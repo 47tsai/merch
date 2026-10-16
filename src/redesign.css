@@ -393,3 +393,21 @@ input:focus, select:focus, textarea:focus { border-color: var(--brand); }
   .item-body { padding: 9px; }
   .stat-card strong { font-size: 21px; }
 }
+
+/* Dark theme contrast fixes for legacy components with hard-coded light colors. */
+html[data-theme='dark'] .empty-state,
+html[data-theme='dark'] .boot-error,
+html[data-theme='dark'] .notice {
+  background: var(--color-surface-soft);
+  border-color: var(--color-border);
+  color: var(--color-text-muted);
+}
+html[data-theme='dark'] .item-detail-text p {
+  color: var(--color-text);
+}
+html[data-theme='dark'] .item-detail-footer {
+  color: var(--color-text-muted);
+}
+html[data-theme='dark'] .item-detail-footer b {
+  color: var(--color-text);
+}
