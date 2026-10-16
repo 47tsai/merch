@@ -27,7 +27,7 @@ jobs:
         with:
           node-version: 22
       - name: Install dependencies
-        run: npm install --no-package-lock
+        run: npm ci
       - name: Sync generated version metadata
         run: npm run version:sync
       - name: Verify CI contract
