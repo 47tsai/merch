@@ -21,7 +21,7 @@ const FORBIDDEN_STORAGE_FIELDS = ['workName', 'shipping', 'material', 'release',
 let mutationQueue: Promise<void> = Promise.resolve();
 let managementVerified = false;
 function endpoint(path: string): string { return `${API_BASE}${path.startsWith('/') ? path : `/${path}`}`; }
-function authToken(): string { try { return sessionStorage.getItem('merch-admin-secret') || ''; } catch { return ''; } }
+function authToken(): string { try { return localStorage.getItem('merch-admin-secret') || ''; } catch { return ''; } }
 async function ensureMutationReady(): Promise<void> {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) throw dataError('目前沒有網路連線，無法送出操作。');
   if (!hasAdminSecret()) { managementVerified = false; throw dataError('尚未完成管理驗證，無法送出操作。'); }
@@ -94,6 +94,6 @@ export async function putShipping(record: StoreState['shipping'][number]): Promi
 export async function deleteShipping(id: string): Promise<MutationSubmission<ApiData>> { return mutateSubmitted('DELETE', () => request(`/shipping/${encodeURIComponent(id)}`, { method: 'DELETE' }).then(validateMutationResult).then(() => getAuthoritativeRemoteData())); }
 export async function getAuthStatus(): Promise<AuthStatus> { const status = validateAuthStatus(await request('/auth/status')); managementVerified = status.authenticated; return status; }
 export function hasAdminSecret(): boolean { return Boolean(authToken()); }
-export function setAdminSecret(value: string): void { try { resetManagementVerification(); if (value.trim()) sessionStorage.setItem('merch-admin-secret', value.trim()); else sessionStorage.removeItem('merch-admin-secret'); } catch { throw dataError('無法儲存管理驗證資訊。'); } }
-export function clearAdminSecret(): void { try { resetManagementVerification(); sessionStorage.removeItem('merch-admin-secret'); } catch {} }
+export function setAdminSecret(value: string): void { try { resetManagementVerification(); if (value.trim()) localStorage.setItem('merch-admin-secret', value.trim()); else localStorage.removeItem('merch-admin-secret'); } catch { throw dataError('無法儲存管理驗證資訊。'); } }
+export function clearAdminSecret(): void { try { resetManagementVerification(); localStorage.removeItem('merch-admin-secret'); } catch {} }
 export function apiConfigured(): boolean { return Boolean(API_BASE); }
