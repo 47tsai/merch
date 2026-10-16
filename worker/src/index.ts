@@ -26,7 +26,7 @@ const CATEGORY_RE = /^[a-z]$/;
 const WORK_ID_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const WORK_CODE_RE = /^[A-Z]{2,3}$/;
 
-function response(body: unknown, status = 200, origin = '*'): Response { return new Response(JSON.stringify(body), { status, headers: { ...jsonHeaders, 'Access-Control-Allow-Origin': origin, 'Access-Control-Allow-Headers': 'Authorization, Content-Type', 'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS', Vary: 'Origin' } }); }
+function response(body: unknown, status = 200, origin = '*'): Response { return new Response(status === 204 || status === 304 ? null : JSON.stringify(body), { status, headers: { ...jsonHeaders, 'Access-Control-Allow-Origin': origin, 'Access-Control-Allow-Headers': 'Authorization, Content-Type', 'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS', Vary: 'Origin' } }); }
 function ok(data: unknown, origin: string): Response { return response({ ok: true, data }, 200, origin); }
 function fail(code: string, message: string, status: number, origin: string): Response { return response({ ok: false, error: { code, message } }, status, origin); }
 function originFor(request: Request, env: Env): string | null { const origin = request.headers.get('Origin'); return !origin || origin === env.ALLOWED_ORIGIN ? env.ALLOWED_ORIGIN : null; }

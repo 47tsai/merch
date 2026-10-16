@@ -28,6 +28,10 @@ function corsResponse(response: Response, origin: string): Response {
   return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
 }
 
+function authorized(request: Request, env: Env): boolean {
+  return Boolean(env.ADMIN_SECRET) && request.headers.get('Authorization') === `Bearer ${env.ADMIN_SECRET}`;
+}
+
 function originFor(request: Request, env: Env): string | null {
   const origin = request.headers.get('Origin');
   return !origin || origin === env.ALLOWED_ORIGIN ? env.ALLOWED_ORIGIN : null;
@@ -222,12 +226,13 @@ export default {
       if (r2Response) return r2Response;
     }
 
-    if (path && request.method === 'PUT') {
-      const response = await mirrorPut(request, env, path);
-      return corsResponse(response, origin);
-    }
-
-    if (path && request.method === 'DELETE') {
+    if (path && (request.method === 'PUT' || request.method === 'DELETE')) {
+      if (!authorized(request, env)) {
+        return corsResponse(errorResponse('UNAUTHORIZED', '需要管理員權限。', 401), origin);
+      }
+      if (request.method === 'PUT') {
+        return corsResponse(await mirrorPut(request, env, path), origin);
+      }
       return corsResponse(await mirrorDelete(request, env, path), origin);
     }
 

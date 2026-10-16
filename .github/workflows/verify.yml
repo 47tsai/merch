@@ -10,7 +10,7 @@ on:
     types: [merch-mutation]
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: verify-${{ github.ref }}
@@ -54,6 +54,8 @@ jobs:
         run: npm run verify:lifecycle
       - name: Verify worker architecture
         run: npm run verify:worker
+      - name: Verify Worker authorization and deployment boundaries
+        run: npm run verify:worker-boundaries
       - name: Verify worker write scope
         run: npm run verify:worker-scope
       - name: Verify worker target read scope
