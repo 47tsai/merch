@@ -33,9 +33,11 @@
     "verify:lifecycle": "node scripts/verify-lifecycle-contract.mjs",
     "verify:validation": "node scripts/verify-validation-contract.mjs",
     "verify:ci-contract": "node scripts/verify-ci-contract.mjs",
-    "verify:worker-boundaries": "node scripts/verify-worker-boundaries.mjs"
+    "verify:worker-boundaries": "node scripts/verify-worker-boundaries.mjs",
+    "verify:worker-runtime": "node --test scripts/verify-worker-runtime.test.mjs"
   },
   "devDependencies": {
+    "esbuild": "^0.25.0",
     "typescript": "^5.6.3",
     "vite": "^7.1.3"
   }
