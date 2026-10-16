@@ -218,8 +218,8 @@ h2 { letter-spacing: -.035em; }
 .section-heading { padding-bottom: 12px; border-bottom: 1px solid var(--color-border); margin-bottom: 15px; }
 .section-heading a, .back-link { font-size: 12px; font-weight: 650; color: var(--brand-text); }
 .bar-row { grid-template-columns: minmax(80px, 1.1fr) minmax(60px, 2fr) minmax(64px, auto); gap: 12px; margin: 14px 0; font-size: 12px; }
-.bar-row > div { height: 5px; border-radius: 0; background: var(--color-surface-soft); }
-.bar-row i { border-radius: 0; background: var(--brand); }
+.bar-row > div { height: 6px; border-radius: 999px; background: var(--color-surface-soft); overflow: hidden; }
+.bar-row i { border-radius: inherit; background: var(--brand); }
 .ranking li { padding: 11px 0; border-bottom-color: var(--color-border); font-size: 12px; }
 .ranking li span { font-family: var(--font-family-mono); font-size: 11px; }
 .ranking li b { font-variant-numeric: tabular-nums; }
@@ -271,7 +271,12 @@ h2 { letter-spacing: -.035em; }
 .item-bottom { padding-top: 9px; border-top: 1px solid var(--color-border); }
 .item-bottom strong { font-size: 12px; font-variant-numeric: tabular-nums; }
 .item-bottom span { font-size: 10px; }
-.badge { border-radius: 3px; font-size: 9px; letter-spacing: .015em; box-shadow: none; }
+.badge { border-radius: 999px; padding: 4px 8px; font-size: 10px; line-height: 1.25; letter-spacing: .01em; box-shadow: none; }
+.view-switch { display: inline-flex; align-items: center; gap: 3px; padding: 3px; border: 1px solid var(--color-border); border-radius: 11px; background: var(--color-surface-soft); }
+.view-button { min-height: 34px; padding: 0 11px; border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--color-text-muted); font-size: 11px; font-weight: 600; transition: background-color .14s ease, color .14s ease, border-color .14s ease; }
+.view-button:hover { color: var(--color-text); }
+.view-button.is-active { background: var(--color-surface); border-color: var(--color-border); color: var(--color-text); box-shadow: var(--shadow-sm); }
+.view-button:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 .collection-pagination { margin-top: 20px; }
 
 /* Forms, management, shipping and settings share one restrained surface language. */
