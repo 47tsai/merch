@@ -39,7 +39,7 @@ try {
   await fs.writeFile(path.join(tempDir, 'sync-overlay.mjs'), 'export async function runWithSync(_label, operation) { return operation(); }\n', 'utf8');
 
   globalThis.window = { setTimeout, clearTimeout };
-  globalThis.sessionStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
+  globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
 
   const load = async (responses) => {
     const calls = [];
@@ -77,6 +77,6 @@ try {
   console.log('API load verification passed: static collection, independent shipping load, shipping-only failure, and Worker /data fallback.');
 } finally {
   if (originalFetch) globalThis.fetch = originalFetch; else delete globalThis.fetch;
-  delete globalThis.window; delete globalThis.sessionStorage;
+  delete globalThis.window; delete globalThis.localStorage;
   await fs.rm(tempDir, { recursive: true, force: true });
 }
