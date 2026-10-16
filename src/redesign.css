@@ -15,12 +15,12 @@
   --brand-border: #bdd7d1;
   --brand-text: #205e58;
 
-  --color-bg: #f3f2ed;
-  --color-surface: #fffefa;
-  --color-surface-soft: #eeede7;
+  --color-bg: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-soft: #f5f7f7;
   --color-text: #252b29;
-  --color-text-muted: #707773;
-  --color-border: #dedfd8;
+  --color-text-muted: #68716e;
+  --color-border: #e2e6e4;
   --color-focus-ring: rgba(38, 118, 111, .22);
 
   --radius-sm: 5px;
