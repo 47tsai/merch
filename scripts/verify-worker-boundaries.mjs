@@ -59,4 +59,8 @@ if (/pages: write|id-token: write/.test(gate + build + deployWorker)) {
   throw new Error('Pages write and OIDC permissions must not be granted to gate, build, or Worker deployment jobs.');
 }
 
-console.log('Worker boundary, deployment gate, and job permission checks passed.');
+if (!deploy.includes('npx wrangler@4.151.0') || /npx wrangler@4(?:\s|$)/.test(deploy)) {
+  throw new Error('Worker deployment must use the explicitly pinned Wrangler CLI version.');
+}
+
+console.log('Worker boundary, deployment gate, job permission, and Wrangler pin checks passed.');
