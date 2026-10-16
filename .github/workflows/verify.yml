@@ -10,7 +10,7 @@ on:
     types: [merch-mutation]
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: verify-${{ github.ref }}
