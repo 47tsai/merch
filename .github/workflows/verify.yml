@@ -26,6 +26,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Generate candidate npm lockfile
+        run: npm install --package-lock-only --ignore-scripts
+      - name: Upload candidate lockfile
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-lock-candidate
+          path: package-lock.json
+          if-no-files-found: error
+          retention-days: 1
       - name: Install dependencies
         run: npm install --no-package-lock
       - name: Sync generated version metadata
