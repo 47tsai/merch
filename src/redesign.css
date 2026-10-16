@@ -411,3 +411,98 @@ html[data-theme='dark'] .item-detail-footer {
 html[data-theme='dark'] .item-detail-footer b {
   color: var(--color-text);
 }
+
+
+/* Design correction: restore a deliberate, varied radius system.
+   Rounded corners are part of the visual language, not a universal preset. */
+:root {
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+}
+
+/* Separate the metrics into composed objects instead of one rigid bordered strip. */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+  border: 0;
+  background: transparent;
+}
+.stat-card {
+  padding: 19px 20px 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 13px;
+  background: var(--color-surface);
+  transition: border-color .16s ease, background-color .16s ease, transform .16s ease;
+}
+.stat-card:last-child { border-right: 1px solid var(--color-border); }
+.stat-card:hover {
+  border-color: var(--brand-border);
+  background: var(--color-surface);
+  transform: translateY(-1px);
+}
+.panel {
+  border-radius: 15px;
+}
+.item-card {
+  overflow: hidden;
+  border-radius: 13px;
+  transition: border-color .16s ease, background-color .16s ease, transform .16s ease;
+}
+.item-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--brand) 42%, var(--color-border));
+}
+.item-media {
+  border-radius: 0;
+  background: color-mix(in srgb, var(--color-surface-soft) 78%, var(--brand-soft));
+}
+.collection-tools .search,
+.collection-tools select,
+.collection-control-group select,
+input, select, textarea {
+  border-radius: 9px;
+}
+.button, button.button, a.button {
+  border-radius: 9px;
+}
+.nav a { border-radius: 9px; }
+.management-toolbar,
+.management-form.is-editing,
+.management-image-row,
+.management-panel form,
+.management-panel .management-editor,
+.management-panel .management-picker,
+.management-panel .management-images,
+.add-section, .shipping-editor, .shipping-list,
+[data-page="settings"] .settings-panel,
+.statistics-chart-card,
+.statistics-summary-card, .statistics-large-chart,
+.statistics-work-items, .statistics-data,
+.empty-state, .boot-error, .notice {
+  border-radius: 13px;
+}
+.shipping-card { border-radius: 10px; }
+.badge { border-radius: 999px; padding-inline: 8px; }
+.statistics-detail-dialog, .item-detail-dialog,
+.shipping-detail-dialog, .image-viewer-dialog {
+  border-radius: 18px;
+}
+
+/* Keep the layout responsive without reverting to a square, compressed mobile UI. */
+@media (max-width: 1000px) {
+  .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .stat-card { border: 1px solid var(--color-border); border-radius: 12px; }
+  .stat-card:last-child { border-right: 1px solid var(--color-border); }
+}
+@media (max-width: 700px) {
+  .stat-grid { gap: 8px; }
+  .stat-card { padding: 15px 14px; border-radius: 12px; }
+  .panel { border-radius: 14px; }
+  .item-card { border-radius: 12px; }
+  .item-media { border-radius: 0; }
+  .button, button.button, a.button { border-radius: 9px; }
+  .badge { border-radius: 999px; }
+}
