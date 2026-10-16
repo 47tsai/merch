@@ -30,7 +30,7 @@ try {
     writable: true,
   });
   globalThis.window = { setTimeout, clearTimeout };
-  globalThis.sessionStorage = { getItem: key => key === 'merch-admin-secret' ? 'verified-secret' : null, setItem: () => {}, removeItem: () => {} };
+  globalThis.localStorage = { getItem: key => key === 'merch-admin-secret' ? 'verified-secret' : null, setItem: () => {}, removeItem: () => {} };
 
   const run = async (operation, responses) => {
     const calls = [];
@@ -87,7 +87,7 @@ try {
 } finally {
   if (originalFetch) globalThis.fetch = originalFetch; else delete globalThis.fetch;
   delete globalThis.window;
-  delete globalThis.sessionStorage;
+  delete globalThis.localStorage;
   try { delete globalThis.navigator; } catch {}
   await fs.rm(tempDir, { recursive: true, force: true });
 }
