@@ -13,7 +13,6 @@ import { showToast } from './utils/toast';
 import { categoryName } from './category-label';
 import { renderItemDetailShipping } from './item-detail-shipping';
 import type { Item } from './types';
-import './redesign.css';
 
 const $ = <T extends Element>(selector: string, root: ParentNode = document) => root.querySelector<T>(selector);
 const $$ = <T extends Element>(selector: string, root: ParentNode = document) => [...root.querySelectorAll<T>(selector)];
