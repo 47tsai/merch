@@ -43,6 +43,7 @@ function makeEnv(options = {}) {
     },
     async delete(key) {
       calls.delete += 1;
+      if (options.failDelete) throw new Error('R2 delete unavailable');
       store.delete(key);
     },
     async head(key) {
@@ -63,6 +64,13 @@ function makeEnv(options = {}) {
     store,
     calls,
   };
+}
+
+function deleteRequest({ authorization = 'Bearer test-admin-secret', requestOrigin = origin } = {}) {
+  return new Request(assetUrl, {
+    method: 'DELETE',
+    headers: { Origin: requestOrigin, Authorization: authorization },
+  });
 }
 
 function putRequest({ authorization = 'Bearer test-admin-secret', requestOrigin = origin } = {}) {
@@ -149,4 +157,44 @@ test('disallowed Origin is rejected before any R2 access', async () => {
   assert.equal(calls.get, 0);
   assert.equal(calls.put, 0);
   assert.equal(calls.delete, 0);
+});
+
+
+test('R2 delete failure stops before GitHub mutation', async () => {
+  const { env, store, calls } = makeEnv({ previous: previousBytes, failDelete: true });
+  let githubCalls = 0;
+  const response = await withFetch(async () => {
+    githubCalls += 1;
+    throw new Error('GitHub must not be called');
+  }, () => worker.fetch(deleteRequest(), env));
+
+  assert.equal(response.status, 502);
+  assert.equal((await response.json()).error.code, 'R2_MIRROR_DELETE_FAILED');
+  assert.deepEqual([...store.get(assetPath)], [...previousBytes]);
+  assert.equal(calls.delete, 1);
+  assert.equal(githubCalls, 0);
+});
+
+test('GitHub delete API failure restores the R2 mirror', async () => {
+  const { env, store, calls } = makeEnv({ previous: previousBytes });
+  const response = await withFetch(async () => new Response('{"message":"upstream unavailable"}', { status: 500 }), () =>
+    worker.fetch(deleteRequest(), env));
+
+  assert.equal(response.status, 503);
+  assert.equal((await response.json()).error.code, 'GITHUB_API_ERROR');
+  assert.deepEqual([...store.get(assetPath)], [...previousBytes]);
+  assert.equal(calls.delete, 1);
+  assert.equal(calls.put, 1, 'rollback should restore the previous object once');
+});
+
+test('failed delete rollback returns an explicit divergence error', async () => {
+  const { env, store, calls } = makeEnv({ previous: previousBytes, failPutAt: [1] });
+  const response = await withFetch(async () => new Response('{"message":"upstream unavailable"}', { status: 500 }), () =>
+    worker.fetch(deleteRequest(), env));
+
+  assert.equal(response.status, 502);
+  assert.equal((await response.json()).error.code, 'GITHUB_DELETE_RESPONSE_FAILED_ROLLBACK_FAILED');
+  assert.equal(store.has(assetPath), false, 'failed rollback leaves the mirror object absent');
+  assert.equal(calls.delete, 1);
+  assert.equal(calls.put, 1);
 });
