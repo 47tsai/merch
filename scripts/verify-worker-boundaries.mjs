@@ -3,6 +3,7 @@ import fs from 'node:fs';
 const r2Entry = fs.readFileSync('worker/src/r2-entry.ts', 'utf8');
 const worker = fs.readFileSync('worker/src/index.ts', 'utf8');
 const deploy = fs.readFileSync('.github/workflows/deploy.yml', 'utf8');
+const verifyWorkflow = fs.readFileSync('.github/workflows/verify.yml', 'utf8');
 
 const outerPut = r2Entry.indexOf("if (path && (request.method === 'PUT' || request.method === 'DELETE'))");
 const outerAuth = r2Entry.indexOf('if (!authorized(request, env))', outerPut);
@@ -13,6 +14,9 @@ if (outerPut < 0 || outerAuth < outerPut || outerMutation < outerAuth || outerDe
 }
 if (!r2Entry.includes('return corsResponse(errorResponse(\'UNAUTHORIZED\', \'需要管理員權限。\', 401), origin)')) {
   throw new Error('Unauthorized R2 image mutations must return a CORS-enabled 401 response.');
+}
+if (!verifyWorkflow.includes('contents: read') || /permissions:\s*\n\s*contents: write/.test(verifyWorkflow)) {
+  throw new Error('Verify workflow should use read-only contents permissions.');
 }
 if (!worker.includes('status === 204 || status === 304 ? null : JSON.stringify(body)')) {
   throw new Error('204/304 responses must be created without a response body.');
