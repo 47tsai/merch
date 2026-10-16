@@ -268,8 +268,9 @@ h2 { letter-spacing: -.035em; }
 .item-top .muted { font-size: 10px; letter-spacing: .025em; }
 .item-card h3 { margin: 9px 0 5px; font-size: 13px; line-height: 1.5; font-weight: 650; letter-spacing: -.015em; }
 .item-work { margin-bottom: 12px; color: var(--color-text-muted); font-size: 11px; }
-.item-bottom { padding-top: 9px; border-top: 1px solid var(--color-border); }
-.item-bottom strong { font-size: 12px; font-variant-numeric: tabular-nums; }
+.item-bottom { display: flex; justify-content: space-between; align-items: center; padding-top: 9px; border-top: 1px solid var(--color-border); text-align: left; }
+.item-bottom strong { margin-right: auto; text-align: left; }
+.item-bottom strong { font-size: 13px; font-variant-numeric: tabular-nums; }
 .item-bottom span { font-size: 10px; }
 .badge { border-radius: 999px; padding: 4px 8px; font-size: 10px; line-height: 1.25; letter-spacing: .01em; box-shadow: none; }
 .view-switch { display: inline-flex; align-items: center; gap: 3px; padding: 3px; border: 1px solid var(--color-border); border-radius: 11px; background: var(--color-surface-soft); }
