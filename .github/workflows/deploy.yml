@@ -30,7 +30,20 @@ jobs:
         run: |
           set -euo pipefail
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "verified=true" >> "$GITHUB_OUTPUT"
+            if [ "${{ github.ref }}" != "refs/heads/main" ]; then
+              echo "Manual deployment is only allowed from main."
+              echo "verified=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            target_sha="${{ github.sha }}"
+            runs=$(gh api "repos/${{ github.repository }}/actions/workflows/verify.yml/runs?head_sha=$target_sha&per_page=100")
+            verified=$(echo "$runs" | jq -r --arg sha "$target_sha" '[.workflow_runs[] | select(.head_sha == $sha and .head_branch == "main" and .status == "completed" and .conclusion == "success")] | length')
+            echo "Successful Verify runs for $target_sha on main: $verified"
+            if [ "$verified" -gt 0 ]; then
+              echo "verified=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "verified=false" >> "$GITHUB_OUTPUT"
+            fi
             exit 0
           fi
 
