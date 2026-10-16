@@ -2,7 +2,6 @@ import './styles.css';
 import './design-tokens.css';
 import './item-detail-modal.css';
 import './collection.css';
-import './redesign.css';
 import './item-detail-shipping';
 import { createRouter } from './router';
 import { loadStore, MerchStore } from './store';
@@ -14,6 +13,7 @@ import { showToast } from './utils/toast';
 import { categoryName } from './category-label';
 import { renderItemDetailShipping } from './item-detail-shipping';
 import type { Item } from './types';
+import './redesign.css';
 
 const $ = <T extends Element>(selector: string, root: ParentNode = document) => root.querySelector<T>(selector);
 const $$ = <T extends Element>(selector: string, root: ParentNode = document) => [...root.querySelectorAll<T>(selector)];
