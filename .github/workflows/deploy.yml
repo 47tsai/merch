@@ -8,10 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  actions: read
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
@@ -20,6 +17,8 @@ concurrency:
 jobs:
   gate:
     runs-on: ubuntu-latest
+    permissions:
+      actions: read
     outputs:
       verified: ${{ steps.check.outputs.verified }}
     steps:
@@ -70,6 +69,8 @@ jobs:
     needs: gate
     if: needs.gate.outputs.verified == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout verified commit
         uses: actions/checkout@v4
@@ -92,6 +93,9 @@ jobs:
     needs: build
     if: needs.build.result == 'success'
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -104,6 +108,8 @@ jobs:
     needs: build
     if: needs.build.result == 'success'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout verified commit
         uses: actions/checkout@v4
