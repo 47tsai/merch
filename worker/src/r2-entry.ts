@@ -6,7 +6,8 @@ interface Env {
   GITHUB_REPO: string;
   GITHUB_BRANCH: string;
   GITHUB_TOKEN: string;
-  ADMIN_SECRET: string;
+  CHI_AUTH_URL: string;
+  CHI_AUTH_CLIENT_ID?: string;
   MERCH_ASSETS: R2Bucket;
 }
 
@@ -28,8 +29,17 @@ function corsResponse(response: Response, origin: string): Response {
   return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
 }
 
-function authorized(request: Request, env: Env): boolean {
-  return Boolean(env.ADMIN_SECRET) && request.headers.get('Authorization') === `Bearer ${env.ADMIN_SECRET}`;
+async function authorized(request: Request, env: Env): Promise<boolean> {
+  const clientId = env.CHI_AUTH_CLIENT_ID?.trim();
+  const authUrl = (env.CHI_AUTH_URL || 'https://auth.chi.qzz.io').replace(/\\/$/, '');
+  const match = (request.headers.get('Authorization') || '').match(/^Bearer ([A-Za-z0-9_-]{40,80})$/);
+  if (!clientId || !match) return false;
+  try {
+    const response = await fetch(`${authUrl}/api/userinfo?client_id=${encodeURIComponent(clientId)}`, { headers: { Authorization: `Bearer ${match[1]}`, Accept: 'application/json' }, signal: AbortSignal.timeout(5000) });
+    if (!response.ok) return false;
+    const identity = await response.json() as { sub?: unknown; aud?: unknown };
+    return identity.sub === 'chi-owner' && identity.aud === clientId;
+  } catch { return false; }
 }
 
 function originFor(request: Request, env: Env): string | null {
@@ -227,7 +237,7 @@ export default {
     }
 
     if (path && (request.method === 'PUT' || request.method === 'DELETE')) {
-      if (!authorized(request, env)) {
+      if (!(await authorized(request, env))) {
         return corsResponse(errorResponse('UNAUTHORIZED', '需要管理員權限。', 401), origin);
       }
       if (request.method === 'PUT') {
