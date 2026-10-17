@@ -31,7 +31,8 @@ function corsResponse(response: Response, origin: string): Response {
 
 async function authorized(request: Request, env: Env): Promise<boolean> {
   const clientId = env.CHI_AUTH_CLIENT_ID?.trim();
-  const authUrl = (env.CHI_AUTH_URL || 'https://auth.chi.qzz.io').replace(/\\/$/, '');
+  const configuredAuthUrl = env.CHI_AUTH_URL || 'https://auth.chi.qzz.io';
+  const authUrl = configuredAuthUrl.endsWith('/') ? configuredAuthUrl.slice(0, -1) : configuredAuthUrl;
   const match = (request.headers.get('Authorization') || '').match(/^Bearer ([A-Za-z0-9_-]{40,80})$/);
   if (!clientId || !match) return false;
   try {
