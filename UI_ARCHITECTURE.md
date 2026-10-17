@@ -49,7 +49,7 @@ Design Tokens
 - `src/theme.ts` / `src/theme.css` / `src/theme-refinement.css`：Light / Dark theme。
 - `src/shared-components.css`：Button、Card、Panel、Modal、Badge、Feedback 等共用視覺基礎。
 - `src/controls.css`：Input、Select、Segmented Control 等控制項。
-- `src/responsive-refinement.css`：Desktop / Tablet / Mobile viewport contract。
+- `src/merch.css`：正式介面的統一視覺、版面與 Desktop / Tablet / Mobile breakpoint。
 
 Shared foundation 是唯一共用 UI 層。舊 API 若仍存在，只能 forwarding，不建立第二套視覺實作。
 
@@ -145,15 +145,7 @@ Detail dialog 不可與其他 modal 使用模糊 selector 混淆。
 
 ## 7. Navigation
 
-Mobile Navigation 採：
-
-```text
-Brand Header
-     ↓
-Horizontal page navigation
-```
-
-Mobile 不保留 Desktop sidebar 的佔位空間。
+Mobile Navigation 使用固定於底部的可橫向滑動導覽列，圖示搭配文字標籤，並支援 iPhone safe area。Mobile 不保留 Desktop sidebar 的佔位空間。
 
 Route navigation 與 page rendering 解耦；跨頁搜尋／Filter 必須由 cross-navigation 與 Collection state 一起更新，而不是只修改 hash。
 
@@ -173,11 +165,11 @@ Route navigation 與 page rendering 解耦；跨頁搜尋／Filter 必須由 cro
 
 ### Mobile
 
-- 導覽採品牌 Header + 水平滑動頁面導覽。
-- 不保留 sidebar 空間。
+- 導覽採底部水平滑動列，顯示圖示與文字標籤。
+- 不保留 Desktop sidebar 空間，並預留 safe area。
 - Form、Modal、Ranking、Statistics、Management 依可用寬度重新安排，而不是單純縮小 Desktop。
 
-所有 viewport breakpoint 規則集中於 `src/responsive-refinement.css`。
+正式介面的 viewport breakpoint 集中於 `src/merch.css`。
 
 ## 9. Accessibility baseline
 
@@ -200,7 +192,7 @@ Route navigation 與 page rendering 解耦；跨頁搜尋／Filter 必須由 cro
 | `src/theme.ts` / `theme.css` / `theme-refinement.css` | Theme |
 | `src/shared-components.css` | Shared visual components |
 | `src/controls.css` | Shared form controls |
-| `src/responsive-refinement.css` | Responsive contract |
+| `src/merch.css` | 正式 UI、Design Tokens alias、Responsive contract |
 | `src/app-loading.*` | Initial loading |
 | `src/sync-overlay.*` | Blocking sync state |
 | `src/page-auth-status.*` | Page auth status |
