@@ -13,6 +13,8 @@ let itemSearch = '';
 let itemPage = 1;
 let recordPage = 1;
 let showSelectedItems = false;
+let itemWorkFilter = '';
+let itemCategoryFilter = '';
 let draftRecordId: string | null = null;
 let draftItemIds = new Set<string>();
 const ITEM_PAGE_SIZE = 12;
@@ -21,27 +23,114 @@ const allItems=()=>storeRef?.snapshot.items??[];
 const money=(n:number,c:string)=>`${c||'TWD'} ${new Intl.NumberFormat('zh-TW').format(n)}`;
 function setValue(id:string,value:string):void{const el=qs<HTMLInputElement|HTMLTextAreaElement|HTMLSelectElement>(`#${id}`);if(el)el.value=value;}
 function renderItems(selected:ShippingRecord|undefined):void{
-  const root=qs<HTMLElement>('[data-shipping-items]');if(!root)return;
-  if(draftRecordId!==editingId){draftRecordId=editingId;draftItemIds=new Set(selected?.itemIds??[]);itemPage=1;}
+  const root=qs<HTMLElement>('[data-shipping-items]');
+  if(!root)return;
+  if(draftRecordId!==editingId){
+    draftRecordId=editingId;
+    draftItemIds=new Set(selected?.itemIds??[]);
+    itemPage=1;
+  }
+  const items=allItems();
   const query=itemSearch.trim().toLocaleLowerCase('zh-Hant');
-  const filtered=allItems().filter(i=>{if(showSelectedItems&&!draftItemIds.has(i.id))return false;if(!query)return true;return [i.id,i.title,i.workId].some(value=>value.toLocaleLowerCase('zh-Hant').includes(query));});
-  const totalPages=Math.max(1,Math.ceil(filtered.length/ITEM_PAGE_SIZE));itemPage=Math.min(itemPage,totalPages);
-  const start=(itemPage-1)*ITEM_PAGE_SIZE;const pageItems=filtered.slice(start,start+ITEM_PAGE_SIZE);
+  const workOptions=[...new Set(items.map(item=>item.workId).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'zh-Hant'));
+  const categoryOptions=[...new Set(items.map(item=>item.category).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'zh-Hant'));
+  if(itemWorkFilter&&!workOptions.includes(itemWorkFilter))itemWorkFilter='';
+  if(itemCategoryFilter&&!categoryOptions.includes(itemCategoryFilter))itemCategoryFilter='';
+  const filtered=items.filter(item=>{
+    if(showSelectedItems&&!draftItemIds.has(item.id))return false;
+    if(itemWorkFilter&&item.workId!==itemWorkFilter)return false;
+    if(itemCategoryFilter&&item.category!==itemCategoryFilter)return false;
+    if(!query)return true;
+    return [item.id,item.title,item.workId,item.workName??'',item.category].some(value=>String(value).toLocaleLowerCase('zh-Hant').includes(query));
+  });
+  const totalPages=Math.max(1,Math.ceil(filtered.length/ITEM_PAGE_SIZE));
+  itemPage=Math.min(itemPage,totalPages);
+  const start=(itemPage-1)*ITEM_PAGE_SIZE;
+  const pageItems=filtered.slice(start,start+ITEM_PAGE_SIZE);
+  const selectedItems=items.filter(item=>draftItemIds.has(item.id));
   root.replaceChildren();
+
+  const selectedPanel=document.createElement('section');
+  selectedPanel.className='shipping-selected-panel';
+  selectedPanel.setAttribute('aria-label','已關聯周邊');
+  const selectedHead=document.createElement('div');
+  selectedHead.className='shipping-selected-heading';
+  const selectedTitle=document.createElement('div');
+  const eyebrow=document.createElement('span');eyebrow.className='shipping-mini-label';eyebrow.textContent='LINKED ITEMS';
+  const count=document.createElement('strong');count.className='shipping-selected-count';count.textContent=`已選 ${draftItemIds.size} 件周邊`;
+  const selectedHint=document.createElement('p');selectedHint.textContent=selectedItems.length?'這些周邊會被記入同一筆運費。':'先從下方清單選取這筆運費涵蓋的周邊。';
+  selectedTitle.append(eyebrow,count,selectedHint);
+  const clear=document.createElement('button');clear.type='button';clear.className='chi-button shipping-clear-selection';clear.textContent='清空選取';clear.disabled=saving||draftItemIds.size===0;clear.dataset.shippingClearSelection='true';
+  selectedHead.append(selectedTitle,clear);selectedPanel.appendChild(selectedHead);
+  const chips=document.createElement('div');chips.className='shipping-selected-chips';
+  if(selectedItems.length){
+    for(const item of selectedItems){
+      const chip=document.createElement('div');chip.className='shipping-selected-chip';
+      const text=document.createElement('span');text.textContent=item.title;
+      const id=document.createElement('small');id.textContent=item.id;
+      const remove=document.createElement('button');remove.type='button';remove.textContent='×';remove.title=`取消關聯：${item.title}`;remove.setAttribute('aria-label',`取消關聯 ${item.title}`);remove.disabled=saving;remove.dataset.shippingUnlink=item.id;
+      chip.append(text,id,remove);chips.appendChild(chip);
+    }
+  }else{
+    const empty=document.createElement('span');empty.className='shipping-selected-empty';empty.textContent='尚未選取周邊';chips.appendChild(empty);
+  }
+  selectedPanel.appendChild(chips);
+  root.appendChild(selectedPanel);
+
   const toolbar=document.createElement('div');toolbar.className='shipping-items-toolbar';
-  const label=document.createElement('label');label.className='shipping-item-search';
-  const span=document.createElement('span');span.textContent='搜尋周邊';const input=document.createElement('input');input.type='search';input.value=itemSearch;input.placeholder='搜尋 Item ID、標題、作品…';input.autocomplete='off';input.disabled=saving;input.setAttribute('data-shipping-item-search','true');label.append(span,input);
-  const selectedLabel=document.createElement('label');selectedLabel.className='shipping-item-filter';const filterCheckbox=document.createElement('input');filterCheckbox.type='checkbox';filterCheckbox.checked=showSelectedItems;filterCheckbox.disabled=saving;filterCheckbox.setAttribute('data-shipping-show-selected','true');const selectedText=document.createElement('span');selectedText.textContent=`只顯示已選 (${draftItemIds.size})`;selectedLabel.append(filterCheckbox,selectedText);
-  toolbar.append(label,selectedLabel);root.appendChild(toolbar);
+  const searchLabel=document.createElement('label');searchLabel.className='shipping-item-search';
+  const searchCaption=document.createElement('span');searchCaption.textContent='搜尋周邊';
+  const search=document.createElement('input');search.type='search';search.value=itemSearch;search.placeholder='輸入名稱、Item ID 或作品';search.autocomplete='off';search.disabled=saving;search.setAttribute('data-shipping-item-search','true');search.className='chi-input';
+  searchLabel.append(searchCaption,search);
+  const filters=document.createElement('div');filters.className='shipping-item-filters';
+  const workLabel=document.createElement('label');workLabel.className='shipping-filter-field';
+  const workCaption=document.createElement('span');workCaption.textContent='作品';
+  const workSelect=document.createElement('select');workSelect.className='chi-select';workSelect.disabled=saving;workSelect.dataset.shippingWorkFilter='true';
+  const allWorks=document.createElement('option');allWorks.value='';allWorks.textContent='全部作品';workSelect.appendChild(allWorks);
+  for(const workId of workOptions){const option=document.createElement('option');option.value=workId;option.textContent=items.find(item=>item.workId===workId)?.workName||workId;workSelect.appendChild(option);}
+  workSelect.value=itemWorkFilter;workLabel.append(workCaption,workSelect);
+  const categoryLabel=document.createElement('label');categoryLabel.className='shipping-filter-field';
+  const categoryCaption=document.createElement('span');categoryCaption.textContent='類型';
+  const categorySelect=document.createElement('select');categorySelect.className='chi-select';categorySelect.disabled=saving;categorySelect.dataset.shippingCategoryFilter='true';
+  const allCategories=document.createElement('option');allCategories.value='';allCategories.textContent='全部類型';categorySelect.appendChild(allCategories);
+  for(const category of categoryOptions){const option=document.createElement('option');option.value=category;option.textContent=category;categorySelect.appendChild(option);}
+  categorySelect.value=itemCategoryFilter;categoryLabel.append(categoryCaption,categorySelect);
+  const selectedLabel=document.createElement('label');selectedLabel.className='shipping-item-filter';
+  const selectedCheckbox=document.createElement('input');selectedCheckbox.type='checkbox';selectedCheckbox.checked=showSelectedItems;selectedCheckbox.disabled=saving;selectedCheckbox.dataset.shippingShowSelected='true';
+  const selectedText=document.createElement('span');selectedText.textContent='只看已選';selectedLabel.append(selectedCheckbox,selectedText);
+  filters.append(workLabel,categoryLabel,selectedLabel);
+  toolbar.append(searchLabel,filters);root.appendChild(toolbar);
+
+  const listHeading=document.createElement('div');listHeading.className='shipping-results-heading';
+  const resultsCount=document.createElement('span');resultsCount.textContent=`符合 ${filtered.length} 件`;
+  const pageActions=document.createElement('div');pageActions.className='shipping-visible-actions';
+  const selectVisible=document.createElement('button');selectVisible.type='button';selectVisible.className='chi-button';selectVisible.textContent=pageItems.length&&pageItems.every(item=>draftItemIds.has(item.id))?'取消本頁全選':'選取本頁';selectVisible.disabled=saving||pageItems.length===0;selectVisible.dataset.shippingSelectVisible='true';
+  pageActions.appendChild(selectVisible);listHeading.append(resultsCount,pageActions);root.appendChild(listHeading);
+
   const list=document.createElement('div');list.className='shipping-items';
-  if(pageItems.length){for(const i of pageItems){const itemLabel=document.createElement('label');itemLabel.className='shipping-item';const checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.value=i.id;checkbox.checked=draftItemIds.has(i.id);checkbox.disabled=saving;checkbox.setAttribute('data-shipping-item-checkbox','true');const text=document.createElement('span');text.textContent=`${i.id} · ${i.title}`;itemLabel.append(checkbox,text);list.appendChild(itemLabel);}}else{const empty=document.createElement('span');empty.className='muted';empty.textContent=showSelectedItems?'目前沒有符合條件的已選周邊。':'目前沒有符合搜尋條件的周邊。';list.appendChild(empty);}
+  if(pageItems.length){
+    for(const item of pageItems){
+      const label=document.createElement('label');label.className='shipping-item';if(draftItemIds.has(item.id))label.classList.add('is-selected');
+      const checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.value=item.id;checkbox.checked=draftItemIds.has(item.id);checkbox.disabled=saving;checkbox.dataset.shippingItemCheckbox='true';
+      const copy=document.createElement('span');copy.className='shipping-item-copy';
+      const title=document.createElement('strong');title.textContent=item.title;
+      const meta=document.createElement('small');meta.textContent=`${item.id} · ${item.workName||item.workId} · ${item.category}`;
+      copy.append(title,meta);const status=document.createElement('span');status.className='shipping-item-status';status.textContent=draftItemIds.has(item.id)?'已選取':'選取';
+      label.append(checkbox,copy,status);list.appendChild(label);
+    }
+  }else{
+    const empty=document.createElement('div');empty.className='shipping-items-empty';
+    const emptyTitle=document.createElement('strong');emptyTitle.textContent=showSelectedItems?'沒有符合條件的已選周邊':'找不到符合條件的周邊';
+    const emptyCopy=document.createElement('span');emptyCopy.textContent=showSelectedItems?'取消「只看已選」或調整篩選條件。':'試試其他關鍵字，或清除作品與類型篩選。';empty.append(emptyTitle,emptyCopy);list.appendChild(empty);
+  }
   root.appendChild(list);
   const pager=document.createElement('div');pager.className='shipping-items-pagination';
-  const summary=document.createElement('span');summary.textContent=`顯示 ${filtered.length?start+1:0}–${Math.min(start+ITEM_PAGE_SIZE,filtered.length)} / ${filtered.length} 件`;
-  const prev=document.createElement('button');prev.className='button secondary compact';prev.type='button';prev.textContent='上一頁';prev.disabled=saving||itemPage<=1;prev.dataset.shippingItemPage=String(itemPage-1);
-  const pageLabel=document.createElement('span');pageLabel.textContent=`第 ${itemPage} / ${totalPages} 頁`;
-  const next=document.createElement('button');next.className='button secondary compact';next.type='button';next.textContent='下一頁';next.disabled=saving||itemPage>=totalPages;next.dataset.shippingItemPage=String(itemPage+1);
-  pager.append(summary,prev,pageLabel,next);root.appendChild(pager);
+  const summary=document.createElement('span');summary.textContent=`第 ${filtered.length?start+1:0}–${Math.min(start+ITEM_PAGE_SIZE,filtered.length)} 件，共 ${filtered.length} 件`;
+  const controls=document.createElement('div');controls.className='shipping-pagination-controls';
+  const prev=document.createElement('button');prev.className='chi-button';prev.type='button';prev.textContent='上一頁';prev.disabled=saving||itemPage<=1;prev.dataset.shippingItemPage=String(itemPage-1);
+  const pageLabel=document.createElement('span');pageLabel.textContent=`${itemPage} / ${totalPages}`;
+  const next=document.createElement('button');next.className='chi-button';next.type='button';next.textContent='下一頁';next.disabled=saving||itemPage>=totalPages;next.dataset.shippingItemPage=String(itemPage+1);
+  controls.append(prev,pageLabel,next);pager.append(summary,controls);root.appendChild(pager);
 }
 function renderRecords():void{
   if(!storeRef)return;
