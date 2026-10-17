@@ -10,10 +10,11 @@ routes = [
 ALLOWED_ORIGIN = "https://merch.chi.qzz.io"
 GITHUB_REPO = "tsai97216/merch"
 GITHUB_BRANCH = "main"
+CHI_AUTH_URL = "https://auth.chi.qzz.io"
 
 [[r2_buckets]]
 binding = "MERCH_ASSETS"
 bucket_name = "chi-merch-assets"
 
 [secrets]
-required = ["GITHUB_TOKEN", "ADMIN_SECRET"]
+required = ["GITHUB_TOKEN"]
