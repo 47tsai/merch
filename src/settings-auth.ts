@@ -4,7 +4,7 @@ import { clearChiAuthToken, getAuthStatus, getChiAuthConfig, hasChiAuthToken } f
 let panel: HTMLElement | null = null;
 function message(text: string, kind: 'info' | 'success' | 'error' = 'info'): void { const node=panel?.querySelector<HTMLElement>('[data-auth-message]'); if(!node)return; node.textContent=text; node.dataset.kind=kind; }
 function updateStatus(authenticated:boolean):void { const status=panel?.querySelector<HTMLElement>('[data-auth-status]'); if(!status)return; status.textContent=authenticated?'已登入 Chi Auth':'尚未登入'; status.dataset.authenticated=String(authenticated); window.dispatchEvent(new Event('merch-auth-status-changed')); }
-function randomToken(bytes=32):string { const value=crypto.getRandomValues(new Uint8Array(bytes)); let binary=''; for(const byte of value)binary+=String.fromCharCode(byte); return btoa(binary).replace(/\\+/g,'-').replace(/\\//g,'_').replace(/=+$/,''); }
+function randomToken(bytes=32):string { const value=crypto.getRandomValues(new Uint8Array(bytes)); let binary=''; for(const byte of value)binary+=String.fromCharCode(byte); return btoa(binary).replaceAll('+','-').replaceAll('/','_').replace(/=+$/,''); }
 async function login():Promise<void>{
   const button=panel?.querySelector<HTMLButtonElement>('[data-auth-verify]');
   if(button)button.disabled=true;
@@ -13,7 +13,7 @@ async function login():Promise<void>{
     const state=randomToken(); const verifier=randomToken(48);
     const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(verifier));
     let binary=''; for(const byte of new Uint8Array(digest))binary+=String.fromCharCode(byte);
-    const challenge=btoa(binary).replace(/\\+/g,'-').replace(/\\//g,'_').replace(/=+$/,'');
+    const challenge=btoa(binary).replaceAll('+','-').replaceAll('/','_').replace(/=+$/,'');
     sessionStorage.setItem('chi-auth-oauth-state',state);
     sessionStorage.setItem('chi-auth-oauth-verifier',verifier);
     const redirectUri=`${location.origin}/oauth-callback.html`;
