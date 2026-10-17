@@ -14,6 +14,7 @@
   --chi-color-page-soft: #edf2fc;
   --chi-color-surface: #ffffff;
   --chi-color-surface-raised: #ffffff;
+  --chi-color-surface-muted: var(--chi-color-page-soft);
   --chi-color-text: #33343a;
   --chi-color-text-strong: #202127;
   --chi-color-text-muted: #686f7d;
