@@ -175,7 +175,6 @@
   .collection-page-header { align-items: flex-start; flex-direction: column; gap: 16px; }
   .collection-page-actions { width: 100%; justify-content: space-between; }
   .collection-filter-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .collection-tools { padding: 15px; }
   .collection-page .list-mode .item-card { grid-template-columns: 112px minmax(0, 1fr); }
   .collection-page .list-mode .item-media { height: 112px; }
 }
@@ -184,7 +183,7 @@
   .collection-page-heading h1 { font-size: 30px; }
   .collection-page-description { font-size: 13px; }
   .collection-page-actions { align-items: center; }
-  .collection-tools { gap: 14px; padding: 12px; border-radius: var(--chi-radius-md); }
+  .collection-tools { gap: 14px; }
   .collection-filter-row { gap: 10px; }
   .collection-page .collection-control-group .chi-label { font-size: 11px; }
   .collection-page .collection-control-group .chi-select { padding-inline: 9px 25px; font-size: 12px; }
