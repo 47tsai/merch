@@ -1,0 +1,60 @@
+/* Chi MERCH management page layout */
+.management-page{width:min(100%, 1120px);margin-inline:auto}
+.management-page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--chi-space-5);margin-bottom:var(--chi-space-6)}
+.management-page-header h1{margin:var(--chi-space-2) 0 0;color:var(--chi-color-text-strong);font-size:clamp(1.8rem,3vw,2.4rem);line-height:1.2;letter-spacing:-.035em}
+.management-page-header p{margin:var(--chi-space-3) 0 0;color:var(--chi-color-text-muted);line-height:1.75}
+.management-page-header>.chi-badge{flex-shrink:0;margin-top:var(--chi-space-2)}
+.management-panel.chi-panel,.works-management.chi-panel{padding:clamp(1rem,2.2vw,1.5rem);border:1px solid var(--chi-color-border);border-radius:var(--chi-radius-lg,16px);background:var(--chi-color-surface);box-shadow:var(--chi-shadow-sm,0 2px 8px rgb(20 30 55 / 4%))}
+.management-toolbar{display:grid;gap:var(--chi-space-4);padding-bottom:var(--chi-space-5);border-bottom:1px solid var(--chi-color-border)}
+.management-search-row{display:flex;align-items:center;gap:var(--chi-space-3)}
+.management-search{flex:1;min-width:0}
+.management-search-count{flex-shrink:0;font-size:var(--chi-text-sm);font-variant-numeric:tabular-nums}
+.management-picker-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;align-items:end;gap:var(--chi-space-3)}
+.management-picker-grid .chi-field{display:grid;gap:var(--chi-space-2);min-width:0}
+.management-toolbar-actions{display:flex;align-items:flex-end}
+.management-form-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--chi-space-4);margin:var(--chi-space-6) 0 var(--chi-space-5)}
+.management-form-heading h2{margin:var(--chi-space-2) 0 0;color:var(--chi-color-text-strong);font-size:1.35rem}
+.management-form-heading p{margin:var(--chi-space-2) 0 0;color:var(--chi-color-text-muted);line-height:1.7}
+.management-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--chi-space-4)}
+.management-grid .chi-field{display:grid;align-content:start;gap:var(--chi-space-2);min-width:0}
+.management-grid .wide{grid-column:1/-1}
+.management-grid .chi-input,.management-grid .chi-select,.management-grid .chi-textarea{width:100%;min-width:0}
+.management-grid .chi-textarea{resize:vertical}
+.management-grid .chi-label b{color:var(--chi-color-accent)}
+.management-images-panel.chi-panel{margin-top:var(--chi-space-6);padding:var(--chi-space-4);border:1px solid var(--chi-color-border);border-radius:var(--chi-radius-md,12px);background:var(--chi-color-surface-muted)}
+.management-images-panel .panel-heading{display:flex;align-items:center;justify-content:space-between;gap:var(--chi-space-3);margin-bottom:var(--chi-space-3)}
+.management-images-panel h3{margin:var(--chi-space-1) 0 0}
+.management-form-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:var(--chi-space-3);margin-top:var(--chi-space-5);padding-top:var(--chi-space-5);border-top:1px solid var(--chi-color-border)}
+.management-form-actions #management-delete{margin-left:auto}
+.works-management.chi-panel{margin-top:var(--chi-space-5)}
+.works-management .section-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--chi-space-4);margin-bottom:var(--chi-space-5)}
+.works-management .section-heading h2{margin:var(--chi-space-2) 0 0;color:var(--chi-color-text-strong)}
+.works-management .section-heading p{max-width:65ch;margin:var(--chi-space-2) 0 0;color:var(--chi-color-text-muted);line-height:1.7}
+.works-management-grid{display:grid;grid-template-columns:minmax(260px,.8fr) minmax(0,1.2fr);gap:var(--chi-space-6)}
+.works-management-form{display:grid;align-content:start;gap:var(--chi-space-3);padding:var(--chi-space-4);border:1px solid var(--chi-color-border);border-radius:var(--chi-radius-md,12px);background:var(--chi-color-page-soft)}
+.works-management-form h3,.works-management-grid>div>h3{margin:0 0 var(--chi-space-2);color:var(--chi-color-text-strong)}
+.works-management-form .chi-field{display:grid;gap:var(--chi-space-2)}
+.works-management-form-actions{display:flex;flex-wrap:wrap;gap:var(--chi-space-2);margin-top:var(--chi-space-2)}
+@media(max-width:760px){
+ .management-picker-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .management-toolbar-actions{grid-column:1/-1}
+ .management-toolbar-actions .chi-button{width:100%;justify-content:center}
+ .works-management-grid{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:560px){
+ .management-page-header{gap:var(--chi-space-3);margin-bottom:var(--chi-space-4)}
+ .management-page-header>.chi-badge{font-size:var(--chi-text-xs)}
+ .management-panel.chi-panel,.works-management.chi-panel{padding:1rem}
+ .management-search-row{align-items:stretch;flex-direction:column}
+ .management-search-count{align-self:flex-start}
+ .management-picker-grid,.management-grid{grid-template-columns:minmax(0,1fr)}
+ .management-grid .wide{grid-column:auto}
+ .management-form-heading{gap:var(--chi-space-2)}
+ .management-form-heading>.chi-badge{display:none}
+ .management-form-actions{justify-content:stretch}
+ .management-form-actions .chi-button{flex:1;justify-content:center}
+ .management-form-actions #management-delete{margin-left:0;flex-basis:100%}
+ .works-management .section-heading{align-items:stretch;flex-direction:column}
+ .works-management .section-heading>.chi-button{align-self:flex-start}
+}
+@media(prefers-reduced-motion:reduce){.management-page *{scroll-behavior:auto}}
