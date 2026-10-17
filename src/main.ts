@@ -72,7 +72,71 @@ function renderHome(store: MerchStore) {
       || '<div class="chi-empty-state home-recent-empty"><p class="chi-empty-state__title">還沒有收藏</p><p class="chi-empty-state__description">新增第一筆收藏後，就會在這裡顯示。</p><a class="chi-button chi-button--primary chi-button--small" href="#/add">新增收藏</a></div>';
   }
 }
-function renderCollection(store: MerchStore) { const host = $('#collection-items'); if (!host) return; const { items, ui } = store.snapshot; const query = ui.collectionQuery.trim().toLowerCase(); const workCode = ui.collectionWork === 'all' ? 'all' : (store.snapshot.works.find((w) => w.id === ui.collectionWork)?.code || ui.collectionWork); let filtered = items.filter((i) => matchesItemQuery(i, query)).filter((i) => ui.collectionStatus === 'all' || (ui.collectionStatus === 'pending' ? i.status === 'pending' || i.status === 'preorder' : i.status === ui.collectionStatus)).filter((i) => workCode === 'all' || getItemIdParts(i)?.workCode === workCode).filter((i) => ui.collectionCategory === 'all' || categoryName(i.category) === ui.collectionCategory).filter((i) => ui.collectionCharacter === 'all' || (i.characters || []).includes(ui.collectionCharacter)).filter((i) => ui.collectionManufacturer === 'all' || i.manufacturer === ui.collectionManufacturer); filtered = [...filtered].sort((a, b) => ui.collectionSort === 'price' ? Number(b.purchase?.price || 0) - Number(a.purchase?.price || 0) : ui.collectionSort === 'title' ? a.title.localeCompare(b.title, 'zh-Hant') : String(itemDate(b)).localeCompare(String(itemDate(a)))); const total = filtered.length; const pageCount = Math.max(1, Math.ceil(total / COLLECTION_PAGE_SIZE)); const page = Math.min(Math.max(1, ui.collectionPage), pageCount); if (page !== ui.collectionPage) { store.setUi({ collectionPage: page }); return; } const start = (page - 1) * COLLECTION_PAGE_SIZE; const visible = filtered.slice(start, start + COLLECTION_PAGE_SIZE); host.innerHTML = visible.map((i) => itemCard(i)).join('') || '<div class="empty-state wide">沒有符合條件的收藏</div>'; host.classList.toggle('list-mode', ui.collectionView === 'list'); const count = $('#collection-count'); if (count) count.textContent = `${filtered.reduce((sum, item) => sum + quantityOf(item), 0)} ITEMS`; const pagination = $('#collection-pagination'); if (pagination) { pagination.hidden = pageCount <= 1; if (pageCount > 1) { const previousDisabled = page <= 1 ? ' disabled' : ''; const nextDisabled = page >= pageCount ? ' disabled' : ''; pagination.innerHTML = `<button type="button" class="button secondary collection-page-button" data-collection-page="prev"${previousDisabled} aria-label="上一頁">上一頁</button><span class="collection-page-status" aria-live="polite">第 ${page} / ${pageCount} 頁</span><button type="button" class="button secondary collection-page-button" data-collection-page="next"${nextDisabled} aria-label="下一頁">下一頁</button>`; } else pagination.innerHTML = ''; } $$('.view-button').forEach((button) => { const active = button.dataset.view === ui.collectionView; button.classList.toggle('is-active', active); button.setAttribute('aria-pressed', String(active)); }); }
+function renderCollection(store: MerchStore) {
+  const host = $('#collection-items');
+  if (!host) return;
+
+  const { items, ui } = store.snapshot;
+  const query = ui.collectionQuery.trim().toLowerCase();
+  const workCode = ui.collectionWork === 'all'
+    ? 'all'
+    : (store.snapshot.works.find((w) => w.id === ui.collectionWork)?.code || ui.collectionWork);
+
+  let filtered = items
+    .filter((item) => matchesItemQuery(item, query))
+    .filter((item) => ui.collectionStatus === 'all' || (
+      ui.collectionStatus === 'pending'
+        ? item.status === 'pending' || item.status === 'preorder'
+        : item.status === ui.collectionStatus
+    ))
+    .filter((item) => workCode === 'all' || getItemIdParts(item)?.workCode === workCode)
+    .filter((item) => ui.collectionCategory === 'all' || categoryName(item.category) === ui.collectionCategory)
+    .filter((item) => ui.collectionCharacter === 'all' || (item.characters || []).includes(ui.collectionCharacter))
+    .filter((item) => ui.collectionManufacturer === 'all' || item.manufacturer === ui.collectionManufacturer);
+
+  filtered = [...filtered].sort((a, b) =>
+    ui.collectionSort === 'price'
+      ? Number(b.purchase?.price || 0) - Number(a.purchase?.price || 0)
+      : ui.collectionSort === 'title'
+        ? a.title.localeCompare(b.title, 'zh-Hant')
+        : String(itemDate(b)).localeCompare(String(itemDate(a)))
+  );
+
+  const total = filtered.length;
+  const pageCount = Math.max(1, Math.ceil(total / COLLECTION_PAGE_SIZE));
+  const page = Math.min(Math.max(1, ui.collectionPage), pageCount);
+  if (page !== ui.collectionPage) {
+    store.setUi({ collectionPage: page });
+    return;
+  }
+
+  const start = (page - 1) * COLLECTION_PAGE_SIZE;
+  const visible = filtered.slice(start, start + COLLECTION_PAGE_SIZE);
+  host.innerHTML = visible.map((item) => itemCard(item)).join('')
+    || '<div class="chi-empty-state empty-state wide"><p class="chi-empty-state__title">沒有符合條件的收藏</p><p class="chi-empty-state__description">試試其他關鍵字，或調整上方的篩選條件。</p></div>';
+  host.classList.toggle('list-mode', ui.collectionView === 'list');
+
+  const count = $('#collection-count');
+  if (count) count.textContent = `${filtered.reduce((sum, item) => sum + quantityOf(item), 0)} ITEMS`;
+
+  const pagination = $('#collection-pagination');
+  if (pagination) {
+    pagination.hidden = pageCount <= 1;
+    if (pageCount > 1) {
+      const previousDisabled = page <= 1 ? ' disabled' : '';
+      const nextDisabled = page >= pageCount ? ' disabled' : '';
+      pagination.innerHTML = `<button type="button" class="chi-button collection-page-button" data-collection-page="prev"${previousDisabled} aria-label="上一頁">上一頁</button><span class="collection-page-status" aria-live="polite">第 ${page} / ${pageCount} 頁</span><button type="button" class="chi-button collection-page-button" data-collection-page="next"${nextDisabled} aria-label="下一頁">下一頁</button>`;
+    } else {
+      pagination.innerHTML = '';
+    }
+  }
+
+  $$('.view-button').forEach((button) => {
+    const active = button.dataset.view === ui.collectionView;
+    button.classList.toggle('is-active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
+}
 function renderStatistics(store: MerchStore) { const { items, shipping = [] } = store.snapshot; const total = items.reduce((sum, item) => sum + quantityOf(item), 0); const pending = items.filter((i) => i.status !== 'received').reduce((sum, item) => sum + quantityOf(item), 0); const spending = items.reduce((s, i) => s + itemValue(i), 0) + shipping.reduce((s, r) => s + Number(r.amount || 0), 0); const set = (k: string, v: string) => { const e = $<HTMLElement>(`[data-stat="${k}"]`); if (e) e.textContent = v; }; set('total', String(total)); set('pending', String(pending)); set('spending', money(spending)); }
 let detailModal: HTMLElement | null = null; let detailUnderlyingRoute = 'collection'; let appStore: MerchStore | null = null;
 function createDetailDialogHtml(): string { return `<button type="button" class="item-detail-close" aria-label="關閉" data-detail-close><i class="fa-solid fa-xmark"></i></button><div class="item-detail-header"><div class="item-detail-image" id="item-detail-image">IMAGE</div><div class="item-detail-heading"><span class="eyebrow">ITEM DETAIL</span><h2 id="item-detail-title"></h2><p id="item-detail-subtitle"></p><div id="item-detail-status"></div></div></div><div class="item-detail-grid"><section><span class="detail-label">基本資訊</span><dl><div><dt>作品</dt><dd id="detail-work"></dd></div><div><dt>系列</dt><dd id="detail-series"></dd></div><div><dt>角色</dt><dd id="detail-character"></dd></div><div><dt>類型</dt><dd id="detail-type"></dd></div><div><dt>製造商</dt><dd id="detail-manufacturer"></dd></div></dl></section><section><span class="detail-label">購買資訊</span><dl><div><dt>單價</dt><dd id="detail-price"></dd></div><div><dt>數量</dt><dd id="detail-quantity"></dd></div><div><dt>合計</dt><dd id="detail-total-price"></dd></div><div><dt>幣別</dt><dd id="detail-currency"></dd></div><div><dt>平台</dt><dd id="detail-platform"></dd></div><div><dt>購買日期</dt><dd id="detail-purchase-date"></dd></div></dl></section><section><span class="detail-label">到貨資訊</span><dl><div><dt>預計到貨</dt><dd id="detail-expected-date"></dd></div><div><dt>收到日期</dt><dd id="detail-received-date"></dd></div></dl></section><section><span class="detail-label">售後</span><dl><div><span class="detail-label">狀態</span><dd id="detail-after-sales-status"></dd></div><div><dt>備註</dt><dd id="detail-after-sales-note"></dd></div></dl></section></div><section class="item-detail-text"><div><span class="detail-label">商品描述</span><p id="detail-description"></p></div><div><span class="detail-label">備註</span><p id="detail-notes"></p></div></section><div class="item-detail-footer"><div class="item-detail-actions"><button type="button" class="button" data-detail-edit>編輯</button><button type="button" class="button danger" data-detail-delete>刪除</button></div></div>`; }
