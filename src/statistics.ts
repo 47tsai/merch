@@ -5,7 +5,7 @@ import { currentYear } from './utils/date';
 import { escapeHtml, qs, qsa } from './utils/dom';
 import { formatMoney, formatPercent, formatQuantity } from './utils/format';
 
-const chartColors = ['#0FA3A3','#39BDBD','#5ACACA','#087D7D','#0B8E8E','#A4E5E5'];
+const chartColors = ['#5B4BC4','#8879E8','#A99FFF','#4636A5','#6B5BD1','#C9C2FF'];
 let selectedYear = currentYear();
 
 function chartSvg(chart: Chart, large = false): string {
