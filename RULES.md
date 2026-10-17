@@ -48,8 +48,8 @@
 - 色彩、Typography、Spacing、Radius、Border、Surface、Focus、Shadow 等以 semantic design tokens 為單一來源，不建立 page-specific token alias。
 - 共用 Button、Input、Select、Segmented Control、Card、Panel、Modal、Badge、Feedback 優先使用 shared foundation，不為單一頁重建第二套元件。
 - Desktop、Tablet、Mobile，以及 Light、Dark 都屬正式 UI contract。
-- viewport responsive 規則集中於 `src/responsive-refinement.css`，不得散落在各頁 CSS。
-- Mobile Navigation 採品牌 Header + 可水平滑動的頁面導覽列，不保留 Desktop sidebar 佔位空間。
+- 正式介面的 viewport responsive 規則集中於 `src/merch.css`，不得保留第二套 preview UI 或重複 refinement stylesheet。
+- Mobile Navigation 採固定底部、可水平滑動且具文字標籤的導覽列，支援 safe area，不保留 Desktop sidebar 佔位空間。
 - 互動需處理 hover、focus-visible、disabled、loading、empty、error。
 - HTML `id` 必須唯一。
 - 動態互動優先使用事件 delegation，不在每次 render 重複新增 document listener。
