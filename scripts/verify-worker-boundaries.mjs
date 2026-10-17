@@ -4,6 +4,7 @@ const r2Entry = fs.readFileSync('worker/src/r2-entry.ts', 'utf8');
 const worker = fs.readFileSync('worker/src/index.ts', 'utf8');
 const deploy = fs.readFileSync('.github/workflows/deploy.yml', 'utf8');
 const verifyWorkflow = fs.readFileSync('.github/workflows/verify.yml', 'utf8');
+const oauthCallback = fs.readFileSync('public/oauth-callback.html', 'utf8');
 
 const outerPut = r2Entry.indexOf("if (path && (request.method === 'PUT' || request.method === 'DELETE'))");
 const outerAuth = r2Entry.indexOf('if (!(await authorized(request, env)))', outerPut);
@@ -68,6 +69,10 @@ if (deploy.includes('ADMIN_SECRET') || deploy.includes('MERCH_ADMIN_SECRET')) {
 }
 if (!deploy.includes('CHI_AUTH_CLIENT_ID') || !deploy.includes('secret put CHI_AUTH_CLIENT_ID')) {
   throw new Error('Deployment must configure the Chi Auth OAuth client ID.');
+}
+
+if (!oauthCallback.includes("tokenUrl.searchParams.set('client_id', cfg.clientId)") || !oauthCallback.includes("fetch(tokenUrl.toString()")) {
+  throw new Error('Chi Auth token exchange must include client_id in the URL so the CORS preflight can resolve the registered client.');
 }
 
 console.log('Worker boundary, deployment gate, job permission, and Wrangler pin checks passed.');
