@@ -1,14 +1,24 @@
-.works-management { margin-top:var(--space-5); }
-.works-management .section-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:var(--toolbar-gap); }
-.works-management-grid { display:grid; grid-template-columns:minmax(260px,.8fr) minmax(0,1.2fr); gap:var(--space-5); margin-top:var(--space-4); }
-.works-management-form { display:grid; gap:var(--form-gap); align-content:start; }
-.works-management-form h3, .works-management-grid > div > h3 { margin:0 0 var(--space-2); }
-.works-management-form-actions { display:flex; flex-wrap:wrap; gap:var(--toolbar-gap); }
-#works-management-list { min-width:0; }
-#works-management-list .data-list-row { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:var(--toolbar-gap); min-width:0; padding:var(--space-3) 0; border-bottom:var(--border-width) solid var(--color-border); }
-#works-management-list .data-list-row:last-child { border-bottom:0; }
-#works-management-list .data-list-main { min-width:0; display:grid; gap:var(--space-1); }
-#works-management-list .data-list-main strong, #works-management-list .data-list-main span, #works-management-list .data-list-main small { min-width:0; overflow-wrap:anywhere; word-break:break-word; }
-#works-management-list .data-list-main span, #works-management-list .data-list-main small { color:var(--color-text-muted); }
-#works-management-list .data-list-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:var(--space-2); width:auto; }
-#works-management-list .data-list-actions .button { min-width:84px; white-space:nowrap; }
+/* Works list is a sub-section of Management, not a separate visual system. */
+.works-management{margin-top:var(--chi-space-5)}
+.works-management .section-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--chi-space-4)}
+.works-management-grid{display:grid;grid-template-columns:minmax(260px,.8fr) minmax(0,1.2fr);gap:var(--chi-space-6);margin-top:var(--chi-space-4)}
+.works-management-form{display:grid;gap:var(--chi-space-3);align-content:start;min-width:0}
+.works-management-form h3,.works-management-grid>div>h3{margin:0 0 var(--chi-space-2);color:var(--chi-color-text-strong)}
+.works-management-form-actions{display:flex;flex-wrap:wrap;gap:var(--chi-space-2)}
+#works-management-list{min-width:0}
+#works-management-list .data-list-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:var(--chi-space-3);min-width:0;padding:var(--chi-space-4) 0;border-bottom:1px solid var(--chi-color-border)}
+#works-management-list .data-list-row:first-child{padding-top:0}
+#works-management-list .data-list-row:last-child{border-bottom:0}
+#works-management-list .data-list-main{min-width:0;display:grid;gap:var(--chi-space-1)}
+#works-management-list .data-list-main strong{color:var(--chi-color-text-strong);font-size:var(--chi-text-sm)}
+#works-management-list .data-list-main strong,#works-management-list .data-list-main span,#works-management-list .data-list-main small{min-width:0;overflow-wrap:anywhere;word-break:break-word}
+#works-management-list .data-list-main span,#works-management-list .data-list-main small{color:var(--chi-color-text-muted);font-size:var(--chi-text-xs)}
+#works-management-list .data-list-main small{font-family:var(--chi-font-mono)}
+#works-management-list .data-list-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:var(--chi-space-2);width:auto}
+#works-management-list .data-list-actions .button{display:inline-flex;align-items:center;justify-content:center;min-width:72px;min-height:36px;padding:0 var(--chi-space-3);border:1px solid var(--chi-color-border-strong);border-radius:var(--chi-radius-md);background:var(--chi-color-surface);color:var(--chi-color-text);font:inherit;font-size:var(--chi-text-xs);font-weight:650;white-space:nowrap;cursor:pointer}
+#works-management-list .data-list-actions .button:hover:not(:disabled){border-color:var(--chi-color-accent-border);background:var(--chi-color-accent-soft);color:var(--chi-color-accent)}
+#works-management-list .data-list-actions .button:focus-visible{outline:3px solid var(--chi-color-focus);outline-offset:2px}
+#works-management-list .data-list-actions .button:disabled{opacity:.5;cursor:not-allowed}
+#works-management-list .data-list-actions .button.danger{border-color:var(--chi-color-danger-border);color:var(--chi-color-danger)}
+#works-management-list .data-list-actions .button.danger:hover:not(:disabled){background:var(--chi-color-danger-soft)}
+@media(max-width:560px){.works-management-grid{grid-template-columns:minmax(0,1fr)}#works-management-list .data-list-row{grid-template-columns:minmax(0,1fr);align-items:start}#works-management-list .data-list-actions{justify-content:stretch}#works-management-list .data-list-actions .button{flex:1}}
