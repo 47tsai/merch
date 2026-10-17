@@ -129,13 +129,12 @@ data/
 ## 5. Shared UI layer
 
 ```text
-src/design-tokens.css
-        │
-        ├── src/theme.css / theme.ts / theme-refinement.css
-        │
-        ├── src/shared-components.css
-        ├── src/controls.css
-        └── src/responsive-refinement.css
+src/main.ts
+   ├── shared base styles
+   └── src/merch.css (loaded last)
+          ├── MERCH visual system
+          ├── semantic token aliases
+          └── responsive layout / mobile bottom navigation
 ```
 
 其他 shared systems：
@@ -146,7 +145,7 @@ src/design-tokens.css
 - `src/utils/toast.ts`：舊 Toast API 的 compatibility forwarding，不建立第二套視覺層。
 - `src/image-viewer.*`：圖片 viewer。
 
-Page CSS 只負責該頁獨有的 layout / visual rules。Viewport breakpoint 統一由 `responsive-refinement.css` 管理。
+正式首頁 `index.html` 是唯一前端入口。`src/main.ts` 載入共用樣式後，最後載入 `src/merch.css` 作為正式 UI 視覺與 responsive 規則。舊的 preview entry 與重複 refinement stylesheet 已移除。
 
 ## 6. Worker boundary
 
@@ -225,7 +224,7 @@ Scripts 分成四類：
 | remote GitHub mutation | Worker |
 | image binary | R2 |
 | generated collection | build scripts |
-| shared visual foundation | shared CSS / theme / responsive |
+| shared visual foundation | `src/main.ts` 與 `src/merch.css` / theme styles |
 | 未完成工作 | `TODO.md` |
 | 長期規則 | `RULES.md` |
 | Item schema | `ITEM_SCHEMA.md` |
