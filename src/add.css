@@ -1,48 +1,261 @@
-.add-form{display:grid;gap:var(--section-gap)}
-[data-page="add"]{width:100%;max-width:960px}
-[data-page="add"] .page-heading{margin-bottom:var(--space-6)}
-[data-page="add"] .add-form{width:100%;max-width:960px}
-[data-page="add"] .add-section{box-shadow:var(--shadow-sm)}
-.add-section{padding:var(--space-5);border:var(--border-width) solid var(--color-border);border-radius:var(--radius-lg);background:var(--color-surface)}
-.add-section-heading{display:flex;gap:var(--space-3);align-items:flex-start;margin-bottom:var(--space-4)}
-.add-section-heading>span{font-size:var(--font-size-sm);font-weight:var(--font-weight-extrabold);color:var(--color-text-muted);padding-top:var(--space-1)}
-.add-section-heading h2{margin:0 0 var(--space-1)}
-.add-section-heading p{margin:0;color:var(--color-text-muted)}
-.add-grid label b{color:var(--brand)}
-.add-actions{display:flex;justify-content:flex-end;gap:var(--toolbar-gap);padding:var(--space-1) 0 var(--space-4)}
-.add-actions .button{min-width:120px;text-align:center}
-
-/* Chi Design System: add-page composition */
-.add-page{width:min(100%, 1040px);margin-inline:auto}
-.add-page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--chi-space-5);margin-bottom:var(--chi-space-7)}
-.add-page-header h1{margin:var(--chi-space-2) 0 0;color:var(--chi-color-text-strong);font-size:clamp(1.8rem,3vw,2.4rem);line-height:1.2;letter-spacing:-.035em}
-.add-page-description{max-width:58ch;margin:var(--chi-space-3) 0 0;color:var(--chi-color-text-muted);line-height:1.75}
-.add-page-header>.chi-badge{flex-shrink:0;margin-top:var(--chi-space-2)}
-.add-form{display:grid;gap:var(--chi-space-5);width:100%;max-width:none}
-.add-section.chi-panel{padding:clamp(1.1rem,2.5vw,1.65rem);border:1px solid var(--chi-color-border);border-radius:var(--chi-radius-lg, 16px);background:var(--chi-color-surface);box-shadow:var(--chi-shadow-sm, 0 2px 8px rgb(20 30 55 / 4%))}
-.add-section-heading{display:flex;align-items:flex-start;gap:var(--chi-space-3);margin:0 0 var(--chi-space-5)}
-.add-section-number{display:grid;place-items:center;flex:0 0 2.25rem;min-height:2.25rem;border:1px solid var(--chi-color-accent-border);border-radius:var(--chi-radius-md, 10px);background:var(--chi-color-accent-soft);color:var(--chi-color-accent);font-size:var(--chi-text-sm);font-weight:750;font-variant-numeric:tabular-nums}
-.add-section-heading h2{margin:0;color:var(--chi-color-text-strong);font-size:1.1rem;line-height:1.4}
-.add-section-heading p{margin:.35rem 0 0;color:var(--chi-color-text-muted);font-size:var(--chi-text-sm);line-height:1.7}
-.add-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--chi-space-4)}
-.add-grid .chi-field{display:grid;align-content:start;gap:var(--chi-space-2);min-width:0}
-.add-grid .wide{grid-column:1/-1}
-.add-grid .chi-label b{color:var(--chi-color-accent);font-weight:750}
-.add-grid .chi-input,.add-grid .chi-select,.add-grid .chi-textarea{width:100%;min-width:0}
-.add-grid .chi-textarea{resize:vertical;min-height:5.5rem}
-.add-form-footer{display:flex;justify-content:flex-end;align-items:center;gap:var(--chi-space-3);padding-bottom:var(--chi-space-6)}
-.add-form-footer .chi-button{min-height:2.75rem}
-.add-form [aria-invalid=true]{border-color:var(--chi-color-danger)}
-.add-form [data-form-errors]{margin-top:var(--chi-space-3)}
-#add-result .modal-dialog{max-width:34rem}
-#add-result .modal-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:var(--chi-space-3)}
-@media(max-width:640px){
- .add-page-header{gap:var(--chi-space-3);margin-bottom:var(--chi-space-5)}
- .add-page-header>.chi-badge{font-size:var(--chi-text-xs)}
- .add-grid{grid-template-columns:minmax(0,1fr);gap:var(--chi-space-4)}
- .add-grid .wide{grid-column:auto}
- .add-section.chi-panel{padding:1rem}
- .add-form-footer{position:sticky;bottom:0;z-index:3;margin-inline:-.25rem;padding:var(--chi-space-3);border:1px solid var(--chi-color-border);border-radius:var(--chi-radius-lg, 16px);background:var(--chi-color-surface-glass);backdrop-filter:blur(16px)}
- .add-form-footer .chi-button{flex:1;justify-content:center}
+/* Add page: composition only. Shared controls and semantic states come from Chi foundation. */
+.add-page {
+  width: min(100%, 1120px);
+  margin-inline: auto;
+  padding-bottom: var(--chi-space-8);
 }
-@media(prefers-reduced-motion:reduce){.add-page *{scroll-behavior:auto}}
+
+.add-page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--chi-space-5);
+  margin-bottom: var(--chi-space-8);
+}
+
+.add-page-header > div { min-width: 0; }
+
+.add-page-header .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  color: var(--chi-color-accent);
+  font-size: var(--chi-text-xs);
+  font-weight: 750;
+  letter-spacing: .12em;
+}
+
+.add-page-header h1 {
+  margin: var(--chi-space-2) 0 0;
+  color: var(--chi-color-text-strong);
+  font-size: var(--chi-text-display);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -.045em;
+}
+
+.add-page-description {
+  max-width: 60ch;
+  margin: var(--chi-space-3) 0 0;
+  color: var(--chi-color-text-muted);
+  font-size: var(--chi-text-sm);
+  line-height: 1.8;
+}
+
+.add-page-header > .chi-badge {
+  flex: 0 0 auto;
+  margin-bottom: .25rem;
+}
+
+.add-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: var(--chi-space-5);
+  width: 100%;
+  max-width: none;
+}
+
+.add-section.chi-panel {
+  min-width: 0;
+  padding: clamp(1.1rem, 2.2vw, 1.65rem);
+  border: 1px solid var(--chi-color-border);
+  border-radius: var(--chi-radius-lg);
+  background: var(--chi-color-surface);
+  box-shadow: var(--chi-shadow-sm);
+}
+
+.add-section:first-child { grid-column: 1 / -1; }
+
+.add-section-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--chi-space-3);
+  margin: 0 0 var(--chi-space-5);
+}
+
+.add-section-number {
+  display: grid;
+  place-items: center;
+  flex: 0 0 2.25rem;
+  min-height: 2.25rem;
+  border: 1px solid var(--chi-color-accent-border);
+  border-radius: var(--chi-radius-md);
+  background: var(--chi-color-accent-soft);
+  color: var(--chi-color-accent);
+  font-size: var(--chi-text-sm);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.add-section-heading > div { min-width: 0; }
+
+.add-section-heading h2 {
+  margin: 0;
+  color: var(--chi-color-text-strong);
+  font-size: var(--chi-text-lg);
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.add-section-heading p {
+  margin: .35rem 0 0;
+  color: var(--chi-color-text-muted);
+  font-size: var(--chi-text-sm);
+  line-height: 1.7;
+}
+
+.add-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: var(--chi-space-4);
+}
+
+.add-grid .chi-field {
+  display: grid;
+  align-content: start;
+  gap: var(--chi-space-2);
+  min-width: 0;
+}
+
+.add-grid .wide { grid-column: 1 / -1; }
+
+.add-grid .chi-label {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: .25rem;
+  color: var(--chi-color-text);
+  font-size: var(--chi-text-sm);
+  font-weight: 650;
+  line-height: 1.5;
+}
+
+.add-grid .chi-label b {
+  color: var(--chi-color-danger);
+  font-size: var(--chi-text-xs);
+  font-weight: 750;
+}
+
+.add-grid .chi-input,
+.add-grid .chi-select,
+.add-grid .chi-textarea {
+  width: 100%;
+  min-width: 0;
+}
+
+.add-grid .chi-textarea {
+  min-height: 6.5rem;
+  resize: vertical;
+}
+
+.add-grid .chi-input,
+.add-grid .chi-select,
+.add-grid .chi-textarea {
+  transition: border-color var(--chi-transition-fast), box-shadow var(--chi-transition-fast), background var(--chi-transition-fast);
+}
+
+.add-form [aria-invalid="true"] {
+  border-color: var(--chi-color-danger);
+}
+
+.add-form [data-form-errors] {
+  grid-column: 1 / -1;
+  margin-top: var(--chi-space-3);
+}
+
+.add-form-footer {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--chi-space-3);
+  padding: var(--chi-space-1) 0 var(--chi-space-4);
+}
+
+.add-form-footer .chi-button { min-height: 2.75rem; }
+
+.add-form-footer .chi-button--primary {
+  min-width: 10rem;
+  box-shadow: var(--chi-shadow-accent);
+}
+
+.add-form-footer .chi-button--primary:hover {
+  box-shadow: var(--chi-shadow-accent-hover);
+}
+
+.add-form[aria-busy="true"] .add-form-footer {
+  opacity: .8;
+}
+
+#add-result .modal-dialog {
+  width: min(100% - 2rem, 34rem);
+  max-width: 34rem;
+}
+
+#add-result .modal-dialog h2 {
+  margin: var(--chi-space-2) 0;
+  color: var(--chi-color-text-strong);
+  font-size: var(--chi-text-xl);
+  line-height: 1.35;
+}
+
+#add-result-item {
+  overflow-wrap: anywhere;
+  color: var(--chi-color-text-muted);
+  line-height: 1.7;
+}
+
+#add-result .modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--chi-space-3);
+  margin-top: var(--chi-space-5);
+}
+
+@media (max-width: 860px) {
+  .add-form { gap: var(--chi-space-4); }
+  .add-section.chi-panel { padding: var(--chi-space-4); }
+  .add-grid { gap: var(--chi-space-3); }
+}
+
+@media (max-width: 640px) {
+  .add-page { padding-bottom: var(--chi-space-5); }
+  .add-page-header {
+    align-items: flex-start;
+    gap: var(--chi-space-3);
+    margin-bottom: var(--chi-space-5);
+  }
+  .add-page-header h1 { font-size: clamp(1.75rem, 7vw, 2.15rem); }
+  .add-page-description { margin-top: var(--chi-space-2); font-size: var(--chi-text-sm); }
+  .add-page-header > .chi-badge { margin-top: .2rem; font-size: var(--chi-text-xs); }
+  .add-form { grid-template-columns: minmax(0, 1fr); gap: var(--chi-space-4); }
+  .add-section:first-child { grid-column: auto; }
+  .add-section.chi-panel { padding: var(--chi-space-4); }
+  .add-section-heading { margin-bottom: var(--chi-space-4); }
+  .add-grid { grid-template-columns: minmax(0, 1fr); gap: var(--chi-space-4); }
+  .add-grid .wide { grid-column: auto; }
+  .add-form-footer {
+    position: sticky;
+    bottom: max(.5rem, env(safe-area-inset-bottom));
+    z-index: 3;
+    justify-content: stretch;
+    margin-inline: -.25rem;
+    padding: var(--chi-space-3);
+    border: 1px solid var(--chi-color-border);
+    border-radius: var(--chi-radius-lg);
+    background: var(--chi-color-surface-glass);
+    box-shadow: var(--chi-shadow-md);
+    backdrop-filter: blur(16px);
+  }
+  .add-form-footer .chi-button { flex: 1 1 0; min-width: 0; padding-inline: var(--chi-space-3); }
+  .add-form-footer .chi-button--primary { min-width: 0; }
+  #add-result .modal-actions { display: grid; grid-template-columns: 1fr; }
+  #add-result .modal-actions .chi-button { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .add-form *, .add-page * { scroll-behavior: auto; transition-duration: 0.01ms !important; }
+}
