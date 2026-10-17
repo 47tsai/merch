@@ -2,3 +2,58 @@
 @media (max-width:1000px){.shipping-layout{grid-template-columns:minmax(0,1fr);gap:16px}.shipping-editor,.shipping-list{min-width:0}.shipping-items{max-height:320px}}
 @media (max-width:700px){.shipping-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}.shipping-editor,.shipping-list{padding:15px;border-radius:13px}.shipping-editor form{gap:14px}.shipping-items-toolbar{grid-template-columns:minmax(0,1fr);gap:8px}.shipping-item-search{min-width:0}.shipping-item-search input{min-width:0;width:100%}.shipping-item-filter{align-self:stretch;padding:9px 0 0;white-space:normal}.shipping-items{max-height:300px;margin-top:8px}.shipping-item{padding:10px 11px;align-items:flex-start}.shipping-item input{margin-top:3px;flex:0 0 auto}.shipping-item span{min-width:0;overflow-wrap:anywhere;word-break:break-word}.shipping-items-pagination,.shipping-records-pagination{display:grid;grid-template-columns:1fr 1fr;gap:7px}.shipping-items-pagination>span:first-child,.shipping-records-pagination>span:first-child{grid-column:1/-1;text-align:center}.shipping-items-pagination .button,.shipping-records-pagination .button{width:100%;min-width:0}.shipping-items-pagination>span:not(:first-child),.shipping-records-pagination>span:not(:first-child){display:flex;align-items:center;justify-content:center;min-height:40px}.shipping-actions,.shipping-card-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.shipping-actions .button,.shipping-card-actions .button{width:100%;min-width:0}.shipping-card{padding:12px}.shipping-card>div:first-child{align-items:flex-start;gap:10px}.shipping-card>div:first-child strong{min-width:0;overflow-wrap:anywhere}.shipping-card>div:first-child span{flex:0 0 auto}.shipping-card-actions{margin-top:10px}.shipping-detail{padding:7px}.shipping-detail-dialog{width:100%;max-height:calc(100vh - 14px);padding:15px;border-radius:15px}.shipping-detail-dialog>.panel-heading{align-items:flex-start;gap:10px}.shipping-detail-dialog>.panel-heading .button{flex:0 0 auto;min-height:40px}.shipping-detail-grid{grid-template-columns:1fr;gap:8px;margin:12px 0}.shipping-detail-grid>div{padding:11px 12px}.shipping-detail-note{padding:11px 12px}.shipping-detail-items li{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;padding:10px 11px}.shipping-detail-items li strong{font-size:12px}.shipping-detail-items li span{font-size:12px}.shipping-detail-items h3{margin-top:15px}}
 @media (max-width:360px){.shipping-editor,.shipping-list{padding:13px}.shipping-item{padding:9px 10px}.shipping-card>div:first-child{display:grid;grid-template-columns:1fr}.shipping-card>div:first-child span{font-size:11px}.shipping-card-actions{grid-template-columns:1fr}.shipping-detail-dialog{padding:12px}.shipping-detail-dialog>.panel-heading .button{padding:0 11px}.shipping-detail-grid>div{padding:10px}.shipping-detail-items li{padding:9px 10px}}
+/* Chi Design System: shipping page */
+.shipping-page{width:min(100%,1180px);margin-inline:auto}
+.shipping-page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--chi-space-5);margin-bottom:var(--chi-space-6)}
+.shipping-page-header h1{margin:var(--chi-space-2) 0 0;color:var(--chi-color-text-strong);font-size:clamp(1.8rem,3vw,2.4rem);line-height:1.2;letter-spacing:-.035em}
+.shipping-page-header p{margin:var(--chi-space-3) 0 0;color:var(--chi-color-text-muted);line-height:1.75}
+.shipping-page-header>.chi-badge{flex-shrink:0;margin-top:var(--chi-space-2)}
+.shipping-layout{grid-template-columns:minmax(0,.88fr) minmax(0,1.12fr);gap:var(--chi-space-5);align-items:start}
+.shipping-editor.chi-panel,.shipping-list.chi-panel{min-width:0;padding:clamp(1rem,2vw,1.5rem);border:1px solid var(--chi-color-border);border-radius:var(--chi-radius-lg,16px);background:var(--chi-color-surface);box-shadow:var(--chi-shadow-sm,0 2px 8px rgb(20 30 55 / 4%))}
+.shipping-panel-heading{display:flex;justify-content:space-between;gap:var(--chi-space-3);margin-bottom:var(--chi-space-5)}
+.shipping-panel-heading h2{margin:var(--chi-space-2) 0 0;color:var(--chi-color-text-strong);font-size:1.25rem}
+.shipping-panel-heading p{margin:var(--chi-space-2) 0 0;color:var(--chi-color-text-muted);font-size:var(--chi-text-sm);line-height:1.7}
+.shipping-editor form{gap:var(--chi-space-4)}
+.shipping-editor .chi-field{display:grid;gap:var(--chi-space-2);min-width:0}
+.shipping-editor .chi-input,.shipping-editor .chi-textarea{width:100%;min-width:0}
+.shipping-editor .chi-textarea{resize:vertical;min-height:5.5rem}
+.shipping-editor .chi-label b{color:var(--chi-color-accent)}
+.shipping-form-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--chi-space-3)}
+.shipping-linked-items{min-width:0;padding-top:var(--chi-space-2)}
+.shipping-subheading{display:flex;align-items:baseline;justify-content:space-between;gap:var(--chi-space-3);flex-wrap:wrap}
+.shipping-subheading h3{margin:0;color:var(--chi-color-text-strong);font-size:1rem}
+.shipping-subheading>span{color:var(--chi-color-text-muted);font-size:var(--chi-text-xs)}
+.shipping-items-toolbar{gap:var(--chi-space-3);margin-block:var(--chi-space-3)}
+.shipping-item-search,.shipping-item-filter{gap:var(--chi-space-2)}
+.shipping-items{gap:var(--chi-space-2);max-height:320px;margin-top:var(--chi-space-3)}
+.shipping-item{gap:var(--chi-space-3);padding:var(--chi-space-3);border:1px solid var(--chi-color-border);border-radius:var(--chi-radius-md,12px);background:var(--chi-color-surface);line-height:1.5}
+.shipping-item:has(input:checked){border-color:var(--chi-color-accent-border);background:var(--chi-color-accent-soft)}
+.shipping-item input{accent-color:var(--chi-color-accent)}
+.shipping-actions{justify-content:flex-end;gap:var(--chi-space-3);margin-top:var(--chi-space-2)}
+.shipping-actions .chi-button{min-height:2.7rem}
+.shipping-list{align-content:start;gap:var(--chi-space-4)}
+.shipping-list .shipping-panel-heading{margin-bottom:var(--chi-space-2)}
+.shipping-records{display:grid;gap:var(--chi-space-3);min-width:0}
+.shipping-card{padding:var(--chi-space-4);border:1px solid var(--chi-color-border);border-radius:var(--chi-radius-md,12px);background:var(--chi-color-surface);transition:border-color .16s,background .16s}
+.shipping-card:hover{border-color:var(--chi-color-accent-border);background:var(--chi-color-page-soft)}
+.shipping-card>div:first-child{align-items:baseline}
+.shipping-card>div:first-child strong{color:var(--chi-color-text-strong);font-size:1.05rem;font-variant-numeric:tabular-nums}
+.shipping-card>div:first-child span,.shipping-card small{color:var(--chi-color-text-muted);font-size:var(--chi-text-xs)}
+.shipping-card p{color:var(--chi-color-text-muted);line-height:1.65}
+.shipping-card-actions .button,.shipping-items-pagination .button,.shipping-records-pagination .button{min-height:2.35rem;padding-inline:var(--chi-space-3);border:1px solid var(--chi-color-border);border-radius:var(--chi-radius-md,10px);background:var(--chi-color-surface);color:var(--chi-color-text);font-weight:650;cursor:pointer}
+.shipping-card-actions .button:hover,.shipping-items-pagination .button:hover,.shipping-records-pagination .button:hover{border-color:var(--chi-color-accent-border);color:var(--chi-color-accent)}
+.shipping-card-actions .button:disabled,.shipping-items-pagination .button:disabled,.shipping-records-pagination .button:disabled{opacity:.5;cursor:not-allowed}
+.shipping-items-pagination,.shipping-records-pagination{gap:var(--chi-space-3);margin-top:var(--chi-space-3);color:var(--chi-color-text-muted)}
+.shipping-editor .empty-state,.shipping-list .empty-state{padding:var(--chi-space-6);border:1px dashed var(--chi-color-border-strong);border-radius:var(--chi-radius-md,12px);color:var(--chi-color-text-muted);text-align:center}
+@media(max-width:900px){.shipping-layout{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:560px){
+ .shipping-page-header{gap:var(--chi-space-3);margin-bottom:var(--chi-space-4)}
+ .shipping-page-header>.chi-badge{font-size:var(--chi-text-xs)}
+ .shipping-editor.chi-panel,.shipping-list.chi-panel{padding:1rem}
+ .shipping-form-row{grid-template-columns:minmax(0,1fr)}
+ .shipping-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+ .shipping-actions .chi-button{width:100%;justify-content:center}
+ .shipping-card{padding:var(--chi-space-3)}
+ .shipping-card-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(prefers-reduced-motion:reduce){.shipping-page *{scroll-behavior:auto;transition:none!important}}
