@@ -82,7 +82,7 @@ function renderCollection(store: MerchStore) {
   const query = ui.collectionQuery.trim().toLowerCase();
   const workCode = ui.collectionWork === 'all'
     ? 'all'
-    : (store.snapshot.works.find((work) => work.id === ui.collectionWork)?.code || ui.collectionWork);
+    : (store.snapshot.works.find((w) => w.id === ui.collectionWork)?.code || ui.collectionWork);
 
   let filtered = items
     .filter((item) => matchesItemQuery(item, query))
