@@ -12,7 +12,7 @@
  --chi-gradient-start:#76a7ff; --chi-gradient-mid:#4a88fc; --chi-gradient-end:#286fe8; --chi-color-hero-start:#edf2fc; --chi-color-hero-mid:#f7f9ff; --chi-color-hero-glow:rgb(74 136 252 / 20%); --chi-color-hero-glow-end:rgb(219 234 254 / 16%); --chi-color-avatar-start:#dbeafe; --chi-color-avatar-end:#eaf2ff; --chi-color-avatar-text:#2457a8; --chi-color-tooltip-surface:#242630; --chi-color-tooltip-text:#fff; --chi-color-on-danger:#fff; --chi-color-footer-hover:#fff; --chi-color-footer-divider:rgb(255 255 255 / 12%); --chi-color-footer-border:rgb(255 255 255 / 22%); --chi-color-footer-menu-surface:#202127; --chi-color-footer-menu-border:#34343d; --chi-color-footer-menu-text:#f5f5f7; --chi-color-footer-menu-hover:#34343d; --chi-color-footer-muted:#8c8c96; --chi-color-shimmer:rgb(255 255 255 / 55%); --chi-shadow-accent-hover:0 6px 20px rgb(74 136 252 / 38%);
  --chi-content-width:1080px; --chi-reading-width:448px; --chi-control-height:44px; --chi-transition-fast:180ms ease;
 }
-[data-chi-theme=dark] {
+html[data-theme='dark'], [data-chi-theme=dark] {
  color-scheme:dark;
  --chi-color-page:#17191f; --chi-color-page-soft:#1b1e27; --chi-color-surface:#20232c; --chi-color-surface-glass:rgb(32 35 44 / 88%); --chi-color-surface-raised:#272b36; --chi-color-surface-muted:#282c38;
  --chi-color-text:#e8eaf1; --chi-color-text-strong:#f7f8fc; --chi-color-text-muted:#b2b8c7; --chi-color-text-subtle:#8c94a6; --chi-color-border:#353a49; --chi-color-border-strong:#4b5265;
