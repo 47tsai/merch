@@ -155,13 +155,23 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           MERCH_GITHUB_TOKEN: ${{ secrets.MERCH_GITHUB_TOKEN }}
         run: printf '%s' "$MERCH_GITHUB_TOKEN" | npx wrangler@4.151.0 secret put GITHUB_TOKEN
-      - name: Set Worker Admin Secret
+      - name: Validate Chi Auth Client ID
+        env:
+          CHI_AUTH_CLIENT_ID: ${{ secrets.CHI_AUTH_CLIENT_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "$CHI_AUTH_CLIENT_ID" ]; then
+            echo 'CHI_AUTH_CLIENT_ID is not configured.'
+            exit 1
+          fi
+          echo 'Chi Auth client ID is configured.'
+      - name: Set Worker Chi Auth Client ID
         working-directory: worker
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          MERCH_ADMIN_SECRET: ${{ secrets.MERCH_ADMIN_SECRET }}
-        run: printf '%s' "$MERCH_ADMIN_SECRET" | npx wrangler@4.151.0 secret put ADMIN_SECRET
+          CHI_AUTH_CLIENT_ID: ${{ secrets.CHI_AUTH_CLIENT_ID }}
+        run: printf '%s' "$CHI_AUTH_CLIENT_ID" | npx wrangler@4.151.0 secret put CHI_AUTH_CLIENT_ID
       - name: Verify Worker Secrets
         working-directory: worker
         env:
@@ -171,7 +181,7 @@ jobs:
           set -euo pipefail
           secrets=$(npx wrangler@4.151.0 secret list --format json)
           echo "$secrets" | jq -e 'map(.name) | index("GITHUB_TOKEN")' >/dev/null
-          echo "$secrets" | jq -e 'map(.name) | index("ADMIN_SECRET")' >/dev/null
+          echo "$secrets" | jq -e 'map(.name) | index("CHI_AUTH_CLIENT_ID")' >/dev/null
           echo 'Worker secrets are configured.'
       - name: Deploy Worker
         working-directory: worker
