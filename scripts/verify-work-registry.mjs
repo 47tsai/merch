@@ -27,7 +27,10 @@ const statistics = read('src/statistics-data.ts');
 const collection = read('src/main.ts');
 const generator = read('scripts/generate-collection.mjs');
 
-assert.match(main, /works\.map\(\(w\)/, '首頁作品統計必須由 Store works 動態產生');
+const homeEnhancements = read('src/home-enhancements.ts');
+assert.match(homeEnhancements, /return store\.snapshot\.works\s*\.map\(\(work\) =>/, '首頁作品排行必須由 Store works registry 動態產生');
+assert.match(main, /set\('total'/, '首頁摘要必須由 Store 計算持有件數');
+assert.match(main, /set\('spending'/, '首頁摘要必須由 Store 計算累計支出');
 assert.match(collection, /snapshot\.works\.find\(\(w\) => w\.id === ui\.collectionWork\)/, 'Collection 作品篩選必須依 Work ID 查詢 Store registry');
 assert.match(add, /store\.snapshot\.works\.map\(work =>/, '新增頁作品選單必須由 Store works 動態產生');
 assert.match(management, /snapshot\.works/, '管理頁必須使用 Store works registry');
