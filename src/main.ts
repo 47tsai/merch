@@ -35,7 +35,21 @@ let itemCardDelegationRoot: HTMLElement | null = null;
 function setupItemCardDelegation(): void { const root = document.querySelector<HTMLElement>('#app') || document.body; if (itemCardDelegationRoot === root) return; itemCardDelegationRoot = root; root.addEventListener('click', (event) => { const target = event.target as Element | null; const card = target?.closest<HTMLElement>('.item-card'); if (card && root.contains(card)) openItemCard(card); }); root.addEventListener('keydown', (event) => { const keyEvent = event as KeyboardEvent; if (keyEvent.key !== 'Enter' && keyEvent.key !== ' ') return; const target = event.target as Element | null; const card = target?.closest<HTMLElement>('.item-card'); if (!card || !root.contains(card)) return; keyEvent.preventDefault(); openItemCard(card); }); }
 function optionList(items: Item[], valueOf: (item: Item) => string | string[] | undefined): string[] { return [...new Set(items.flatMap((item) => { const value = valueOf(item); if (Array.isArray(value)) return value.filter(Boolean); return value ? [value] : []; }))].sort((a, b) => a.localeCompare(b, 'zh-Hant')); }
 function setSelectOptions(id: string, allLabel: string, values: string[], selected: string) { const select = $<HTMLSelectElement>(`#${id}`); if (!select) return; select.innerHTML = [`<option value="all">${escapeHtml(allLabel)}</option>`, ...values.map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`)].join(''); select.value = values.includes(selected) ? selected : 'all'; }
-function syncDynamicCollectionOptions(store: MerchStore) { const { items, ui } = store.snapshot; setSelectOptions('filter-category', '全部類型', optionList(items, (item) => categoryName(item.category)), ui.collectionCategory); setSelectOptions('filter-character', '全部角色', optionList(items, (item) => item.characters), ui.collectionCharacter); setSelectOptions('filter-manufacturer', '全部廠商', optionList(items, (item) => item.manufacturer), ui.collectionManufacturer); }
+function syncDynamicCollectionOptions(store: MerchStore) {
+  const { items, ui, works } = store.snapshot;
+  setSelectOptions('filter-category', '全部類型', optionList(items, (item) => categoryName(item.category)), ui.collectionCategory);
+  setSelectOptions('filter-character', '全部角色', optionList(items, (item) => item.characters), ui.collectionCharacter);
+  setSelectOptions('filter-manufacturer', '全部廠商', optionList(items, (item) => item.manufacturer), ui.collectionManufacturer);
+
+  const workSelect = $('#filter-work') as HTMLSelectElement | null;
+  if (workSelect) {
+    workSelect.innerHTML = [
+      '<option value="all">全部作品</option>',
+      ...works.map((work) => `<option value="${escapeHtml(work.id)}">${escapeHtml(work.name)}</option>`)
+    ].join('');
+    workSelect.value = works.some((work) => work.id === ui.collectionWork) ? ui.collectionWork : 'all';
+  }
+}
 function renderHome(store: MerchStore) {
   const { items, shipping = [] } = store.snapshot;
   const total = items.reduce((sum, item) => sum + quantityOf(item), 0);
@@ -144,8 +158,69 @@ function ensureDetailModal() { if (detailModal) return detailModal; const modal 
 function setDetailText(modal: HTMLElement, id: string, value: unknown) { const node = modal.querySelector<HTMLElement>(`#${id}`); if (node) node.textContent = value == null || value === '' ? '—' : String(value); }
 function closeDetailModal() { if (detailModal) { detailModal.hidden = true; document.body.classList.remove('detail-modal-open'); } const target = `#/${detailUnderlyingRoute}`; if (location.hash !== target) location.hash = target; }
 function renderDetail(store: MerchStore, id: string) { const modal = ensureDetailModal(); const dialog = $('.item-detail-dialog', modal); if (!dialog) return; const item = store.snapshot.items.find((i) => i.id === id); if (!item) { dialog.setAttribute('data-detail-item-id', ''); dialog.innerHTML = `<div class="item-detail-error"><button type="button" class="item-detail-close" aria-label="關閉" data-detail-close><i class="fa-solid fa-xmark"></i></button><span class="eyebrow">404 / ITEM</span><h2>找不到收藏</h2><p>這個收藏不存在或已被移除。</p></div>`; modal.hidden = false; document.body.classList.add('detail-modal-open'); return; } if (!dialog.querySelector('#item-detail-title')) dialog.innerHTML = createDetailDialogHtml(); dialog.setAttribute('data-detail-item-id', item.id); const characters = item.characters?.join('、') || '—'; const series = item.series?.join('、') || '—'; const afterSalesStatus = item.afterSales?.status; const afterSalesNote = item.afterSales?.note; setDetailText(modal, 'item-detail-title', item.title || '收藏詳細資訊'); setDetailText(modal, 'item-detail-subtitle', `${item.workName || '—'} · ${characters}`); setDetailText(modal, 'detail-work', item.workName); setDetailText(modal, 'detail-series', series); setDetailText(modal, 'detail-character', characters); setDetailText(modal, 'detail-type', categoryName(item.category)); setDetailText(modal, 'detail-manufacturer', item.manufacturer); setDetailText(modal, 'detail-price', money(item.purchase?.price)); setDetailText(modal, 'detail-quantity', quantityOf(item)); setDetailText(modal, 'detail-total-price', item.purchase?.price == null ? undefined : money(itemValue(item))); setDetailText(modal, 'detail-currency', item.purchase?.currency); setDetailText(modal, 'detail-platform', item.purchase?.platform); setDetailText(modal, 'detail-purchase-date', dateText(item.purchase?.date)); setDetailText(modal, 'detail-expected-date', dateText(item.arrival?.expectedDate)); setDetailText(modal, 'detail-received-date', dateText(item.arrival?.receivedDate)); setDetailText(modal, 'detail-after-sales-status', afterSalesStatus); setDetailText(modal, 'detail-after-sales-note', afterSalesNote); setDetailText(modal, 'detail-description', item.description); setDetailText(modal, 'detail-notes', item.notes); const status = $('#item-detail-status', modal); if (status) status.innerHTML = item.status === 'received' ? '<span class="badge is-hidden" aria-hidden="true"></span>' : `<span class="badge">${escapeHtml(statusText(item.status))}</span>`; const image = $('#item-detail-image', modal); const cover = item.images?.find((entry) => entry.isCover) || item.images?.[0]; const imageSrc = itemImageSource(item, cover); if (image) image.innerHTML = imageSrc ? `<img src="${escapeHtml(imageSrc)}" alt="${escapeHtml(cover?.alt || item.title || '')}" onerror="this.style.display='none';this.parentElement.classList.add('image-fallback')">` : '<span class="image-placeholder">IMAGE</span>'; renderItemDetailShipping(dialog, item, store.snapshot.shipping ?? [], store.snapshot.items); modal.hidden = false; document.body.classList.add('detail-modal-open'); }
-function syncCollectionControls(store: MerchStore) { const { ui } = store.snapshot; const search = $('#collection-search') as HTMLInputElement | null; const work = $('#filter-work') as HTMLSelectElement | null; const status = $('#filter-status') as HTMLSelectElement | null; const category = $('#filter-category') as HTMLSelectElement | null; const character = $('#filter-character') as HTMLSelectElement | null; const manufacturer = $('#filter-manufacturer') as HTMLSelectElement | null; const sort = $('#sort') as HTMLSelectElement | null; if (search) search.value = ui.collectionQuery; if (work) work.value = ui.collectionWork; if (status) status.value = ui.collectionStatus === 'preorder' ? 'pending' : ui.collectionStatus; if (category) category.value = ui.collectionCategory; if (character) character.value = ui.collectionCharacter; if (manufacturer) manufacturer.value = ui.collectionManufacturer; if (sort) sort.value = ui.collectionSort; }
-function setupCollection(store: MerchStore) { const search = $('#collection-search') as HTMLInputElement | null; const work = $('#filter-work') as HTMLSelectElement | null; const status = $('#filter-status') as HTMLSelectElement | null; const category = $('#filter-category') as HTMLSelectElement | null; const character = $('#filter-character') as HTMLSelectElement | null; const manufacturer = $('#filter-manufacturer') as HTMLSelectElement | null; const sort = $('#sort') as HTMLSelectElement | null; search?.addEventListener('input', () => store.setUi({ collectionQuery: search.value, collectionPage: 1 })); work?.addEventListener('change', () => store.setUi({ collectionWork: work.value, collectionPage: 1 })); status?.addEventListener('change', () => store.setUi({ collectionStatus: status.value === 'pending' ? 'pending' : status.value, collectionPage: 1 })); category?.addEventListener('change', () => store.setUi({ collectionCategory: category.value, collectionPage: 1 })); character?.addEventListener('change', () => store.setUi({ collectionCharacter: character.value, collectionPage: 1 })); manufacturer?.addEventListener('change', () => store.setUi({ collectionManufacturer: manufacturer.value, collectionPage: 1 })); sort?.addEventListener('change', () => store.setUi({ collectionSort: sort.value as 'created' | 'title' | 'price', collectionPage: 1 })); $$('.view-button').forEach((button) => button.addEventListener('click', () => store.setUi({ collectionView: button.dataset.view === 'list' ? 'list' : 'cards' }))); const pagination = $('#collection-pagination'); pagination?.addEventListener('click', (event) => { const target = event.target as Element | null; const button = target?.closest<HTMLButtonElement>('[data-collection-page]'); if (!button || button.disabled) return; const direction = button.dataset.collectionPage; const current = store.snapshot.ui.collectionPage; store.setUi({ collectionPage: direction === 'next' ? current + 1 : Math.max(1, current - 1) }); window.requestAnimationFrame(() => { const collectionPage = document.querySelector<HTMLElement>('.page[data-page="collection"]'); if (!collectionPage) return; const top = collectionPage.getBoundingClientRect().top + window.scrollY; window.scrollTo({ top: Math.max(0, top), behavior: 'auto' }); }); }); }
+function syncCollectionControls(store: MerchStore) {
+  const { ui } = store.snapshot;
+  const search = $('#collection-search') as HTMLInputElement | null;
+  const clearSearch = $('#collection-search-clear') as HTMLButtonElement | null;
+  const work = $('#filter-work') as HTMLSelectElement | null;
+  const status = $('#filter-status') as HTMLSelectElement | null;
+  const category = $('#filter-category') as HTMLSelectElement | null;
+  const character = $('#filter-character') as HTMLSelectElement | null;
+  const manufacturer = $('#filter-manufacturer') as HTMLSelectElement | null;
+  const sort = $('#sort') as HTMLSelectElement | null;
+
+  if (search) search.value = ui.collectionQuery;
+  if (clearSearch) clearSearch.hidden = !ui.collectionQuery;
+  if (work) work.value = ui.collectionWork;
+  if (status) status.value = ui.collectionStatus === 'preorder' ? 'pending' : ui.collectionStatus;
+  if (category) category.value = ui.collectionCategory;
+  if (character) character.value = ui.collectionCharacter;
+  if (manufacturer) manufacturer.value = ui.collectionManufacturer;
+  if (sort) sort.value = ui.collectionSort;
+}
+function setupCollection(store: MerchStore) {
+  const search = $('#collection-search') as HTMLInputElement | null;
+  const clearSearch = $('#collection-search-clear') as HTMLButtonElement | null;
+  const work = $('#filter-work') as HTMLSelectElement | null;
+  const status = $('#filter-status') as HTMLSelectElement | null;
+  const category = $('#filter-category') as HTMLSelectElement | null;
+  const character = $('#filter-character') as HTMLSelectElement | null;
+  const manufacturer = $('#filter-manufacturer') as HTMLSelectElement | null;
+  const sort = $('#sort') as HTMLSelectElement | null;
+
+  search?.addEventListener('input', () => store.setUi({ collectionQuery: search.value, collectionPage: 1 }));
+  clearSearch?.addEventListener('click', () => {
+    store.setUi({ collectionQuery: '', collectionPage: 1 });
+    search?.focus();
+  });
+  work?.addEventListener('change', () => store.setUi({ collectionWork: work.value, collectionPage: 1 }));
+  status?.addEventListener('change', () => store.setUi({ collectionStatus: status.value === 'pending' ? 'pending' : status.value, collectionPage: 1 }));
+  category?.addEventListener('change', () => store.setUi({ collectionCategory: category.value, collectionPage: 1 }));
+  character?.addEventListener('change', () => store.setUi({ collectionCharacter: character.value, collectionPage: 1 }));
+  manufacturer?.addEventListener('change', () => store.setUi({ collectionManufacturer: manufacturer.value, collectionPage: 1 }));
+  sort?.addEventListener('change', () => store.setUi({ collectionSort: sort.value as 'created' | 'title' | 'price', collectionPage: 1 }));
+
+  $$('.view-button').forEach((button) => button.addEventListener('click', () => {
+    store.setUi({ collectionView: button.dataset.view === 'list' ? 'list' : 'cards' });
+  }));
+
+  const pagination = $('#collection-pagination');
+  pagination?.addEventListener('click', (event) => {
+    const target = event.target as Element | null;
+    const button = target?.closest<HTMLButtonElement>('[data-collection-page]');
+    if (!button || button.disabled) return;
+
+    const direction = button.dataset.collectionPage;
+    const current = store.snapshot.ui.collectionPage;
+    store.setUi({ collectionPage: direction === 'next' ? current + 1 : Math.max(1, current - 1) });
+    window.requestAnimationFrame(() => {
+      const collectionPage = document.querySelector<HTMLElement>('.page[data-page="collection"]');
+      if (!collectionPage) return;
+      const top = collectionPage.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({ top: Math.max(0, top), behavior: 'auto' });
+    });
+  });
+}
 function setupSidebarToggle() { const sidebar = $('.sidebar') as HTMLElement | null; const button = $('#sidebar-toggle') as HTMLButtonElement | null; if (!sidebar || !button) return; const key = 'chi-merch-sidebar-collapsed'; const setCollapsed = (collapsed: boolean) => { sidebar.classList.toggle('is-collapsed', collapsed); document.body.classList.toggle('sidebar-collapsed', collapsed); button.setAttribute('aria-label', collapsed ? '展開側邊欄' : '收合側邊欄'); button.title = collapsed ? '展開側邊欄' : '收合側邊欄'; button.innerHTML = '<i class="fa-solid fa-grip-lines-vertical" aria-hidden="true"></i>'; try { localStorage.setItem(key, collapsed ? '1' : '0'); } catch {} }; let collapsed = false; try { collapsed = localStorage.getItem(key) === '1'; } catch {} setCollapsed(collapsed); button.addEventListener('click', () => setCollapsed(!sidebar.classList.contains('is-collapsed'))); }
 function renderGlobalError(error: unknown): void { const appError = toAppError(error, '資料載入失敗'); const e = $('#global-error'); if (!e) return; e.hidden = false; e.innerHTML = `<strong>資料載入失敗</strong><p>${escapeHtml(appError.message)}</p><button type="button" id="global-error-retry">重新載入</button>`; }
 async function boot() { setupSidebarToggle(); setupItemCardDelegation(); let visiblePage = 'home'; let storeRef: MerchStore | null = null; if (location.hash.startsWith('#/item/')) visiblePage = 'collection'; const router = createRouter({ onNavigate: (route) => { if (route.name === 'item') { detailUnderlyingRoute = visiblePage || 'collection'; if (storeRef) renderDetail(storeRef, route.id); return; } if (route.name === 'not-found') { $$('.page').forEach((page) => { const active = page.getAttribute('data-page') === '404'; page.toggleAttribute('hidden', !active); page.classList.toggle('is-active', active); }); if (detailModal) { detailModal.hidden = true; document.body.classList.remove('detail-modal-open'); } return; } visiblePage = route.name; if (detailModal) { detailModal.hidden = true; document.body.classList.remove('detail-modal-open'); } $$('.page').forEach((page) => { const active = page.getAttribute('data-page') === route.name; page.toggleAttribute('hidden', !active); page.classList.toggle('is-active', active); }); const navLinks = Array.from(document.querySelectorAll<HTMLAnchorElement>('.nav a')); navLinks.forEach((a) => { const active = a.dataset.route === route.name; a.classList.toggle('is-active', active); if (active) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); }); const activeNav = navLinks.find((a) => a.dataset.route === route.name); const nav = activeNav?.closest<HTMLElement>('.nav'); if (activeNav && nav && window.matchMedia('(max-width: 560px)').matches) nav.scrollTo({ left: Math.max(0, activeNav.offsetLeft - (nav.clientWidth - activeNav.clientWidth) / 2), behavior: 'auto' }); const recentSection = $('#recent-section'); if (recentSection) recentSection.toggleAttribute('hidden', route.name !== 'home'); }}); try { const store = await loadStore(); storeRef = store; appStore = store; document.documentElement.dataset.dataReady = 'true'; syncDynamicCollectionOptions(store); syncCollectionControls(store); renderHome(store); renderCollection(store); renderStatistics(store); setupCollection(store); store.subscribe(() => { syncDynamicCollectionOptions(store); syncCollectionControls(store); renderHome(store); renderCollection(store); renderStatistics(store); const match = location.hash.match(/^#\/item\/([^/]+)$/); if (match) renderDetail(store, decodeURIComponent(match[1])); }); router.start(); } catch (error) { console.error(error); renderGlobalError(error); } }
