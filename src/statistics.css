@@ -442,6 +442,13 @@
   .statistics-chart-card { padding: 17px; }
 }
 @media (max-width: 760px) {
+  .statistics-work-items-desktop { display: none; }
+  .statistics-work-items-mobile-list { display: grid; gap: 0; }
+  .statistics-work-item-mobile { display: grid; gap: 4px; padding: 12px 0; border-bottom: 1px solid var(--chi-color-border); }
+  .statistics-work-item-mobile:last-child { border-bottom: 0; }
+  .statistics-work-item-mobile strong { color: var(--chi-color-text-strong); font-size: 13px; line-height: 1.45; overflow-wrap: anywhere; }
+  .statistics-work-item-mobile span { color: var(--chi-color-text-muted); font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; }
+  .statistics-work-item-mobile b { color: var(--chi-color-text); font-size: 12px; font-weight: 700; line-height: 1.5; overflow-wrap: anywhere; }
   .statistics-page-header { align-items: flex-start; flex-direction: column; gap: 14px; }
   .statistics-live-badge { align-self: flex-start; }
   .statistics-chart-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
