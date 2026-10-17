@@ -100,7 +100,6 @@ html[data-theme="dark"] {
   --chi-color-danger: #ff8d98;
   color-scheme: dark;
 }
-* { box-sizing: border-box; }
 html, body { min-height: 100%; }
 body {
   margin: 0;
