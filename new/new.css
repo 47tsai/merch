@@ -9,6 +9,7 @@
   --chi-color-accent-soft: #f0edff;
   --chi-color-accent-border: #d3caff;
   --chi-color-accent-text: #4636a5;
+  --chi-color-on-accent: #ffffff;
   --chi-color-page: #f6f8fc;
   --chi-color-page-soft: #edf2fc;
   --chi-color-surface: #ffffff;
@@ -45,6 +46,7 @@
   --brand-soft: var(--chi-color-accent-soft);
   --brand-border: var(--chi-color-accent-border);
   --brand-text: var(--chi-color-accent-text);
+  --on-brand: var(--chi-color-on-accent);
   --color-bg: var(--chi-color-page);
   --color-surface: var(--chi-color-surface);
   --color-surface-soft: var(--chi-color-page-soft);
@@ -77,6 +79,7 @@ html[data-theme="dark"] {
   --chi-color-accent-soft: #292442;
   --chi-color-accent-border: #554a83;
   --chi-color-accent-text: #c9c2ff;
+  --chi-color-on-accent: #17191f;
   --chi-color-page: #17191f;
   --chi-color-page-soft: #282c38;
   --chi-color-surface: #20232c;
@@ -284,7 +287,7 @@ button, .button { cursor: pointer; }
   border: 1px solid transparent;
   border-radius: var(--radius-md);
   background: var(--brand);
-  color: #ffffff;
+  color: var(--on-brand);
   font-size: 13px;
   font-weight: 700;
   text-decoration: none;
