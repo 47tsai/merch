@@ -4,7 +4,7 @@
 .statistics-icon--previous { transform: rotate(180deg); }
 /* Chart primitives shared by previews and the full-detail dialog. */
 .chart-track { fill: var(--chi-color-surface-muted); }
-.chart-fill, .bar-fill { fill: var(--chi-color-accent); opacity: .9; }
+.chart-fill, .bar-fill { fill: var(--chi-brand); opacity: .9; }
 .chart-value, .bar-value { font-weight: 700; }
 .bar-value { text-anchor: end; }
 .chart-axis { stroke: var(--chi-color-border); stroke-width: 1; }
@@ -254,7 +254,7 @@
 .statistics-chart-preview .chart-empty { fill: var(--chi-color-text-muted) !important; }
 .statistics-chart-preview .chart-track { fill: var(--chi-color-surface-muted); }
 .statistics-chart-preview .chart-fill,
-.statistics-chart-preview .bar-fill { fill: var(--chi-color-accent); opacity: .9; }
+.statistics-chart-preview .bar-fill { fill: var(--chi-brand); opacity: .9; }
 .statistics-chart-preview .chart-axis,
 .statistics-chart-preview .chart-grid-line { stroke: var(--chi-color-border); }
 .statistics-chart-preview .donut-segment { stroke: var(--chi-color-surface); }
