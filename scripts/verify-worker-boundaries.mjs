@@ -67,8 +67,11 @@ if (!deploy.includes('npx wrangler@4.151.0') || /npx wrangler@4(?:\s|$)/.test(de
 if (deploy.includes('ADMIN_SECRET') || deploy.includes('MERCH_ADMIN_SECRET')) {
   throw new Error('Deployment must not require the legacy admin secret after Chi Auth migration.');
 }
-if (!deploy.includes('CHI_AUTH_CLIENT_ID') || !deploy.includes('secret put CHI_AUTH_CLIENT_ID')) {
-  throw new Error('Deployment must configure the Chi Auth OAuth client ID.');
+const wranglerConfig = fs.readFileSync('worker/wrangler.toml', 'utf8');
+if (!wranglerConfig.includes('CHI_AUTH_CLIENT_ID = "T4sJJ0exZ0iiqaL5nrjUly-RU-KgoVp0"') ||
+    !deploy.includes('Chi Auth client ID is supplied by wrangler.toml.') ||
+    deploy.includes('secret put CHI_AUTH_CLIENT_ID')) {
+  throw new Error('Deployment must configure the public Chi Auth OAuth client ID through Wrangler vars, not as a secret.');
 }
 
 if (!oauthCallback.includes("tokenUrl.searchParams.set('client_id', cfg.clientId)") || !oauthCallback.includes("fetch(tokenUrl.toString()")) {
