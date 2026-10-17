@@ -21,7 +21,9 @@
     if (!cr.ok || !cp.ok || !cp.data) throw new Error('無法取得登入設定。');
     const cfg = cp.data;
     const redirectUri = location.origin + '/oauth-callback.html';
-    const tr = await fetch(cfg.authUrl.replace(/\/$/, '') + '/api/token', {
+    const tokenUrl = new URL('/api/token', cfg.authUrl);
+    tokenUrl.searchParams.set('client_id', cfg.clientId);
+    const tr = await fetch(tokenUrl.toString(), {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, cache: 'no-store',
       body: JSON.stringify({ client_id: cfg.clientId, code: code, redirect_uri: redirectUri, code_verifier: verifier })
     });
