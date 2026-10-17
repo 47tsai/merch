@@ -6,7 +6,7 @@ const deploy = fs.readFileSync('.github/workflows/deploy.yml', 'utf8');
 const verifyWorkflow = fs.readFileSync('.github/workflows/verify.yml', 'utf8');
 
 const outerPut = r2Entry.indexOf("if (path && (request.method === 'PUT' || request.method === 'DELETE'))");
-const outerAuth = r2Entry.indexOf('if (!authorized(request, env))', outerPut);
+const outerAuth = r2Entry.indexOf('if (!(await authorized(request, env)))', outerPut);
 const outerMutation = r2Entry.indexOf('mirrorPut(request, env, path)', outerPut);
 const outerDelete = r2Entry.indexOf('mirrorDelete(request, env, path)', outerPut);
 if (outerPut < 0 || outerAuth < outerPut || outerMutation < outerAuth || outerDelete < outerAuth) {
@@ -61,6 +61,13 @@ if (/pages: write|id-token: write/.test(gate + build + deployWorker)) {
 
 if (!deploy.includes('npx wrangler@4.151.0') || /npx wrangler@4(?:\s|$)/.test(deploy)) {
   throw new Error('Worker deployment must use the explicitly pinned Wrangler CLI version.');
+}
+
+if (deploy.includes('ADMIN_SECRET') || deploy.includes('MERCH_ADMIN_SECRET')) {
+  throw new Error('Deployment must not require the legacy admin secret after Chi Auth migration.');
+}
+if (!deploy.includes('CHI_AUTH_CLIENT_ID') || !deploy.includes('secret put CHI_AUTH_CLIENT_ID')) {
+  throw new Error('Deployment must configure the Chi Auth OAuth client ID.');
 }
 
 console.log('Worker boundary, deployment gate, job permission, and Wrangler pin checks passed.');
