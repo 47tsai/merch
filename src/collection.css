@@ -1,6 +1,204 @@
-.collection-tools{align-items:stretch;gap:12px}.collection-tools .search{min-width:260px;flex:1 1 320px;align-self:end}.collection-control-group{display:grid;grid-template-rows:12px 42px;gap:6px;min-width:0;align-self:stretch}.collection-control-label{padding-left:3px;color:var(--color-text-muted);font-size:10px;font-weight:750;letter-spacing:.08em;line-height:12px}.collection-control-body{min-width:0;height:42px}.collection-control-group select{display:block;width:100%;min-width:0;max-width:none;height:42px;padding-inline:13px;font-size:12px;font-weight:650;line-height:1;box-sizing:border-box}.collection-sort-group{min-width:120px}.collection-sort-group select{min-width:120px}.collection-view-group{min-width:156px}.collection-tools .view-switch{display:flex;align-items:center;gap:3px;width:100%;height:42px;min-height:42px;padding:4px;box-sizing:border-box}.collection-tools .view-button{flex:1 1 0;min-width:0;height:32px;padding:0 10px;font-size:12px;font-weight:650;line-height:1}.item-top .badge.is-hidden{display:inline-block!important;visibility:hidden!important;font-size:0!important;line-height:1!important;color:transparent!important}.item-top .badge.is-hidden::before,.item-top .badge.is-hidden::after{content:none!important}.expected-arrival{display:block;margin-top:9px;color:var(--brand);font-size:10px;font-weight:650}.item-card:focus-visible{outline:3px solid var(--color-focus-ring);outline-offset:2px}.list-mode .item-card{grid-template-columns:140px minmax(0,1fr)}.list-mode .expected-arrival{margin-top:7px}
-.collection-pagination{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:24px;padding:4px 0}.collection-page-status{min-width:92px;text-align:center;color:var(--color-text-muted);font-size:13px;font-weight:650}.collection-page-button{min-width:84px}.collection-page-button:disabled{cursor:not-allowed;opacity:.45}
+/* Collection page: Chi Design System components with MERCH-specific layout. */
+.collection-page { min-width: 0; }
+.collection-page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 0 0 24px;
+}
+.collection-page-heading { min-width: 0; }
+.collection-page-heading h1 {
+  margin: 0;
+  color: var(--chi-color-text-strong);
+  font-size: clamp(30px, 3.2vw, 40px);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -.045em;
+}
+.collection-page-description {
+  margin: 9px 0 0;
+  color: var(--chi-color-text-muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+.collection-page-actions { display: flex; flex: 0 0 auto; align-items: center; flex-wrap: wrap; gap: 10px; }
+.collection-page-actions .chi-button { text-decoration: none; }
+.collection-count-badge { min-height: 36px; display: inline-flex; align-items: center; padding-inline: 12px; font-weight: 650; }
+.collection-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.collection-tools {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 28px;
+  padding: 18px;
+  border: 1px solid var(--chi-color-border);
+  border-radius: var(--chi-radius-lg);
+  background: var(--chi-color-surface);
+}
+.collection-page .collection-search { width: 100%; min-width: 0; min-height: 44px; }
+.collection-page .collection-search input {
+  min-width: 0;
+  min-height: 40px;
+  padding: 8px 0;
+  border: 0;
+  outline: 0;
+  box-shadow: none;
+  background: transparent;
+  color: var(--chi-color-text);
+  font: inherit;
+  font-size: 14px;
+}
+.collection-search-clear {
+  display: inline-flex;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--chi-radius-sm);
+  background: transparent;
+  color: var(--chi-color-text-muted);
+  cursor: pointer;
+}
+.collection-search-clear:hover { background: var(--chi-color-surface-muted); color: var(--chi-color-text-strong); }
+.collection-filter-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: end;
+  gap: 14px;
+}
+.collection-page .collection-control-group { min-width: 0; gap: 6px; }
+.collection-page .collection-control-group:has(select[hidden]) { display: none; }
+.collection-page .collection-control-group .chi-label { color: var(--chi-color-text-muted); font-size: 12px; }
+.collection-page .collection-control-group .chi-select { min-width: 0; font-size: 13px; }
+.collection-page .collection-view-switch {
+  display: flex;
+  min-width: 0;
+  min-height: var(--chi-control-height);
+  align-items: center;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid var(--chi-color-border);
+  border-radius: var(--chi-radius-md);
+  background: var(--chi-color-surface-muted);
+}
+.collection-page .collection-view-switch .chi-segmented__item { flex: 1 1 0; min-width: 0; white-space: nowrap; }
+.collection-page .collection-view-switch .chi-segmented__item.is-active {
+  background: var(--chi-color-surface);
+  color: var(--chi-color-text-strong);
+  box-shadow: 0 1px 2px rgb(20 25 45 / 8%);
+}
+.collection-results { min-width: 0; }
+.collection-results-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.collection-results-heading > div { min-width: 0; }
+.collection-results-heading .panel-label { display: block; margin-bottom: 7px; }
+.collection-results-heading h2 {
+  margin: 0;
+  color: var(--chi-color-text-strong);
+  font-size: 21px;
+  font-weight: 750;
+  line-height: 1.35;
+  letter-spacing: -.025em;
+}
+.collection-result-count { margin: 0; color: var(--chi-color-text-muted); font-size: 12px; white-space: nowrap; }
+.collection-page .collection-grid { min-width: 0; }
+.collection-page .collection-empty-state { grid-column: 1 / -1; padding: 38px 18px; }
+.collection-page .collection-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 28px 0 0;
+  padding: 0;
+}
+.collection-page .collection-pagination[hidden] { display: none; }
+.collection-page .collection-pagination .chi-pagination__item {
+  min-width: 38px;
+  height: 38px;
+  padding-inline: 8px;
+  border: 1px solid transparent;
+  border-radius: var(--chi-radius-md);
+  background: transparent;
+  color: var(--chi-color-text-muted);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.collection-page .collection-pagination .chi-pagination__item:hover:not(:disabled) {
+  background: var(--chi-color-surface-muted);
+  color: var(--chi-color-text-strong);
+}
+.collection-page .collection-pagination .chi-pagination__item[aria-current="page"] {
+  border-color: var(--chi-color-accent-border);
+  background: var(--chi-color-accent-soft);
+  color: var(--chi-color-accent);
+  font-weight: 750;
+}
+.collection-page .collection-pagination .chi-pagination__item:disabled { opacity: .35; cursor: not-allowed; }
+.collection-page .collection-pagination .collection-page-arrow { font-size: 23px; line-height: 1; }
+.collection-page .collection-page-ellipsis { display: inline-flex; width: 24px; align-items: center; justify-content: center; color: var(--chi-color-text-subtle); }
+.collection-page .collection-page-status { margin: 10px 0 0; color: var(--chi-color-text-muted); text-align: center; font-size: 12px; }
+.collection-page .collection-page-status:empty { display: none; }
 
-/* Large collections: keep off-screen cards out of the initial layout/paint work. */
-.collection-grid .item-card{content-visibility:auto;contain-intrinsic-size:auto 300px}
-.collection-grid .item-card img{content-visibility:auto;}
+/* Preserve collection-specific item details and compact list mode. */
+.item-top .badge.is-hidden { display: inline-block !important; visibility: hidden !important; font-size: 0 !important; line-height: 1 !important; color: transparent !important; }
+.item-top .badge.is-hidden::before, .item-top .badge.is-hidden::after { content: none !important; }
+.expected-arrival { display: block; margin-top: 9px; color: var(--chi-color-accent); font-size: 10px; font-weight: 650; }
+.collection-page .item-card:focus-visible { outline: 3px solid var(--chi-color-focus); outline-offset: 2px; }
+.collection-page .list-mode .item-card { display: grid; grid-template-columns: 140px minmax(0, 1fr); margin-bottom: 9px; }
+.collection-page .list-mode .item-media { height: 140px; }
+.collection-page .list-mode .expected-arrival { margin-top: 7px; }
+
+/* Large collections: keep off-screen cards out of initial layout and paint work. */
+.collection-page .collection-grid .item-card { content-visibility: auto; contain-intrinsic-size: auto 300px; }
+.collection-page .collection-grid .item-card img { content-visibility: auto; }
+
+@media (max-width: 1120px) {
+  .collection-filter-row { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+}
+@media (max-width: 820px) {
+  .collection-page-header { align-items: flex-start; flex-direction: column; gap: 16px; }
+  .collection-page-actions { width: 100%; justify-content: space-between; }
+  .collection-filter-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .collection-tools { padding: 15px; }
+  .collection-page .list-mode .item-card { grid-template-columns: 112px minmax(0, 1fr); }
+  .collection-page .list-mode .item-media { height: 112px; }
+}
+@media (max-width: 560px) {
+  .collection-page-header { margin-bottom: 20px; }
+  .collection-page-heading h1 { font-size: 30px; }
+  .collection-page-description { font-size: 13px; }
+  .collection-page-actions { align-items: center; }
+  .collection-tools { gap: 14px; padding: 12px; border-radius: var(--chi-radius-md); }
+  .collection-filter-row { gap: 10px; }
+  .collection-page .collection-control-group .chi-label { font-size: 11px; }
+  .collection-page .collection-control-group .chi-select { padding-inline: 9px 25px; font-size: 12px; }
+  .collection-results-heading h2 { font-size: 19px; }
+  .collection-page .collection-pagination { gap: 1px; }
+  .collection-page .collection-pagination .chi-pagination__item { min-width: 34px; height: 36px; padding-inline: 6px; }
+  .collection-page .collection-pagination .collection-page-arrow { min-width: 30px; }
+  .collection-page .collection-page-ellipsis { width: 16px; }
+  .collection-page .list-mode .item-card { grid-template-columns: 88px minmax(0, 1fr); }
+  .collection-page .list-mode .item-media { height: 88px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .collection-page .collection-pagination .chi-pagination__item { transition: none; }
+}
