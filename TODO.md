@@ -2,7 +2,7 @@
 
 ## Current state
 
-- **目前開發版本：`2.0.16`。**
+- **目前開發版本：`2.0.17`。**
 - `RULES.md`：長期開發規則。
 - `ITEM_SCHEMA.md`：Item 資料契約。
 - `ITEM_TYPES.md`：Category registry。
@@ -12,7 +12,7 @@
 
 ### PageSpeed / 效能改善
 
-- [ ] 圖片傳輸最佳化...
+- [ ] 圖片傳輸最佳化：檢查縮圖尺寸／格式、R2 傳輸與快取策略；列表縮圖已加入非同步解碼。
 - [ ] Cache lifetime 最佳化...
 - [ ] CSS 載入管線整理...
 - [ ] CSS 使用量最佳化...
