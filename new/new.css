@@ -1,6 +1,6 @@
 /* Chi MERCH new interface
    Layout and component rhythm follow Chi Design System.
-   MERCH keeps its teal product identity; Chi Auth callback remains blue. */
+   MERCH uses a deeper blue-violet identity; Chi Auth callback follows Auth's indigo palette. */
 :root {
   --brand: #5b4bc4;
   --brand-hover: #4b3ba8;
