@@ -67,14 +67,14 @@ function makeEnv(options = {}) {
   };
 }
 
-function deleteRequest({ authorization = 'Bearer test-admin-secret', requestOrigin = origin } = {}) {
+function deleteRequest({ authorization = 'Bearer aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', requestOrigin = origin } = {}) {
   return new Request(assetUrl, {
     method: 'DELETE',
     headers: { Origin: requestOrigin, Authorization: authorization },
   });
 }
 
-function putRequest({ authorization = 'Bearer test-admin-secret', requestOrigin = origin } = {}) {
+function putRequest({ authorization = 'Bearer aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', requestOrigin = origin } = {}) {
   return new Request(assetUrl, {
     method: 'PUT',
     headers: {
