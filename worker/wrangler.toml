@@ -17,4 +17,4 @@ binding = "MERCH_ASSETS"
 bucket_name = "chi-merch-assets"
 
 [secrets]
-required = ["GITHUB_TOKEN"]
+required = ["GITHUB_TOKEN", "CHI_AUTH_CLIENT_ID"]
