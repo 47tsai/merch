@@ -4,6 +4,7 @@ import './chi-library-tokens.css';
 import './chi-components.css';
 import './item-detail-modal.css';
 import './collection.css';
+import './merch.css';
 import './item-detail-shipping';
 import { createRouter } from './router';
 import { loadStore, MerchStore } from './store';
