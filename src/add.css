@@ -11,3 +11,38 @@
 .add-grid label b{color:var(--brand)}
 .add-actions{display:flex;justify-content:flex-end;gap:var(--toolbar-gap);padding:var(--space-1) 0 var(--space-4)}
 .add-actions .button{min-width:120px;text-align:center}
+
+/* Chi Design System: add-page composition */
+.add-page{width:min(100%, 1040px);margin-inline:auto}
+.add-page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--chi-space-5);margin-bottom:var(--chi-space-7)}
+.add-page-header h1{margin:var(--chi-space-2) 0 0;color:var(--chi-color-text-strong);font-size:clamp(1.8rem,3vw,2.4rem);line-height:1.2;letter-spacing:-.035em}
+.add-page-description{max-width:58ch;margin:var(--chi-space-3) 0 0;color:var(--chi-color-text-muted);line-height:1.75}
+.add-page-header>.chi-badge{flex-shrink:0;margin-top:var(--chi-space-2)}
+.add-form{display:grid;gap:var(--chi-space-5);width:100%;max-width:none}
+.add-section.chi-panel{padding:clamp(1.1rem,2.5vw,1.65rem);border:1px solid var(--chi-color-border);border-radius:var(--chi-radius-lg, 16px);background:var(--chi-color-surface);box-shadow:var(--chi-shadow-sm, 0 2px 8px rgb(20 30 55 / 4%))}
+.add-section-heading{display:flex;align-items:flex-start;gap:var(--chi-space-3);margin:0 0 var(--chi-space-5)}
+.add-section-number{display:grid;place-items:center;flex:0 0 2.25rem;min-height:2.25rem;border:1px solid var(--chi-color-accent-border);border-radius:var(--chi-radius-md, 10px);background:var(--chi-color-accent-soft);color:var(--chi-color-accent);font-size:var(--chi-text-sm);font-weight:750;font-variant-numeric:tabular-nums}
+.add-section-heading h2{margin:0;color:var(--chi-color-text-strong);font-size:1.1rem;line-height:1.4}
+.add-section-heading p{margin:.35rem 0 0;color:var(--chi-color-text-muted);font-size:var(--chi-text-sm);line-height:1.7}
+.add-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--chi-space-4)}
+.add-grid .chi-field{display:grid;align-content:start;gap:var(--chi-space-2);min-width:0}
+.add-grid .wide{grid-column:1/-1}
+.add-grid .chi-label b{color:var(--chi-color-accent);font-weight:750}
+.add-grid .chi-input,.add-grid .chi-select,.add-grid .chi-textarea{width:100%;min-width:0}
+.add-grid .chi-textarea{resize:vertical;min-height:5.5rem}
+.add-form-footer{display:flex;justify-content:flex-end;align-items:center;gap:var(--chi-space-3);padding-bottom:var(--chi-space-6)}
+.add-form-footer .chi-button{min-height:2.75rem}
+.add-form [aria-invalid=true]{border-color:var(--chi-color-danger)}
+.add-form [data-form-errors]{margin-top:var(--chi-space-3)}
+#add-result .modal-dialog{max-width:34rem}
+#add-result .modal-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:var(--chi-space-3)}
+@media(max-width:640px){
+ .add-page-header{gap:var(--chi-space-3);margin-bottom:var(--chi-space-5)}
+ .add-page-header>.chi-badge{font-size:var(--chi-text-xs)}
+ .add-grid{grid-template-columns:minmax(0,1fr);gap:var(--chi-space-4)}
+ .add-grid .wide{grid-column:auto}
+ .add-section.chi-panel{padding:1rem}
+ .add-form-footer{position:sticky;bottom:0;z-index:3;margin-inline:-.25rem;padding:var(--chi-space-3);border:1px solid var(--chi-color-border);border-radius:var(--chi-radius-lg, 16px);background:var(--chi-color-surface-glass);backdrop-filter:blur(16px)}
+ .add-form-footer .chi-button{flex:1;justify-content:center}
+}
+@media(prefers-reduced-motion:reduce){.add-page *{scroll-behavior:auto}}
