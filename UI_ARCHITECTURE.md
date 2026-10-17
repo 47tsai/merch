@@ -45,6 +45,7 @@ Design Tokens
 
 ### Design foundation
 
+- `src/styles.css`：目前仍含歷史版 layout 與元件規則；只保留尚未確認可安全遷移的內容，禁止新增正式 UI 樣式。後續逐項確認使用者與覆寫關係後移除。
 - `src/design-tokens.css`：semantic color、typography、spacing、radius、border、surface、focus、shadow。
 - `src/theme.ts` / `src/theme.css` / `src/theme-refinement.css`：Light / Dark theme。
 - `src/shared-components.css`：Button、Card、Panel、Modal、Badge、Feedback 等共用視覺基礎。
@@ -188,6 +189,7 @@ Route navigation 與 page rendering 解耦；跨頁搜尋／Filter 必須由 cro
 
 | 檔案 | 責任 |
 |---|---|
+| `src/styles.css` | 歷史版全域／版面規則，僅作為待清理來源，不新增樣式 |
 | `src/design-tokens.css` | Design tokens |
 | `src/theme.ts` / `theme.css` / `theme-refinement.css` | Theme |
 | `src/shared-components.css` | Shared visual components |
