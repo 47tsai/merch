@@ -58,7 +58,8 @@ function makeEnv(options = {}) {
       GITHUB_REPO: 'tsai97216/merch',
       GITHUB_BRANCH: 'main',
       GITHUB_TOKEN: 'test-token',
-      ADMIN_SECRET: 'test-admin-secret',
+      CHI_AUTH_URL: 'https://auth.chi.qzz.io',
+      CHI_AUTH_CLIENT_ID: 'test-client-id',
       MERCH_ASSETS: bucket,
     },
     store,
@@ -66,14 +67,14 @@ function makeEnv(options = {}) {
   };
 }
 
-function deleteRequest({ authorization = 'Bearer test-admin-secret', requestOrigin = origin } = {}) {
+function deleteRequest({ authorization = 'Bearer aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', requestOrigin = origin } = {}) {
   return new Request(assetUrl, {
     method: 'DELETE',
     headers: { Origin: requestOrigin, Authorization: authorization },
   });
 }
 
-function putRequest({ authorization = 'Bearer test-admin-secret', requestOrigin = origin } = {}) {
+function putRequest({ authorization = 'Bearer aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', requestOrigin = origin } = {}) {
   return new Request(assetUrl, {
     method: 'PUT',
     headers: {
@@ -87,7 +88,13 @@ function putRequest({ authorization = 'Bearer test-admin-secret', requestOrigin 
 
 async function withFetch(mock, run) {
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = mock;
+  globalThis.fetch = async (input, init) => {
+    const target = new URL(typeof input === 'string' ? input : input.url);
+    if (target.pathname === '/api/userinfo' && target.searchParams.get('client_id') === 'test-client-id') {
+      return new Response(JSON.stringify({ sub: ['chi', 'owner'].join('-'), aud: 'test-client-id' }), { status: 200 });
+    }
+    return mock(input, init);
+  };
   try {
     return await run();
   } finally {

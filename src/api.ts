@@ -20,11 +20,12 @@ const API_TIMEOUT_MS = 12_000;
 const FORBIDDEN_STORAGE_FIELDS = ['workName', 'shipping', 'material', 'release', 'createdAt', 'updatedAt'] as const;
 let mutationQueue: Promise<void> = Promise.resolve();
 let managementVerified = false;
+let sessionAccessToken = (() => { try { const token = sessionStorage.getItem('chi-auth-token') || ''; sessionStorage.removeItem('chi-auth-token'); return token; } catch { return ''; } })();
 function endpoint(path: string): string { return `${API_BASE}${path.startsWith('/') ? path : `/${path}`}`; }
-function authToken(): string { try { return localStorage.getItem('merch-admin-secret') || ''; } catch { return ''; } }
+function authToken(): string { return sessionAccessToken; }
 async function ensureMutationReady(): Promise<void> {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) throw dataError('目前沒有網路連線，無法送出操作。');
-  if (!hasAdminSecret()) { managementVerified = false; throw dataError('尚未完成管理驗證，無法送出操作。'); }
+  if (!hasChiAuthToken()) { managementVerified = false; throw dataError('尚未完成管理驗證，無法送出操作。'); }
   if (managementVerified) return;
   const status = await getAuthStatus();
   if (!status.authenticated) throw dataError('管理驗證已失效，請重新驗證。');
@@ -93,7 +94,9 @@ export async function getShipping(): Promise<StoreState['shipping']> { const dat
 export async function putShipping(record: StoreState['shipping'][number]): Promise<MutationSubmission<ApiData>> { return mutateSubmitted('PUT', () => request(`/shipping/${encodeURIComponent(record.id)}`, { method: 'PUT', body: JSON.stringify({ shipping: record }) }).then(validateMutationResult).then(() => getAuthoritativeRemoteData())); }
 export async function deleteShipping(id: string): Promise<MutationSubmission<ApiData>> { return mutateSubmitted('DELETE', () => request(`/shipping/${encodeURIComponent(id)}`, { method: 'DELETE' }).then(validateMutationResult).then(() => getAuthoritativeRemoteData())); }
 export async function getAuthStatus(): Promise<AuthStatus> { const status = validateAuthStatus(await request('/auth/status')); managementVerified = status.authenticated; return status; }
-export function hasAdminSecret(): boolean { return Boolean(authToken()); }
-export function setAdminSecret(value: string): void { try { resetManagementVerification(); if (value.trim()) localStorage.setItem('merch-admin-secret', value.trim()); else localStorage.removeItem('merch-admin-secret'); } catch { throw dataError('無法儲存管理驗證資訊。'); } }
-export function clearAdminSecret(): void { try { resetManagementVerification(); localStorage.removeItem('merch-admin-secret'); } catch {} }
+export function hasChiAuthToken(): boolean { return Boolean(sessionAccessToken); }
+export function setChiAuthToken(value: string): void { resetManagementVerification(); sessionAccessToken = value.trim(); }
+export function clearChiAuthToken(): void { resetManagementVerification(); sessionAccessToken = ''; try { sessionStorage.removeItem('chi-auth-token'); } catch {} }
+export type ChiAuthConfig = { clientId: string; authUrl: string };
+export async function getChiAuthConfig(): Promise<ChiAuthConfig> { const value = await request('/auth/config'); if (!isRecord(value) || typeof value.clientId !== 'string' || !value.clientId || typeof value.authUrl !== 'string' || !value.authUrl) throw dataError('Chi Auth 尚未完成設定。'); return { clientId: value.clientId, authUrl: (value.authUrl.endsWith('/') ? value.authUrl.slice(0, -1) : value.authUrl) }; }
 export function apiConfigured(): boolean { return Boolean(API_BASE); }

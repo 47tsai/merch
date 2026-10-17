@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><title>Chi MERCH 登入</title></head>
+<body>
+<main><h1>正在完成登入</h1><p id="status">請稍候。</p></main>
+<script>
+(async function () {
+  const status = document.getElementById('status');
+  try {
+    const p = new URLSearchParams(location.search);
+    const code = p.get('code');
+    const state = p.get('state');
+    const savedState = sessionStorage.getItem('chi-auth-oauth-state');
+    const verifier = sessionStorage.getItem('chi-auth-oauth-verifier');
+    sessionStorage.removeItem('chi-auth-oauth-state');
+    sessionStorage.removeItem('chi-auth-oauth-verifier');
+    if (p.has('error')) throw new Error(p.get('error_description') || p.get('error'));
+    if (!code || !state || state !== savedState || !verifier) throw new Error('登入狀態無效，請重新登入。');
+    const cr = await fetch('/api/auth/config', { cache: 'no-store' });
+    const cp = await cr.json();
+    if (!cr.ok || !cp.ok || !cp.data) throw new Error('無法取得登入設定。');
+    const cfg = cp.data;
+    const redirectUri = location.origin + '/oauth-callback.html';
+    const tokenUrl = new URL('/api/token', cfg.authUrl);
+    tokenUrl.searchParams.set('client_id', cfg.clientId);
+    const tr = await fetch(tokenUrl.toString(), {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, cache: 'no-store',
+      body: JSON.stringify({ client_id: cfg.clientId, code: code, redirect_uri: redirectUri, code_verifier: verifier })
+    });
+    const token = await tr.json();
+    if (!tr.ok || typeof token.access_token !== 'string') throw new Error(token.error || '登入驗證失敗。');
+    sessionStorage.setItem('chi-auth-token', token.access_token);
+    history.replaceState(null, '', '/oauth-callback.html');
+    location.replace('/#/settings');
+  } catch (e) {
+    status.textContent = e instanceof Error ? e.message : '登入失敗，請稍後再試。';
+  }
+})();
+</script>
+</body></html>

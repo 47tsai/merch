@@ -4,9 +4,10 @@ const r2Entry = fs.readFileSync('worker/src/r2-entry.ts', 'utf8');
 const worker = fs.readFileSync('worker/src/index.ts', 'utf8');
 const deploy = fs.readFileSync('.github/workflows/deploy.yml', 'utf8');
 const verifyWorkflow = fs.readFileSync('.github/workflows/verify.yml', 'utf8');
+const oauthCallback = fs.readFileSync('public/oauth-callback.html', 'utf8');
 
 const outerPut = r2Entry.indexOf("if (path && (request.method === 'PUT' || request.method === 'DELETE'))");
-const outerAuth = r2Entry.indexOf('if (!authorized(request, env))', outerPut);
+const outerAuth = r2Entry.indexOf('if (!(await authorized(request, env)))', outerPut);
 const outerMutation = r2Entry.indexOf('mirrorPut(request, env, path)', outerPut);
 const outerDelete = r2Entry.indexOf('mirrorDelete(request, env, path)', outerPut);
 if (outerPut < 0 || outerAuth < outerPut || outerMutation < outerAuth || outerDelete < outerAuth) {
@@ -61,6 +62,20 @@ if (/pages: write|id-token: write/.test(gate + build + deployWorker)) {
 
 if (!deploy.includes('npx wrangler@4.151.0') || /npx wrangler@4(?:\s|$)/.test(deploy)) {
   throw new Error('Worker deployment must use the explicitly pinned Wrangler CLI version.');
+}
+
+if (deploy.includes('ADMIN_SECRET') || deploy.includes('MERCH_ADMIN_SECRET')) {
+  throw new Error('Deployment must not require the legacy admin secret after Chi Auth migration.');
+}
+const wranglerConfig = fs.readFileSync('worker/wrangler.toml', 'utf8');
+if (!wranglerConfig.includes('CHI_AUTH_CLIENT_ID = "T4sJJ0exZ0iiqaL5nrjUly-RU-KgoVp0"') ||
+    !deploy.includes('Chi Auth client ID is supplied by wrangler.toml.') ||
+    deploy.includes('secret put CHI_AUTH_CLIENT_ID')) {
+  throw new Error('Deployment must configure the public Chi Auth OAuth client ID through Wrangler vars, not as a secret.');
+}
+
+if (!oauthCallback.includes("tokenUrl.searchParams.set('client_id', cfg.clientId)") || !oauthCallback.includes("fetch(tokenUrl.toString()")) {
+  throw new Error('Chi Auth token exchange must include client_id in the URL so the CORS preflight can resolve the registered client.');
 }
 
 console.log('Worker boundary, deployment gate, job permission, and Wrangler pin checks passed.');

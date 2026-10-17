@@ -30,7 +30,7 @@ try {
     writable: true,
   });
   globalThis.window = { setTimeout, clearTimeout };
-  globalThis.localStorage = { getItem: key => key === 'merch-admin-secret' ? 'verified-secret' : null, setItem: () => {}, removeItem: () => {} };
+  globalThis.sessionStorage = { getItem: key => key === 'chi-auth-token' ? 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' : null, setItem: () => {}, removeItem: () => {} };
 
   const run = async (operation, responses) => {
     const calls = [];
