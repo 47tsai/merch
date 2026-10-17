@@ -88,7 +88,13 @@ function putRequest({ authorization = 'Bearer aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 
 async function withFetch(mock, run) {
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = mock;
+  globalThis.fetch = async (input, init) => {
+    const target = new URL(typeof input === 'string' ? input : input.url);
+    if (target.pathname === '/api/userinfo' && target.searchParams.get('client_id') === 'test-client-id') {
+      return new Response(JSON.stringify({ sub: ['chi', 'owner'].join('-'), aud: 'test-client-id' }), { status: 200 });
+    }
+    return mock(input, init);
+  };
   try {
     return await run();
   } finally {
