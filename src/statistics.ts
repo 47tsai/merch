@@ -138,7 +138,7 @@ function openDetail(chart: Chart): void {
   const modal = document.createElement('div');
   modal.className = 'statistics-detail';
   const mobile = window.matchMedia('(max-width: 700px)').matches;
-  modal.innerHTML = `<div class="statistics-detail-backdrop" data-stat-close></div><section class="statistics-detail-dialog${mobile ? ' statistics-detail-dialog-mobile' : ''}" role="dialog" aria-modal="true" aria-labelledby="statistics-detail-title"><header class="statistics-detail-header"><div><span class="eyebrow">STATISTICS DETAIL</span><h2 id="statistics-detail-title">${escapeHtml(chart.title)}</h2><p>${escapeHtml(chart.description)}</p></div><button type="button" class="statistics-detail-close" data-stat-close aria-label="關閉詳細統計"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></header><div class="statistics-summary-grid">${chart.summary.map(item => `<div class="statistics-summary-card"><span>${escapeHtml(item.label)}</span><strong>${escapeHtml(item.value)}</strong></div>`).join('')}</div><div class="statistics-large-chart statistics-large-chart-${escapeHtml(chart.id)}" style="--statistics-row-count:${chart.rows.length}">${chartSvg(chart, true)}</div>${detailTable(chart)}</section>`;
+  modal.innerHTML = `<div class="statistics-detail-backdrop" data-stat-close></div><section class="chi-panel statistics-detail-dialog${mobile ? ' statistics-detail-dialog-mobile' : ''}" role="dialog" aria-modal="true" aria-labelledby="statistics-detail-title"><header class="statistics-detail-header"><div><span class="eyebrow">STATISTICS / DETAIL</span><h2 id="statistics-detail-title">${escapeHtml(chart.title)}</h2><p>${escapeHtml(chart.description)}</p></div><button type="button" class="chi-button statistics-detail-close" data-stat-close aria-label="關閉詳細統計"><span aria-hidden="true">×</span></button></header><div class="statistics-summary-grid">${chart.summary.map(item => `<div class="chi-stat statistics-summary-card"><span class="chi-stat__label">${escapeHtml(item.label)}</span><strong class="chi-stat__value">${escapeHtml(item.value)}</strong></div>`).join('')}</div><div class="statistics-large-chart statistics-large-chart-${escapeHtml(chart.id)}" style="--statistics-row-count:${chart.rows.length}">${chartSvg(chart, true)}</div>${detailTable(chart)}</section>`;
   document.body.appendChild(modal);
   document.body.classList.add('statistics-detail-open');
   const close = () => { modal.remove(); document.body.classList.remove('statistics-detail-open'); document.removeEventListener('keydown', keydown); };
@@ -165,12 +165,33 @@ function openDetail(chart: Chart): void {
 function render(charts: Chart[], years: number[]): void {
   const host = qs<HTMLElement>('#statistics-charts');
   if (!host) return;
+
   host.innerHTML = charts.map(chart => {
     const isMonthly = chart.id === 'monthly-spending';
     const yearControl = isMonthly
-      ? `<div class="statistics-year-control" role="group" aria-label="月度年份"><button type="button" class="statistics-year-step" data-stat-year-prev aria-label="上一年">‹</button><span data-stat-year-label>${chart.year ?? currentYear()} 年</span><button type="button" class="statistics-year-step" data-stat-year-next aria-label="下一年">›</button></div>`
+      ? `<div class="statistics-year-control" role="group" aria-label="月度年份">
+          <button type="button" class="chi-button statistics-year-step" data-stat-year-prev aria-label="上一年">‹</button>
+          <span data-stat-year-label>${chart.year ?? currentYear()} 年</span>
+          <button type="button" class="chi-button statistics-year-step" data-stat-year-next aria-label="下一年">›</button>
+        </div>`
       : '';
-    return `<article class="statistics-chart-card" data-chart-id="${escapeHtml(chart.id)}"><div class="statistics-chart-heading"><button type="button" class="statistics-chart-open" data-chart-open><span><b>${escapeHtml(chart.title)}</b><small>${escapeHtml(chart.description)}</small></span><i class="fa-solid fa-up-right-and-down-left-from-center" aria-hidden="true"></i></button>${yearControl}</div><button type="button" class="statistics-chart-preview" data-chart-open aria-label="查看${escapeHtml(chart.title)}完整分析">${chartSvg(chart)}</button><span class="statistics-chart-hint">點擊查看完整分析</span></article>`;
+    return `<article class="chi-panel statistics-chart-card" data-chart-id="${escapeHtml(chart.id)}">
+      <header class="statistics-chart-heading">
+        <div class="statistics-chart-title-group">
+          <span class="statistics-chart-kicker">COLLECTION INSIGHT</span>
+          <h3>${escapeHtml(chart.title)}</h3>
+          <p>${escapeHtml(chart.description)}</p>
+        </div>
+        ${yearControl}
+      </header>
+      <button type="button" class="statistics-chart-preview" data-chart-open aria-label="查看${escapeHtml(chart.title)}完整分析">
+        ${chartSvg(chart)}
+      </button>
+      <footer class="statistics-chart-footer">
+        <span>查看完整分析與明細</span>
+        <span class="statistics-chart-open-icon" aria-hidden="true">↗</span>
+      </footer>
+    </article>`;
   }).join('');
 
   const monthly = charts.find(chart => chart.id === 'monthly-spending');
