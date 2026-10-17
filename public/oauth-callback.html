@@ -1,40 +1,358 @@
 <!doctype html>
 <html lang="zh-Hant">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><title>Chi MERCH 登入</title></head>
-<body>
-<main><h1>正在完成登入</h1><p id="status">請稍候。</p></main>
-<script>
-(async function () {
-  const status = document.getElementById('status');
-  try {
-    const p = new URLSearchParams(location.search);
-    const code = p.get('code');
-    const state = p.get('state');
-    const savedState = sessionStorage.getItem('chi-auth-oauth-state');
-    const verifier = sessionStorage.getItem('chi-auth-oauth-verifier');
-    sessionStorage.removeItem('chi-auth-oauth-state');
-    sessionStorage.removeItem('chi-auth-oauth-verifier');
-    if (p.has('error')) throw new Error(p.get('error_description') || p.get('error'));
-    if (!code || !state || state !== savedState || !verifier) throw new Error('登入狀態無效，請重新登入。');
-    const cr = await fetch('/api/auth/config', { cache: 'no-store' });
-    const cp = await cr.json();
-    if (!cr.ok || !cp.ok || !cp.data) throw new Error('無法取得登入設定。');
-    const cfg = cp.data;
-    const redirectUri = location.origin + '/oauth-callback.html';
-    const tokenUrl = new URL('/api/token', cfg.authUrl);
-    tokenUrl.searchParams.set('client_id', cfg.clientId);
-    const tr = await fetch(tokenUrl.toString(), {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, cache: 'no-store',
-      body: JSON.stringify({ client_id: cfg.clientId, code: code, redirect_uri: redirectUri, code_verifier: verifier })
-    });
-    const token = await tr.json();
-    if (!tr.ok || typeof token.access_token !== 'string') throw new Error(token.error || '登入驗證失敗。');
-    sessionStorage.setItem('chi-auth-token', token.access_token);
-    history.replaceState(null, '', '/oauth-callback.html');
-    location.replace('/#/settings');
-  } catch (e) {
-    status.textContent = e instanceof Error ? e.message : '登入失敗，請稍後再試。';
-  }
-})();
-</script>
-</body></html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f6f8fc">
+  <title>Chi MERCH 登入</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --page: #f6f8fc;
+      --surface: #fff;
+      --surface-soft: #edf2fc;
+      --text: #33343a;
+      --text-strong: #202127;
+      --text-muted: #686f7d;
+      --text-subtle: #9299a7;
+      --border: #e8ebf2;
+      --border-strong: #d4dae6;
+      --accent: #4a88fc;
+      --accent-hover: #3476e8;
+      --accent-soft: #eaf2ff;
+      --on-accent: #071a36;
+      --success: #237a50;
+      --success-soft: #ecfdf3;
+      --success-border: #bbebd0;
+      --danger: #b93843;
+      --danger-soft: #fff1f2;
+      --danger-border: #f4c7cc;
+      --font-sans: "Noto Sans TC", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 20px;
+      --space-6: 24px;
+      --space-8: 32px;
+      --space-10: 40px;
+      --focus: 0 0 0 3px rgb(74 136 252 / 28%);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --page: #17191f;
+        --surface: #20232c;
+        --surface-soft: #282c38;
+        --text: #e8eaf1;
+        --text-strong: #f7f8fc;
+        --text-muted: #b2b8c7;
+        --text-subtle: #8c94a6;
+        --border: #353a49;
+        --border-strong: #4b5265;
+        --accent-hover: #76a7ff;
+        --accent-soft: #202f49;
+        --success: #7ed6a7;
+        --success-soft: #1e3029;
+        --success-border: #285a43;
+        --danger: #ff969e;
+        --danger-soft: #362329;
+        --danger-border: #71343c;
+      }
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { min-height: 100%; background: var(--page); }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      color: var(--text);
+      background: var(--page);
+      font: 400 16px/1.65 var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; }
+    a:focus-visible { outline: none; box-shadow: var(--focus); }
+    .topbar {
+      width: 100%;
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .topbar-inner, .footer-inner {
+      width: min(calc(100% - 40px), 960px);
+      margin-inline: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-strong);
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: .035em;
+      text-decoration: none;
+    }
+    .brand-mark {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: var(--accent);
+      color: var(--on-accent);
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: -.04em;
+    }
+    .brand-product {
+      margin-left: 2px;
+      color: var(--text-muted);
+      font-weight: 600;
+      letter-spacing: .01em;
+    }
+    .context {
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+    main {
+      width: min(calc(100% - 40px), 440px);
+      margin: auto;
+      padding-block: 56px 64px;
+    }
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--text-subtle);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 0;
+      color: var(--text-strong);
+      font-size: clamp(26px, 6vw, 32px);
+      font-weight: 780;
+      letter-spacing: -.045em;
+      line-height: 1.25;
+    }
+    .intro {
+      margin: 12px 0 0;
+      color: var(--text-muted);
+      font-size: 15px;
+      line-height: 1.8;
+    }
+    .status-panel {
+      margin-top: 28px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      background: var(--surface);
+    }
+    .status-heading {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--text-strong);
+      font-size: 15px;
+      font-weight: 700;
+    }
+    .progress-ring {
+      width: 20px;
+      height: 20px;
+      flex: 0 0 20px;
+      border: 2px solid var(--border-strong);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    #status {
+      margin: 10px 0 0 32px;
+      color: var(--text-muted);
+      font-size: 14px;
+      overflow-wrap: anywhere;
+    }
+    .status-note {
+      margin: 18px 0 0;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      color: var(--text-subtle);
+      font-size: 12px;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .button {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 16px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      background: var(--surface);
+      color: var(--text);
+      font: inherit;
+      font-size: 14px;
+      font-weight: 650;
+      text-decoration: none;
+      transition: background .18s ease, border-color .18s ease;
+    }
+    .button:hover { background: var(--surface-soft); }
+    .button-primary {
+      border-color: transparent;
+      background: var(--accent);
+      color: var(--on-accent);
+    }
+    .button-primary:hover { background: var(--accent-hover); }
+    .button[hidden] { display: none; }
+    [data-state="error"] .progress-ring { display: none; }
+    [data-state="error"] .status-heading::before {
+      content: "!";
+      width: 20px;
+      height: 20px;
+      flex: 0 0 20px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--danger-soft);
+      color: var(--danger);
+      font-size: 13px;
+      font-weight: 800;
+    }
+    [data-state="error"] .status-panel {
+      border-color: var(--danger-border);
+    }
+    [data-state="error"] .status-heading { color: var(--danger); }
+    footer {
+      margin-top: auto;
+      padding-block: 18px;
+      border-top: 1px solid var(--border);
+      color: var(--text-subtle);
+      font-size: 12px;
+    }
+    .footer-inner { min-height: 24px; }
+    .footer-label { color: var(--text-muted); font-weight: 650; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (max-width: 480px) {
+      .topbar-inner, .footer-inner { width: min(calc(100% - 32px), 960px); }
+      main { width: min(calc(100% - 32px), 440px); padding-block: 40px 48px; }
+      .status-panel { padding: 18px; }
+      .context { display: none; }
+      .footer-inner { align-items: flex-start; flex-direction: column; gap: 4px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body data-state="loading">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="/" aria-label="Chi MERCH 首頁">
+        <span class="brand-mark" aria-hidden="true">C</span>
+        <span>Chi<span class="brand-product"> MERCH</span></span>
+      </a>
+      <span class="context">安全登入流程</span>
+    </div>
+  </header>
+
+  <main>
+    <p class="eyebrow">CHI AUTH / SIGN IN</p>
+    <h1 id="title">正在完成登入</h1>
+    <p class="intro">請稍候，系統正在確認你的登入狀態。</p>
+
+    <section class="status-panel" aria-labelledby="status-heading">
+      <div class="status-heading" id="status-heading">
+        <span class="progress-ring" aria-hidden="true"></span>
+        <span id="status-label">正在驗證登入資訊</span>
+      </div>
+      <p id="status" role="status" aria-live="polite">正在安全地處理登入要求，請不要關閉此頁。</p>
+      <p class="status-note">此頁只負責完成登入驗證，不會要求你在這裡輸入密碼。</p>
+    </section>
+
+    <div class="actions">
+      <a class="button button-primary" id="return-link" href="/#/settings" hidden>返回設定並重新登入</a>
+      <a class="button" href="/">返回 MERCH 首頁</a>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <span class="footer-label">Chi MERCH</span>
+      <span>Personal Collection Database</span>
+    </div>
+  </footer>
+
+  <script>
+    (async function () {
+      const status = document.getElementById('status');
+      const title = document.getElementById('title');
+      const statusLabel = document.getElementById('status-label');
+      const returnLink = document.getElementById('return-link');
+
+      try {
+        const p = new URLSearchParams(location.search);
+        const code = p.get('code');
+        const state = p.get('state');
+        const savedState = sessionStorage.getItem('chi-auth-oauth-state');
+        const verifier = sessionStorage.getItem('chi-auth-oauth-verifier');
+        sessionStorage.removeItem('chi-auth-oauth-state');
+        sessionStorage.removeItem('chi-auth-oauth-verifier');
+
+        if (p.has('error')) throw new Error(p.get('error_description') || p.get('error'));
+        if (!code || !state || state !== savedState || !verifier) throw new Error('登入狀態無效，請重新登入。');
+
+        const cr = await fetch('/api/auth/config', { cache: 'no-store' });
+        const cp = await cr.json();
+        if (!cr.ok || !cp.ok || !cp.data) throw new Error('無法取得登入設定。');
+
+        const cfg = cp.data;
+        const redirectUri = location.origin + '/oauth-callback.html';
+        const tokenUrl = new URL('/api/token', cfg.authUrl);
+        tokenUrl.searchParams.set('client_id', cfg.clientId);
+        const tr = await fetch(tokenUrl.toString(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          cache: 'no-store',
+          body: JSON.stringify({
+            client_id: cfg.clientId,
+            code: code,
+            redirect_uri: redirectUri,
+            code_verifier: verifier
+          })
+        });
+        const token = await tr.json();
+        if (!tr.ok || typeof token.access_token !== 'string') {
+          throw new Error(token.error || '登入驗證失敗。');
+        }
+
+        sessionStorage.setItem('chi-auth-token', token.access_token);
+        history.replaceState(null, '', '/oauth-callback.html');
+        location.replace('/#/settings');
+      } catch (e) {
+        document.body.dataset.state = 'error';
+        title.textContent = '登入未完成';
+        statusLabel.textContent = '無法完成登入驗證';
+        status.textContent = e instanceof Error ? e.message : '登入失敗，請稍後再試。';
+        returnLink.hidden = false;
+      }
+    })();
+  </script>
+</body>
+</html>
