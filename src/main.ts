@@ -1,5 +1,7 @@
 import './styles.css';
 import './design-tokens.css';
+import './chi-library-tokens.css';
+import './chi-components.css';
 import './item-detail-modal.css';
 import './collection.css';
 import './item-detail-shipping';
