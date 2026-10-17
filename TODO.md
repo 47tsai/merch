@@ -2,7 +2,7 @@
 
 ## Current state
 
-- **目前開發版本：`2.0.30`。**
+- **目前開發版本：`2.0.31`。**
 - `RULES.md`：長期開發規則。
 - `ITEM_SCHEMA.md`：Item 資料契約。
 - `ITEM_TYPES.md`：Category registry。
