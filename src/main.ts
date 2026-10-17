@@ -74,7 +74,90 @@ function renderHome(store: MerchStore) {
       || '<div class="chi-empty-state home-recent-empty"><p class="chi-empty-state__title">還沒有收藏</p><p class="chi-empty-state__description">新增第一筆收藏後，就會在這裡顯示。</p><a class="chi-button chi-button--primary chi-button--small" href="#/add">新增收藏</a></div>';
   }
 }
-function renderCollection(store: MerchStore) { const host = $('#collection-items'); if (!host) return; const { items, ui } = store.snapshot; const query = ui.collectionQuery.trim().toLowerCase(); const workCode = ui.collectionWork === 'all' ? 'all' : (store.snapshot.works.find((w) => w.id === ui.collectionWork)?.code || ui.collectionWork); let filtered = items.filter((i) => matchesItemQuery(i, query)).filter((i) => ui.collectionStatus === 'all' || (ui.collectionStatus === 'pending' ? i.status === 'pending' || i.status === 'preorder' : i.status === ui.collectionStatus)).filter((i) => workCode === 'all' || getItemIdParts(i)?.workCode === workCode).filter((i) => ui.collectionCategory === 'all' || categoryName(i.category) === ui.collectionCategory).filter((i) => ui.collectionCharacter === 'all' || (i.characters || []).includes(ui.collectionCharacter)).filter((i) => ui.collectionManufacturer === 'all' || i.manufacturer === ui.collectionManufacturer); filtered = [...filtered].sort((a, b) => ui.collectionSort === 'price' ? Number(b.purchase?.price || 0) - Number(a.purchase?.price || 0) : ui.collectionSort === 'title' ? a.title.localeCompare(b.title, 'zh-Hant') : String(itemDate(b)).localeCompare(String(itemDate(a)))); const total = filtered.length; const pageCount = Math.max(1, Math.ceil(total / COLLECTION_PAGE_SIZE)); const page = Math.min(Math.max(1, ui.collectionPage), pageCount); if (page !== ui.collectionPage) { store.setUi({ collectionPage: page }); return; } const start = (page - 1) * COLLECTION_PAGE_SIZE; const visible = filtered.slice(start, start + COLLECTION_PAGE_SIZE); host.innerHTML = visible.map((i) => itemCard(i)).join('') || '<div class="empty-state wide">沒有符合條件的收藏</div>'; host.classList.toggle('list-mode', ui.collectionView === 'list'); const count = $('#collection-count'); if (count) count.textContent = `${filtered.reduce((sum, item) => sum + quantityOf(item), 0)} ITEMS`; const pagination = $('#collection-pagination'); if (pagination) { pagination.hidden = pageCount <= 1; if (pageCount > 1) { const previousDisabled = page <= 1 ? ' disabled' : ''; const nextDisabled = page >= pageCount ? ' disabled' : ''; pagination.innerHTML = `<button type="button" class="button secondary collection-page-button" data-collection-page="prev"${previousDisabled} aria-label="上一頁">上一頁</button><span class="collection-page-status" aria-live="polite">第 ${page} / ${pageCount} 頁</span><button type="button" class="button secondary collection-page-button" data-collection-page="next"${nextDisabled} aria-label="下一頁">下一頁</button>`; } else pagination.innerHTML = ''; } $$('.view-button').forEach((button) => { const active = button.dataset.view === ui.collectionView; button.classList.toggle('is-active', active); button.setAttribute('aria-pressed', String(active)); }); }
+function renderCollection(store: MerchStore) {
+  const host = $('#collection-items');
+  if (!host) return;
+
+  const { items, ui } = store.snapshot;
+  const query = ui.collectionQuery.trim().toLowerCase();
+  const workCode = ui.collectionWork === 'all'
+    ? 'all'
+    : (store.snapshot.works.find((work) => work.id === ui.collectionWork)?.code || ui.collectionWork);
+
+  let filtered = items
+    .filter((item) => matchesItemQuery(item, query))
+    .filter((item) => ui.collectionStatus === 'all'
+      || (ui.collectionStatus === 'pending'
+        ? item.status === 'pending' || item.status === 'preorder'
+        : item.status === ui.collectionStatus))
+    .filter((item) => workCode === 'all' || getItemIdParts(item)?.workCode === workCode)
+    .filter((item) => ui.collectionCategory === 'all' || categoryName(item.category) === ui.collectionCategory)
+    .filter((item) => ui.collectionCharacter === 'all' || (item.characters || []).includes(ui.collectionCharacter))
+    .filter((item) => ui.collectionManufacturer === 'all' || item.manufacturer === ui.collectionManufacturer);
+
+  filtered = [...filtered].sort((a, b) => ui.collectionSort === 'price'
+    ? Number(b.purchase?.price || 0) - Number(a.purchase?.price || 0)
+    : ui.collectionSort === 'title'
+      ? a.title.localeCompare(b.title, 'zh-Hant')
+      : String(itemDate(b)).localeCompare(String(itemDate(a))));
+
+  const total = filtered.length;
+  const pageCount = Math.max(1, Math.ceil(total / COLLECTION_PAGE_SIZE));
+  const page = Math.min(Math.max(1, ui.collectionPage), pageCount);
+
+  if (page !== ui.collectionPage) {
+    store.setUi({ collectionPage: page });
+    return;
+  }
+
+  const start = (page - 1) * COLLECTION_PAGE_SIZE;
+  const visible = filtered.slice(start, start + COLLECTION_PAGE_SIZE);
+  host.innerHTML = visible.map((item) => itemCard(item)).join('')
+    || '<div class="chi-empty-state collection-empty-state"><p class="chi-empty-state__title">目前沒有符合條件的收藏</p><p class="chi-empty-state__description">試著調整搜尋文字或篩選條件，看看其他收藏。</p></div>';
+  host.classList.toggle('list-mode', ui.collectionView === 'list');
+
+  const count = $('#collection-count');
+  if (count) count.textContent = `共 ${filtered.reduce((sum, item) => sum + quantityOf(item), 0)} 件`;
+
+  const resultCount = $('#collection-result-count');
+  if (resultCount) {
+    const first = total === 0 ? 0 : start + 1;
+    const last = Math.min(start + COLLECTION_PAGE_SIZE, total);
+    resultCount.textContent = total === 0 ? '共 0 筆' : `顯示 ${first}–${last} 筆，共 ${total} 筆`;
+  }
+
+  const pagination = $('#collection-pagination');
+  const pageStatus = $('#collection-page-status');
+  if (pagination) {
+    pagination.hidden = pageCount <= 1;
+    if (pageCount > 1) {
+      const pageTokens: Array<number | 'ellipsis'> = pageCount <= 7
+        ? Array.from({ length: pageCount }, (_, index) => index + 1)
+        : page <= 4
+          ? [1, 2, 3, 4, 5, 'ellipsis', pageCount]
+          : page >= pageCount - 3
+            ? [1, 'ellipsis', pageCount - 4, pageCount - 3, pageCount - 2, pageCount - 1, pageCount]
+            : [1, 'ellipsis', page - 1, page, page + 1, 'ellipsis', pageCount];
+      const previousDisabled = page <= 1 ? ' disabled aria-disabled="true"' : '';
+      const nextDisabled = page >= pageCount ? ' disabled aria-disabled="true"' : '';
+      const previous = `<button type="button" class="chi-pagination__item collection-page-arrow" data-collection-page="prev"${previousDisabled} aria-label="上一頁">‹</button>`;
+      const next = `<button type="button" class="chi-pagination__item collection-page-arrow" data-collection-page="next"${nextDisabled} aria-label="下一頁">›</button>`;
+      const pages = pageTokens.map((token) => token === 'ellipsis'
+        ? '<span class="collection-page-ellipsis" aria-hidden="true">…</span>'
+        : `<button type="button" class="chi-pagination__item" data-collection-page="${token}"${token === page ? ' aria-current="page" aria-label="第 ' + token + ' 頁，當前頁面"' : ' aria-label="第 ' + token + ' 頁"'}>${token}</button>`).join('');
+      pagination.innerHTML = previous + pages + next;
+    } else {
+      pagination.innerHTML = '';
+    }
+  }
+  if (pageStatus) pageStatus.textContent = pageCount > 1 ? `第 ${page} 頁，共 ${pageCount} 頁` : '';
+
+  $$('.chi-segmented__item[data-view]').forEach((button) => {
+    const active = button.dataset.view === ui.collectionView;
+    button.classList.toggle('is-active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
+}
 function renderStatistics(store: MerchStore) { const { items, shipping = [] } = store.snapshot; const total = items.reduce((sum, item) => sum + quantityOf(item), 0); const pending = items.filter((i) => i.status !== 'received').reduce((sum, item) => sum + quantityOf(item), 0); const spending = items.reduce((s, i) => s + itemValue(i), 0) + shipping.reduce((s, r) => s + Number(r.amount || 0), 0); const set = (k: string, v: string) => { const e = $<HTMLElement>(`[data-stat="${k}"]`); if (e) e.textContent = v; }; set('total', String(total)); set('pending', String(pending)); set('spending', money(spending)); }
 let detailModal: HTMLElement | null = null; let detailUnderlyingRoute = 'collection'; let appStore: MerchStore | null = null;
 function createDetailDialogHtml(): string { return `<button type="button" class="item-detail-close" aria-label="關閉" data-detail-close><i class="fa-solid fa-xmark"></i></button><div class="item-detail-header"><div class="item-detail-image" id="item-detail-image">IMAGE</div><div class="item-detail-heading"><span class="eyebrow">ITEM DETAIL</span><h2 id="item-detail-title"></h2><p id="item-detail-subtitle"></p><div id="item-detail-status"></div></div></div><div class="item-detail-grid"><section><span class="detail-label">基本資訊</span><dl><div><dt>作品</dt><dd id="detail-work"></dd></div><div><dt>系列</dt><dd id="detail-series"></dd></div><div><dt>角色</dt><dd id="detail-character"></dd></div><div><dt>類型</dt><dd id="detail-type"></dd></div><div><dt>製造商</dt><dd id="detail-manufacturer"></dd></div></dl></section><section><span class="detail-label">購買資訊</span><dl><div><dt>單價</dt><dd id="detail-price"></dd></div><div><dt>數量</dt><dd id="detail-quantity"></dd></div><div><dt>合計</dt><dd id="detail-total-price"></dd></div><div><dt>幣別</dt><dd id="detail-currency"></dd></div><div><dt>平台</dt><dd id="detail-platform"></dd></div><div><dt>購買日期</dt><dd id="detail-purchase-date"></dd></div></dl></section><section><span class="detail-label">到貨資訊</span><dl><div><dt>預計到貨</dt><dd id="detail-expected-date"></dd></div><div><dt>收到日期</dt><dd id="detail-received-date"></dd></div></dl></section><section><span class="detail-label">售後</span><dl><div><span class="detail-label">狀態</span><dd id="detail-after-sales-status"></dd></div><div><dt>備註</dt><dd id="detail-after-sales-note"></dd></div></dl></section></div><section class="item-detail-text"><div><span class="detail-label">商品描述</span><p id="detail-description"></p></div><div><span class="detail-label">備註</span><p id="detail-notes"></p></div></section><div class="item-detail-footer"><div class="item-detail-actions"><button type="button" class="button" data-detail-edit>編輯</button><button type="button" class="button danger" data-detail-delete>刪除</button></div></div>`; }
@@ -83,7 +166,58 @@ function setDetailText(modal: HTMLElement, id: string, value: unknown) { const n
 function closeDetailModal() { if (detailModal) { detailModal.hidden = true; document.body.classList.remove('detail-modal-open'); } const target = `#/${detailUnderlyingRoute}`; if (location.hash !== target) location.hash = target; }
 function renderDetail(store: MerchStore, id: string) { const modal = ensureDetailModal(); const dialog = $('.item-detail-dialog', modal); if (!dialog) return; const item = store.snapshot.items.find((i) => i.id === id); if (!item) { dialog.setAttribute('data-detail-item-id', ''); dialog.innerHTML = `<div class="item-detail-error"><button type="button" class="item-detail-close" aria-label="關閉" data-detail-close><i class="fa-solid fa-xmark"></i></button><span class="eyebrow">404 / ITEM</span><h2>找不到收藏</h2><p>這個收藏不存在或已被移除。</p></div>`; modal.hidden = false; document.body.classList.add('detail-modal-open'); return; } if (!dialog.querySelector('#item-detail-title')) dialog.innerHTML = createDetailDialogHtml(); dialog.setAttribute('data-detail-item-id', item.id); const characters = item.characters?.join('、') || '—'; const series = item.series?.join('、') || '—'; const afterSalesStatus = item.afterSales?.status; const afterSalesNote = item.afterSales?.note; setDetailText(modal, 'item-detail-title', item.title || '收藏詳細資訊'); setDetailText(modal, 'item-detail-subtitle', `${item.workName || '—'} · ${characters}`); setDetailText(modal, 'detail-work', item.workName); setDetailText(modal, 'detail-series', series); setDetailText(modal, 'detail-character', characters); setDetailText(modal, 'detail-type', categoryName(item.category)); setDetailText(modal, 'detail-manufacturer', item.manufacturer); setDetailText(modal, 'detail-price', money(item.purchase?.price)); setDetailText(modal, 'detail-quantity', quantityOf(item)); setDetailText(modal, 'detail-total-price', item.purchase?.price == null ? undefined : money(itemValue(item))); setDetailText(modal, 'detail-currency', item.purchase?.currency); setDetailText(modal, 'detail-platform', item.purchase?.platform); setDetailText(modal, 'detail-purchase-date', dateText(item.purchase?.date)); setDetailText(modal, 'detail-expected-date', dateText(item.arrival?.expectedDate)); setDetailText(modal, 'detail-received-date', dateText(item.arrival?.receivedDate)); setDetailText(modal, 'detail-after-sales-status', afterSalesStatus); setDetailText(modal, 'detail-after-sales-note', afterSalesNote); setDetailText(modal, 'detail-description', item.description); setDetailText(modal, 'detail-notes', item.notes); const status = $('#item-detail-status', modal); if (status) status.innerHTML = item.status === 'received' ? '<span class="badge is-hidden" aria-hidden="true"></span>' : `<span class="badge">${escapeHtml(statusText(item.status))}</span>`; const image = $('#item-detail-image', modal); const cover = item.images?.find((entry) => entry.isCover) || item.images?.[0]; const imageSrc = itemImageSource(item, cover); if (image) image.innerHTML = imageSrc ? `<img src="${escapeHtml(imageSrc)}" alt="${escapeHtml(cover?.alt || item.title || '')}" onerror="this.style.display='none';this.parentElement.classList.add('image-fallback')">` : '<span class="image-placeholder">IMAGE</span>'; renderItemDetailShipping(dialog, item, store.snapshot.shipping ?? [], store.snapshot.items); modal.hidden = false; document.body.classList.add('detail-modal-open'); }
 function syncCollectionControls(store: MerchStore) { const { ui } = store.snapshot; const search = $('#collection-search') as HTMLInputElement | null; const work = $('#filter-work') as HTMLSelectElement | null; const status = $('#filter-status') as HTMLSelectElement | null; const category = $('#filter-category') as HTMLSelectElement | null; const character = $('#filter-character') as HTMLSelectElement | null; const manufacturer = $('#filter-manufacturer') as HTMLSelectElement | null; const sort = $('#sort') as HTMLSelectElement | null; if (search) search.value = ui.collectionQuery; if (work) work.value = ui.collectionWork; if (status) status.value = ui.collectionStatus === 'preorder' ? 'pending' : ui.collectionStatus; if (category) category.value = ui.collectionCategory; if (character) character.value = ui.collectionCharacter; if (manufacturer) manufacturer.value = ui.collectionManufacturer; if (sort) sort.value = ui.collectionSort; }
-function setupCollection(store: MerchStore) { const search = $('#collection-search') as HTMLInputElement | null; const work = $('#filter-work') as HTMLSelectElement | null; const status = $('#filter-status') as HTMLSelectElement | null; const category = $('#filter-category') as HTMLSelectElement | null; const character = $('#filter-character') as HTMLSelectElement | null; const manufacturer = $('#filter-manufacturer') as HTMLSelectElement | null; const sort = $('#sort') as HTMLSelectElement | null; search?.addEventListener('input', () => store.setUi({ collectionQuery: search.value, collectionPage: 1 })); work?.addEventListener('change', () => store.setUi({ collectionWork: work.value, collectionPage: 1 })); status?.addEventListener('change', () => store.setUi({ collectionStatus: status.value === 'pending' ? 'pending' : status.value, collectionPage: 1 })); category?.addEventListener('change', () => store.setUi({ collectionCategory: category.value, collectionPage: 1 })); character?.addEventListener('change', () => store.setUi({ collectionCharacter: character.value, collectionPage: 1 })); manufacturer?.addEventListener('change', () => store.setUi({ collectionManufacturer: manufacturer.value, collectionPage: 1 })); sort?.addEventListener('change', () => store.setUi({ collectionSort: sort.value as 'created' | 'title' | 'price', collectionPage: 1 })); $$('.view-button').forEach((button) => button.addEventListener('click', () => store.setUi({ collectionView: button.dataset.view === 'list' ? 'list' : 'cards' }))); const pagination = $('#collection-pagination'); pagination?.addEventListener('click', (event) => { const target = event.target as Element | null; const button = target?.closest<HTMLButtonElement>('[data-collection-page]'); if (!button || button.disabled) return; const direction = button.dataset.collectionPage; const current = store.snapshot.ui.collectionPage; store.setUi({ collectionPage: direction === 'next' ? current + 1 : Math.max(1, current - 1) }); window.requestAnimationFrame(() => { const collectionPage = document.querySelector<HTMLElement>('.page[data-page="collection"]'); if (!collectionPage) return; const top = collectionPage.getBoundingClientRect().top + window.scrollY; window.scrollTo({ top: Math.max(0, top), behavior: 'auto' }); }); }); }
+function setupCollection(store: MerchStore) {
+  const search = $('#collection-search') as HTMLInputElement | null;
+  const clearSearch = $('#collection-search-clear') as HTMLButtonElement | null;
+  const work = $('#filter-work') as HTMLSelectElement | null;
+  const status = $('#filter-status') as HTMLSelectElement | null;
+  const category = $('#filter-category') as HTMLSelectElement | null;
+  const character = $('#filter-character') as HTMLSelectElement | null;
+  const manufacturer = $('#filter-manufacturer') as HTMLSelectElement | null;
+  const sort = $('#sort') as HTMLSelectElement | null;
+
+  search?.addEventListener('input', () => store.setUi({ collectionQuery: search.value, collectionPage: 1 }));
+  clearSearch?.addEventListener('click', () => {
+    if (!search) return;
+    search.value = '';
+    store.setUi({ collectionQuery: '', collectionPage: 1 });
+    search.focus();
+  });
+  work?.addEventListener('change', () => store.setUi({ collectionWork: work.value, collectionPage: 1 }));
+  status?.addEventListener('change', () => store.setUi({ collectionStatus: status.value === 'pending' ? 'pending' : status.value, collectionPage: 1 }));
+  category?.addEventListener('change', () => store.setUi({ collectionCategory: category.value, collectionPage: 1 }));
+  character?.addEventListener('change', () => store.setUi({ collectionCharacter: character.value, collectionPage: 1 }));
+  manufacturer?.addEventListener('change', () => store.setUi({ collectionManufacturer: manufacturer.value, collectionPage: 1 }));
+  sort?.addEventListener('change', () => store.setUi({ collectionSort: sort.value as 'created' | 'title' | 'price', collectionPage: 1 }));
+
+  $$('.chi-segmented__item[data-view]').forEach((button) => {
+    button.addEventListener('click', () => store.setUi({ collectionView: button.dataset.view === 'list' ? 'list' : 'cards' }));
+  });
+
+  const pagination = $('#collection-pagination');
+  pagination?.addEventListener('click', (event) => {
+    const target = event.target as Element | null;
+    const button = target?.closest<HTMLButtonElement>('[data-collection-page]');
+    if (!button || button.disabled) return;
+
+    const requested = button.dataset.collectionPage;
+    const current = store.snapshot.ui.collectionPage;
+    const nextPage = requested === 'next'
+      ? current + 1
+      : requested === 'prev'
+        ? current - 1
+        : Number(requested);
+    if (!Number.isInteger(nextPage) || nextPage < 1) return;
+
+    store.setUi({ collectionPage: nextPage });
+    window.requestAnimationFrame(() => {
+      const results = document.querySelector<HTMLElement>('#collection-results');
+      if (!results) return;
+      const top = results.getBoundingClientRect().top + window.scrollY - 12;
+      window.scrollTo({ top: Math.max(0, top), behavior: 'auto' });
+    });
+  });
+}
 function setupSidebarToggle() { const sidebar = $('.sidebar') as HTMLElement | null; const button = $('#sidebar-toggle') as HTMLButtonElement | null; if (!sidebar || !button) return; const key = 'chi-merch-sidebar-collapsed'; const setCollapsed = (collapsed: boolean) => { sidebar.classList.toggle('is-collapsed', collapsed); document.body.classList.toggle('sidebar-collapsed', collapsed); button.setAttribute('aria-label', collapsed ? '展開側邊欄' : '收合側邊欄'); button.title = collapsed ? '展開側邊欄' : '收合側邊欄'; button.innerHTML = '<i class="fa-solid fa-grip-lines-vertical" aria-hidden="true"></i>'; try { localStorage.setItem(key, collapsed ? '1' : '0'); } catch {} }; let collapsed = false; try { collapsed = localStorage.getItem(key) === '1'; } catch {} setCollapsed(collapsed); button.addEventListener('click', () => setCollapsed(!sidebar.classList.contains('is-collapsed'))); }
 function renderGlobalError(error: unknown): void { const appError = toAppError(error, '資料載入失敗'); const e = $('#global-error'); if (!e) return; e.hidden = false; e.innerHTML = `<strong>資料載入失敗</strong><p>${escapeHtml(appError.message)}</p><button type="button" id="global-error-retry">重新載入</button>`; }
 async function boot() { setupSidebarToggle(); setupItemCardDelegation(); let visiblePage = 'home'; let storeRef: MerchStore | null = null; if (location.hash.startsWith('#/item/')) visiblePage = 'collection'; const router = createRouter({ onNavigate: (route) => { if (route.name === 'item') { detailUnderlyingRoute = visiblePage || 'collection'; if (storeRef) renderDetail(storeRef, route.id); return; } if (route.name === 'not-found') { $$('.page').forEach((page) => { const active = page.getAttribute('data-page') === '404'; page.toggleAttribute('hidden', !active); page.classList.toggle('is-active', active); }); if (detailModal) { detailModal.hidden = true; document.body.classList.remove('detail-modal-open'); } return; } visiblePage = route.name; if (detailModal) { detailModal.hidden = true; document.body.classList.remove('detail-modal-open'); } $$('.page').forEach((page) => { const active = page.getAttribute('data-page') === route.name; page.toggleAttribute('hidden', !active); page.classList.toggle('is-active', active); }); const navLinks = Array.from(document.querySelectorAll<HTMLAnchorElement>('.nav a')); navLinks.forEach((a) => { const active = a.dataset.route === route.name; a.classList.toggle('is-active', active); if (active) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); }); const activeNav = navLinks.find((a) => a.dataset.route === route.name); const nav = activeNav?.closest<HTMLElement>('.nav'); if (activeNav && nav && window.matchMedia('(max-width: 560px)').matches) nav.scrollTo({ left: Math.max(0, activeNav.offsetLeft - (nav.clientWidth - activeNav.clientWidth) / 2), behavior: 'auto' }); const recentSection = $('#recent-section'); if (recentSection) recentSection.toggleAttribute('hidden', route.name !== 'home'); }}); try { const store = await loadStore(); storeRef = store; appStore = store; document.documentElement.dataset.dataReady = 'true'; syncDynamicCollectionOptions(store); syncCollectionControls(store); renderHome(store); renderCollection(store); renderStatistics(store); setupCollection(store); store.subscribe(() => { syncDynamicCollectionOptions(store); syncCollectionControls(store); renderHome(store); renderCollection(store); renderStatistics(store); const match = location.hash.match(/^#\/item\/([^/]+)$/); if (match) renderDetail(store, decodeURIComponent(match[1])); }); router.start(); } catch (error) { console.error(error); renderGlobalError(error); } }
