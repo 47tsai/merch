@@ -1,4 +1,5 @@
 import './settings-auth.css';
+import './merch.css';
 import { clearChiAuthToken, getAuthStatus, getChiAuthConfig, hasChiAuthToken } from './api';
 
 let panel: HTMLElement | null = null;
