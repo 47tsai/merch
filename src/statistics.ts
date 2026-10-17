@@ -165,12 +165,33 @@ function openDetail(chart: Chart): void {
 function render(charts: Chart[], years: number[]): void {
   const host = qs<HTMLElement>('#statistics-charts');
   if (!host) return;
+
   host.innerHTML = charts.map(chart => {
     const isMonthly = chart.id === 'monthly-spending';
     const yearControl = isMonthly
-      ? `<div class="statistics-year-control" role="group" aria-label="月度年份"><button type="button" class="statistics-year-step" data-stat-year-prev aria-label="上一年">‹</button><span data-stat-year-label>${chart.year ?? currentYear()} 年</span><button type="button" class="statistics-year-step" data-stat-year-next aria-label="下一年">›</button></div>`
+      ? `<div class="statistics-year-control" role="group" aria-label="月度年份">
+          <button type="button" class="chi-button chi-button--secondary statistics-year-step" data-stat-year-prev aria-label="上一年">‹</button>
+          <span data-stat-year-label>${chart.year ?? currentYear()} 年</span>
+          <button type="button" class="chi-button chi-button--secondary statistics-year-step" data-stat-year-next aria-label="下一年">›</button>
+        </div>`
       : '';
-    return `<article class="statistics-chart-card" data-chart-id="${escapeHtml(chart.id)}"><div class="statistics-chart-heading"><button type="button" class="statistics-chart-open" data-chart-open><span><b>${escapeHtml(chart.title)}</b><small>${escapeHtml(chart.description)}</small></span><i class="fa-solid fa-up-right-and-down-left-from-center" aria-hidden="true"></i></button>${yearControl}</div><button type="button" class="statistics-chart-preview" data-chart-open aria-label="查看${escapeHtml(chart.title)}完整分析">${chartSvg(chart)}</button><span class="statistics-chart-hint">點擊查看完整分析</span></article>`;
+    return `<article class="chi-panel statistics-chart-card" data-chart-id="${escapeHtml(chart.id)}">
+      <header class="statistics-chart-heading">
+        <div class="statistics-chart-title-group">
+          <span class="statistics-chart-kicker">COLLECTION INSIGHT</span>
+          <h3>${escapeHtml(chart.title)}</h3>
+          <p>${escapeHtml(chart.description)}</p>
+        </div>
+        ${yearControl}
+      </header>
+      <button type="button" class="statistics-chart-preview" data-chart-open aria-label="查看${escapeHtml(chart.title)}完整分析">
+        ${chartSvg(chart)}
+      </button>
+      <footer class="statistics-chart-footer">
+        <span>查看完整分析與明細</span>
+        <span class="statistics-chart-open-icon" aria-hidden="true">↗</span>
+      </footer>
+    </article>`;
   }).join('');
 
   const monthly = charts.find(chart => chart.id === 'monthly-spending');
