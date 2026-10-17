@@ -35,6 +35,7 @@
 .shipping-selected-chip>button:hover{background:var(--chi-color-surface);color:var(--chi-color-danger)}
 .shipping-selected-chip>button:focus-visible{outline:2px solid var(--chi-color-focus);outline-offset:1px}
 .shipping-selected-empty{color:var(--chi-color-text-muted);font-size:var(--chi-text-xs)}
+.shipping-item-picker{display:grid;gap:var(--chi-space-3);min-width:0}
 .shipping-items-toolbar{display:grid;gap:var(--chi-space-3);margin-block:var(--chi-space-3)}
 .shipping-item-search,.shipping-filter-field{display:grid;gap:var(--chi-space-2);min-width:0}
 .shipping-item-search>span,.shipping-filter-field>span{color:var(--chi-color-text-muted);font-size:var(--chi-text-xs);font-weight:650}
