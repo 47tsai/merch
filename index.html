@@ -357,25 +357,62 @@
   </div>
 </section>
 <section class="page settings-page" data-page="settings" hidden aria-labelledby="settings-page-title">
-  <header class="settings-page-header"><div><span class="eyebrow">07 / SETTINGS</span><h1 id="settings-page-title">設定</h1><p>管理登入狀態、介面外觀與網站資訊。</p></div><span class="chi-badge">偏好設定</span></header>
+  <header class="settings-page-header">
+    <div class="settings-page-heading">
+      <span class="eyebrow">07 / SETTINGS</span>
+      <h1 id="settings-page-title">設定</h1>
+      <p>管理帳號存取、介面外觀與網站資訊。</p>
+    </div>
+    <span class="chi-badge settings-page-badge"><svg class="settings-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="/icons.svg#sliders-horizontal"></use></svg>偏好設定</span>
+  </header>
   <div class="settings-layout">
     <section class="settings-panel settings-panel-featured settings-auth-panel chi-panel" aria-labelledby="settings-auth-title">
-      <header class="settings-panel-heading"><div><span class="panel-label">CHI AUTH</span><h2 id="settings-auth-title">管理登入</h2><p>使用 Chi Auth 的 Passkey 登入。登入憑證只保存在目前分頁記憶體中，重新整理後需要重新登入。</p></div><span class="settings-auth-status" data-auth-status>尚未登入</span></header>
-      <div class="settings-auth-controls"><div class="settings-auth-buttons"><button type="button" class="chi-button chi-button--primary" data-auth-verify>使用 Chi Auth 登入</button><button type="button" class="chi-button" data-auth-clear>登出</button></div></div>
+      <header class="settings-panel-heading">
+        <div class="settings-panel-title-group">
+          <span class="settings-section-icon settings-section-icon--auth"><svg class="settings-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="/icons.svg#layers"></use></svg></span>
+          <div><span class="panel-label">CHI AUTH</span><h2 id="settings-auth-title">管理登入</h2></div>
+        </div>
+        <span class="settings-auth-status" data-auth-status>尚未登入</span>
+      </header>
+      <p class="settings-panel-description">透過 Chi Auth 與 Passkey 驗證管理權限。登入憑證僅保存在目前分頁的記憶體中，重新整理後需重新登入。</p>
+      <div class="settings-auth-controls">
+        <div class="settings-auth-buttons">
+          <button type="button" class="chi-button chi-button--primary" data-auth-verify><svg class="settings-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="/icons.svg#external-link"></use></svg>使用 Chi Auth 登入</button>
+          <button type="button" class="chi-button" data-auth-clear><svg class="settings-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="/icons.svg#x"></use></svg>登出</button>
+        </div>
+      </div>
       <p class="settings-auth-message" data-auth-message role="status" aria-live="polite"></p>
     </section>
     <div class="settings-columns">
-      <section class="settings-panel chi-panel" aria-labelledby="settings-appearance-title">
-        <header class="settings-panel-heading"><div><span class="panel-label">APPEARANCE</span><h2 id="settings-appearance-title">顯示模式</h2><p>跟隨系統會依照裝置目前的外觀設定自動切換。</p></div><span data-theme-status class="muted">—</span></header>
+      <section class="settings-panel chi-panel settings-appearance-panel" aria-labelledby="settings-appearance-title">
+        <header class="settings-panel-heading">
+          <div class="settings-panel-title-group">
+            <span class="settings-section-icon"><svg class="settings-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="/icons.svg#palette"></use></svg></span>
+            <div><span class="panel-label">APPEARANCE</span><h2 id="settings-appearance-title">顯示模式</h2></div>
+          </div>
+        </header>
+        <p class="settings-panel-description">選擇你偏好的外觀。跟隨系統會依裝置設定自動切換。</p>
         <div class="theme-choice-group" role="group" aria-label="顯示模式">
-          <button type="button" class="theme-choice" data-theme-choice="system" aria-pressed="false"><i class="fa-solid fa-circle-half-stroke" aria-hidden="true"></i><span><strong>跟隨系統</strong><small>自動配合裝置</small></span></button>
-          <button type="button" class="theme-choice" data-theme-choice="light" aria-pressed="false"><i class="fa-solid fa-sun" aria-hidden="true"></i><span><strong>淺色模式</strong><small>明亮介面</small></span></button>
-          <button type="button" class="theme-choice" data-theme-choice="dark" aria-pressed="false"><i class="fa-solid fa-moon" aria-hidden="true"></i><span><strong>深色模式</strong><small>低亮度介面</small></span></button>
+          <button type="button" class="theme-choice" data-theme-choice="system" aria-pressed="false"><span class="theme-choice-preview"><svg class="settings-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="/icons.svg#panels-top-left"></use></svg></span><span class="theme-choice-copy"><strong>跟隨系統</strong><small>自動配合裝置</small></span><svg class="theme-choice-check settings-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="/icons.svg#circle-check"></use></svg></button>
+          <button type="button" class="theme-choice" data-theme-choice="light" aria-pressed="false"><span class="theme-choice-preview"><svg class="settings-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="/icons.svg#sun"></use></svg></span><span class="theme-choice-copy"><strong>淺色模式</strong><small>清晰明亮的介面</small></span><svg class="theme-choice-check settings-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="/icons.svg#circle-check"></use></svg></button>
+          <button type="button" class="theme-choice" data-theme-choice="dark" aria-pressed="false"><span class="theme-choice-preview"><svg class="settings-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="/icons.svg#moon"></use></svg></span><span class="theme-choice-copy"><strong>深色模式</strong><small>降低環境亮度干擾</small></span><svg class="theme-choice-check settings-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="/icons.svg#circle-check"></use></svg></button>
         </div>
+        <p class="settings-theme-footnote"><span data-theme-status>跟隨系統</span><span>偏好保存在這台裝置</span></p>
       </section>
-      <section class="settings-panel chi-panel" aria-labelledby="settings-system-title">
-        <header class="settings-panel-heading"><div><span class="panel-label">SYSTEM</span><h2 id="settings-system-title">系統資訊</h2><p>網站執行環境與資料來源。</p></div></header>
-        <dl class="settings-info-list"><div><dt>版本</dt><dd class="version">v--</dd></div><div><dt>資料來源</dt><dd>Static Data Store</dd></div><div><dt>前端</dt><dd>TypeScript + Vite</dd></div></dl>
+      <section class="settings-panel chi-panel settings-system-panel" aria-labelledby="settings-system-title">
+        <header class="settings-panel-heading">
+          <div class="settings-panel-title-group">
+            <span class="settings-section-icon"><svg class="settings-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="/icons.svg#info"></use></svg></span>
+            <div><span class="panel-label">SYSTEM</span><h2 id="settings-system-title">系統資訊</h2></div>
+          </div>
+        </header>
+        <p class="settings-panel-description">網站版本與目前使用的資料架構。</p>
+        <dl class="settings-info-list">
+          <div><dt>網站版本</dt><dd class="version">v--</dd></div>
+          <div><dt>資料來源</dt><dd><span class="settings-info-dot" aria-hidden="true"></span>Static Data Store</dd></div>
+          <div><dt>技術架構</dt><dd>TypeScript <span aria-hidden="true">·</span> Vite</dd></div>
+        </dl>
+        <p class="settings-system-note"><svg class="settings-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="/icons.svg#info"></use></svg>版本資訊會在網站載入時自動更新。</p>
       </section>
     </div>
   </div>
