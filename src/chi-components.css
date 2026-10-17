@@ -1,5 +1,4 @@
 /* Framework-agnostic shared styles. Load tokens.css first. */
-*,*::before,*::after{box-sizing:border-box}
 .chi-page{min-height:100%;margin:0;background:var(--chi-color-page);color:var(--chi-color-text);font-family:var(--chi-font-sans);font-size:var(--chi-text-md);line-height:var(--chi-leading-normal);-webkit-font-smoothing:antialiased}
 .chi-container{width:min(calc(100% - 2.5rem),var(--chi-content-width));margin-inline:auto}
 .chi-container--reading{width:min(calc(100% - 2.5rem),var(--chi-reading-width));margin-inline:auto}
