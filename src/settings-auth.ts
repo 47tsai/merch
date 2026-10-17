@@ -29,7 +29,7 @@ async function login():Promise<void>{
 }
 async function verifyStored():Promise<void>{try{const result=await getAuthStatus();if(result.authenticated){updateStatus(true);message('Chi Auth 身分已確認，可管理收藏。','success');return;}clearChiAuthToken();updateStatus(false);message('尚未登入，請使用 Chi Auth Passkey 登入。');}catch{updateStatus(false);}}
 async function bind():Promise<void>{
-  panel=document.querySelector<HTMLElement>('[data-page="settings"] section[aria-labelledby="settings-auth-title]');
+  panel=document.querySelector<HTMLElement>('[data-page="settings"] section[aria-labelledby="settings-auth-title"]');
   if(!panel)return;
   panel.querySelector<HTMLButtonElement>('[data-auth-verify]')?.addEventListener('click',()=>{void login();});
   panel.querySelector<HTMLButtonElement>('[data-auth-clear]')?.addEventListener('click',()=>{clearChiAuthToken();updateStatus(false);message('已登出 Chi Auth。');});
