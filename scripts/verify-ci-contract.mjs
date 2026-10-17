@@ -20,15 +20,13 @@ if (!workflow.includes('npm run build')) {
   throw new Error('CI workflow is missing the production build step.');
 }
 
-
 const deployWorkflow = fs.readFileSync('.github/workflows/deploy.yml', 'utf8');
-const verifyWorkflow = fs.readFileSync('.github/workflows/verify.yml', 'utf8');
 const workerSource = fs.readFileSync('worker/src/index.ts', 'utf8');
 
 if (!deployWorkflow.includes('workflow_run:') || !deployWorkflow.includes('workflows: [Verify]') || !deployWorkflow.includes('types: [completed]')) {
   throw new Error('Deploy workflow must be triggered by the completed Verify workflow.');
 }
-if (!verifyWorkflow.includes('repository_dispatch') || !verifyWorkflow.includes('merch-mutation')) {
+if (!workflow.includes('repository_dispatch') || !workflow.includes('merch-mutation')) {
   throw new Error('Verify workflow must accept the runtime mutation dispatch event.');
 }
 if (!deployWorkflow.includes('github.event.workflow_run.id') || !deployWorkflow.includes('actions/runs/$run_id')) {
