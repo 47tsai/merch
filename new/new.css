@@ -57,6 +57,9 @@
   --color-border: var(--chi-color-border);
   --color-border-strong: var(--chi-color-border-strong);
   --color-focus-ring: var(--chi-color-focus);
+  --color-success: var(--chi-color-success);
+  --color-warning: var(--chi-color-warning);
+  --color-danger: var(--chi-color-danger);
   --radius-sm: var(--chi-radius-sm);
   --radius-md: var(--chi-radius-md);
   --radius-lg: var(--chi-radius-lg);
