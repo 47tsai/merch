@@ -1,5 +1,5 @@
 import './page-auth-status.css';
-import { getAuthStatus, hasAdminSecret } from './api';
+import { getAuthStatus, hasChiAuthToken } from './api';
 
 const TARGET_PAGES = new Set(['add', 'management', 'shipping']);
 let verificationRequest = 0;
@@ -32,7 +32,7 @@ async function refresh(): Promise<void> {
     .filter((page) => TARGET_PAGES.has(page.dataset.page || ''));
   if (!pages.length) return;
   const statuses = pages.map((page) => statusFor(page));
-  if (!hasAdminSecret()) {
+  if (!hasChiAuthToken()) {
     statuses.forEach((status) => setStatus(status, false));
     return;
   }
