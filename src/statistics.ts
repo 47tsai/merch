@@ -138,7 +138,7 @@ function openDetail(chart: Chart): void {
   const modal = document.createElement('div');
   modal.className = 'statistics-detail';
   const mobile = window.matchMedia('(max-width: 700px)').matches;
-  modal.innerHTML = `<div class="statistics-detail-backdrop" data-stat-close></div><section class="chi-panel statistics-detail-dialog${mobile ? ' statistics-detail-dialog-mobile' : ''}" role="dialog" aria-modal="true" aria-labelledby="statistics-detail-title"><header class="statistics-detail-header"><div><span class="eyebrow">STATISTICS / DETAIL</span><h2 id="statistics-detail-title">${escapeHtml(chart.title)}</h2><p>${escapeHtml(chart.description)}</p></div><button type="button" class="chi-button chi-button--secondary statistics-detail-close" data-stat-close aria-label="關閉詳細統計"><span aria-hidden="true">×</span></button></header><div class="statistics-summary-grid">${chart.summary.map(item => `<div class="chi-stat statistics-summary-card"><span class="chi-stat__label">${escapeHtml(item.label)}</span><strong class="chi-stat__value">${escapeHtml(item.value)}</strong></div>`).join('')}</div><div class="statistics-large-chart statistics-large-chart-${escapeHtml(chart.id)}" style="--statistics-row-count:${chart.rows.length}">${chartSvg(chart, true)}</div>${detailTable(chart)}</section>`;
+  modal.innerHTML = `<div class="statistics-detail-backdrop" data-stat-close></div><section class="chi-panel statistics-detail-dialog${mobile ? ' statistics-detail-dialog-mobile' : ''}" role="dialog" aria-modal="true" aria-labelledby="statistics-detail-title"><header class="statistics-detail-header"><div><span class="eyebrow">STATISTICS / DETAIL</span><h2 id="statistics-detail-title">${escapeHtml(chart.title)}</h2><p>${escapeHtml(chart.description)}</p></div><button type="button" class="chi-button statistics-detail-close" data-stat-close aria-label="關閉詳細統計"><span aria-hidden="true">×</span></button></header><div class="statistics-summary-grid">${chart.summary.map(item => `<div class="chi-stat statistics-summary-card"><span class="chi-stat__label">${escapeHtml(item.label)}</span><strong class="chi-stat__value">${escapeHtml(item.value)}</strong></div>`).join('')}</div><div class="statistics-large-chart statistics-large-chart-${escapeHtml(chart.id)}" style="--statistics-row-count:${chart.rows.length}">${chartSvg(chart, true)}</div>${detailTable(chart)}</section>`;
   document.body.appendChild(modal);
   document.body.classList.add('statistics-detail-open');
   const close = () => { modal.remove(); document.body.classList.remove('statistics-detail-open'); document.removeEventListener('keydown', keydown); };
@@ -170,9 +170,9 @@ function render(charts: Chart[], years: number[]): void {
     const isMonthly = chart.id === 'monthly-spending';
     const yearControl = isMonthly
       ? `<div class="statistics-year-control" role="group" aria-label="月度年份">
-          <button type="button" class="chi-button chi-button--secondary statistics-year-step" data-stat-year-prev aria-label="上一年">‹</button>
+          <button type="button" class="chi-button statistics-year-step" data-stat-year-prev aria-label="上一年">‹</button>
           <span data-stat-year-label>${chart.year ?? currentYear()} 年</span>
-          <button type="button" class="chi-button chi-button--secondary statistics-year-step" data-stat-year-next aria-label="下一年">›</button>
+          <button type="button" class="chi-button statistics-year-step" data-stat-year-next aria-label="下一年">›</button>
         </div>`
       : '';
     return `<article class="chi-panel statistics-chart-card" data-chart-id="${escapeHtml(chart.id)}">
