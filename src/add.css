@@ -246,7 +246,7 @@
     padding: var(--chi-space-3);
     border: 1px solid var(--chi-color-border);
     border-radius: var(--chi-radius-lg);
-    background: var(--chi-color-surface-glass);
+    background: color-mix(in srgb, var(--chi-color-surface) 90%, transparent);
     box-shadow: var(--chi-shadow-md);
     backdrop-filter: blur(16px);
   }
