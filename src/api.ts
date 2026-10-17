@@ -98,5 +98,5 @@ export function hasChiAuthToken(): boolean { return Boolean(sessionAccessToken);
 export function setChiAuthToken(value: string): void { resetManagementVerification(); sessionAccessToken = value.trim(); }
 export function clearChiAuthToken(): void { resetManagementVerification(); sessionAccessToken = ''; try { sessionStorage.removeItem('chi-auth-token'); } catch {} }
 export type ChiAuthConfig = { clientId: string; authUrl: string };
-export async function getChiAuthConfig(): Promise<ChiAuthConfig> { const value = await request('/auth/config'); if (!isRecord(value) || typeof value.clientId !== 'string' || !value.clientId || typeof value.authUrl !== 'string' || !value.authUrl) throw dataError('Chi Auth 尚未完成設定。'); return { clientId: value.clientId, authUrl: value.authUrl.replace(/\\/$/, '') }; }
+export async function getChiAuthConfig(): Promise<ChiAuthConfig> { const value = await request('/auth/config'); if (!isRecord(value) || typeof value.clientId !== 'string' || !value.clientId || typeof value.authUrl !== 'string' || !value.authUrl) throw dataError('Chi Auth 尚未完成設定。'); return { clientId: value.clientId, authUrl: (value.authUrl.endsWith('/') ? value.authUrl.slice(0, -1) : value.authUrl) }; }
 export function apiConfigured(): boolean { return Boolean(API_BASE); }
