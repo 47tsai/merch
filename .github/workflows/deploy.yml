@@ -155,23 +155,6 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           MERCH_GITHUB_TOKEN: ${{ secrets.MERCH_GITHUB_TOKEN }}
         run: printf '%s' "$MERCH_GITHUB_TOKEN" | npx wrangler@4.151.0 secret put GITHUB_TOKEN
-      - name: Validate Chi Auth Client ID
-        env:
-          CHI_AUTH_CLIENT_ID: ${{ secrets.CHI_AUTH_CLIENT_ID }}
-        run: |
-          set -euo pipefail
-          if [ -z "$CHI_AUTH_CLIENT_ID" ]; then
-            echo 'CHI_AUTH_CLIENT_ID is not configured.'
-            exit 1
-          fi
-          echo 'Chi Auth client ID is configured.'
-      - name: Set Worker Chi Auth Client ID
-        working-directory: worker
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CHI_AUTH_CLIENT_ID: ${{ secrets.CHI_AUTH_CLIENT_ID }}
-        run: printf '%s' "$CHI_AUTH_CLIENT_ID" | npx wrangler@4.151.0 secret put CHI_AUTH_CLIENT_ID
       - name: Verify Worker Secrets
         working-directory: worker
         env:
@@ -181,8 +164,7 @@ jobs:
           set -euo pipefail
           secrets=$(npx wrangler@4.151.0 secret list --format json)
           echo "$secrets" | jq -e 'map(.name) | index("GITHUB_TOKEN")' >/dev/null
-          echo "$secrets" | jq -e 'map(.name) | index("CHI_AUTH_CLIENT_ID")' >/dev/null
-          echo 'Worker secrets are configured.'
+          echo 'Worker secrets are configured; Chi Auth client ID is supplied by wrangler.toml.'
       - name: Deploy Worker
         working-directory: worker
         env:
