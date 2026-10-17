@@ -5,6 +5,7 @@ import './chi-components.css';
 import './merch.css';
 import './item-detail-modal.css';
 import './collection.css';
+import './version';
 import { createRouter } from './router';
 import { loadStore, MerchStore } from './store';
 import { toAppError } from './error';
