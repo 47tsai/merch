@@ -6,6 +6,9 @@
   <meta name="referrer" content="no-referrer">
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#f6f8fc">
+  <script>
+    (() => { let preference = "system"; try { const saved = localStorage.getItem("merch-theme"); if (saved === "light" || saved === "dark") preference = saved; } catch {} const dark = preference === "dark" || (preference === "system" && matchMedia("(prefers-color-scheme: dark)").matches); document.documentElement.dataset.themePreference = preference; document.documentElement.dataset.theme = dark ? "dark" : "light"; document.documentElement.style.colorScheme = dark ? "dark" : "light"; })();
+  </script>
   <title>Chi MERCH 登入</title>
   <style>
     :root {
@@ -44,27 +47,28 @@
       --space-10: 40px;
       --focus: 0 0 0 3px rgb(74 136 252 / 28%);
     }
+    :root[data-theme="dark"] {      
+      --page: #17191f;
+      --surface: #20232c;
+      --surface-soft: #282c38;
+      --text: #e8eaf1;
+      --text-strong: #f7f8fc;
+      --text-muted: #b2b8c7;
+      --text-subtle: #8c94a6;
+      --border: #353a49;
+      --border-strong: #4b5265;
+      --accent: #4a88fc;
+      --accent-hover: #76a7ff;
+      --accent-soft: #202f49;
+      --success: #7ed6a7;
+      --success-soft: #1e3029;
+      --success-border: #285a43;
+      --danger: #ff969e;
+      --danger-soft: #362329;
+      --danger-border: #71343c;
+    }
     @media (prefers-color-scheme: dark) {
-      :root {
-        --page: #17191f;
-        --surface: #20232c;
-        --surface-soft: #282c38;
-        --text: #e8eaf1;
-        --text-strong: #f7f8fc;
-        --text-muted: #b2b8c7;
-        --text-subtle: #8c94a6;
-        --border: #353a49;
-        --border-strong: #4b5265;
-        --accent: #4a88fc;
-        --accent-hover: #76a7ff;
-        --accent-soft: #202f49;
-        --success: #7ed6a7;
-        --success-soft: #1e3029;
-        --success-border: #285a43;
-        --danger: #ff969e;
-        --danger-soft: #362329;
-        --danger-border: #71343c;
-      }
+      :root[data-theme-preference="system"] { color-scheme: dark; --page: #17191f; --surface: #20232c; --surface-soft: #282c38; --text: #e8eaf1; --text-strong: #f7f8fc; --text-muted: #b2b8c7; --text-subtle: #8c94a6; --border: #353a49; --border-strong: #4b5265; --accent: #4a88fc; --accent-hover: #76a7ff; --accent-soft: #202f49; --success: #7ed6a7; --success-soft: #1e3029; --success-border: #285a43; --danger: #ff969e; --danger-soft: #362329; --danger-border: #71343c; }
     }
     *, *::before, *::after { box-sizing: border-box; }
     html { min-height: 100%; background: var(--page); }
@@ -124,10 +128,12 @@
       font-weight: 600;
       letter-spacing: .01em;
     }
-    .context {
-      color: var(--text-muted);
-      font-size: 13px;
-    }
+    .context { color: var(--text-muted); font-size: 13px; }
+    .topbar-tools { display: flex; align-items: center; justify-content: flex-end; gap: 16px; }
+    .theme-picker { display: inline-flex; align-items: center; gap: 3px; padding: 3px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-soft); }
+    .theme-choice { min-height: 32px; padding: 0 9px; border: 1px solid transparent; border-radius: 7px; background: transparent; color: var(--text-muted); font: inherit; font-size: 12px; cursor: pointer; }
+    .theme-choice[aria-pressed="true"] { border-color: var(--border-strong); background: var(--surface); color: var(--text-strong); box-shadow: 0 1px 2px rgb(0 0 0 / 5%); }
+    .theme-choice:focus-visible { outline: none; box-shadow: var(--focus); }
     main {
       width: min(calc(100% - 40px), 440px);
       margin: auto;
@@ -251,6 +257,10 @@
     .footer-label { color: var(--text-muted); font-weight: 650; }
     @keyframes spin { to { transform: rotate(360deg); } }
     @media (max-width: 480px) {
+      .topbar-inner, .footer-inner { width: min(calc(100% - 24px), 960px); }
+      .topbar-tools { gap: 8px; }
+      .context { display: none; }
+      .theme-choice { padding-inline: 7px; }
       .topbar-inner, .footer-inner { width: min(calc(100% - 32px), 960px); }
       main { width: min(calc(100% - 32px), 440px); padding-block: 40px 48px; }
       .status-panel { padding: 18px; }
@@ -269,7 +279,14 @@
         <span class="brand-mark" aria-hidden="true">C</span>
         <span>Chi<span class="brand-product"> MERCH</span></span>
       </a>
-      <span class="context">安全登入流程</span>
+      <div class="topbar-tools">
+        <span class="context">安全登入流程</span>
+        <div class="theme-picker" role="group" aria-label="外觀模式">
+          <button class="theme-choice" type="button" data-theme-choice="light" aria-pressed="false">淺色</button>
+          <button class="theme-choice" type="button" data-theme-choice="dark" aria-pressed="false">深色</button>
+          <button class="theme-choice" type="button" data-theme-choice="system" aria-pressed="true">系統</button>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -306,6 +323,23 @@
       const title = document.getElementById('title');
       const statusLabel = document.getElementById('status-label');
       const returnLink = document.getElementById('return-link');
+      const themeChoices = document.querySelectorAll('[data-theme-choice]');
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
+      const getThemePreference = () => { const value = document.documentElement.dataset.themePreference; return value === 'light' || value === 'dark' ? value : 'system'; };
+      function applyTheme(preference, persist = true) {
+        const effective = preference === 'system' ? (systemTheme.matches ? 'dark' : 'light') : preference;
+        const root = document.documentElement;
+        root.dataset.themePreference = preference;
+        root.dataset.theme = effective;
+        root.style.colorScheme = effective;
+        themeChoices.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.themeChoice === preference)));
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.content = effective === 'dark' ? '#17191f' : '#f6f8fc';
+        if (persist) { try { if (preference === 'system') localStorage.removeItem('merch-theme'); else localStorage.setItem('merch-theme', preference); } catch {} }
+      }
+      themeChoices.forEach(button => button.addEventListener('click', () => applyTheme(button.dataset.themeChoice)));
+      systemTheme.addEventListener?.('change', () => { if (getThemePreference() === 'system') applyTheme('system', false); });
+      applyTheme(getThemePreference(), false);
 
       try {
         const p = new URLSearchParams(location.search);
