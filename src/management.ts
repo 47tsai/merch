@@ -1,3 +1,4 @@
+import './management.css';
 import './management-images.css';
 import { getAsset, putAsset, deleteAsset, getAuthoritativeRemoteData } from './api';
 import { resolveAssetUrl } from './image-source';
