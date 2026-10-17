@@ -4,17 +4,17 @@
 
 :root {
   /* Chi MERCH brand: sourced from tsai97216/chi-brand. */
-  --chi-brand: #0FA3A3;
-  --chi-nav: #0FA3A3;
-  --chi-merch: #0FA3A3;
+  --chi-brand: #5B4BC4;
+  --chi-nav: #5B4BC4;
+  --chi-merch: #5B4BC4;
 
   /* Shared semantic brand roles. */
   --brand: var(--chi-merch);
-  --brand-hover: #0B8E8E;
-  --brand-active: #087D7D;
-  --brand-soft: #E5F7F7;
-  --brand-border: #B5E2E2;
-  --brand-text: #087070;
+  --brand-hover: #4B3BA8;
+  --brand-active: #3D2F91;
+  --brand-soft: #F0EDFF;
+  --brand-border: #D3CAFF;
+  --brand-text: #4636A5;
 
   /* Product semantic surfaces. */
   --color-bg: #F5F6F8;
@@ -23,21 +23,21 @@
   --color-text: #20242C;
   --color-text-muted: #69717D;
   --color-border: #E4E7EC;
-  --color-focus-ring: rgba(15, 163, 163, .22);
+  --color-focus-ring: rgba(91, 75, 196, .24);
 
   /* Semantic state colors. */
   --color-success: #218838;
   --color-warning: #A86400;
   --color-danger: #C53030;
-  --color-info: #0B8E8E;
+  --color-info: #5B4BC4;
 }
 
 html[data-theme='dark'] {
-  --brand-hover: #39BDBD;
-  --brand-active: #5ACACA;
-  --brand-soft: #143434;
-  --brand-border: #367979;
-  --brand-text: #A4E5E5;
+  --brand-hover: #C0B8FF;
+  --brand-active: #D8D2FF;
+  --brand-soft: #292442;
+  --brand-border: #554A83;
+  --brand-text: #C9C2FF;
 
   --color-bg: #11151B;
   --color-surface: #171C24;
@@ -45,12 +45,12 @@ html[data-theme='dark'] {
   --color-text: #EDF1F7;
   --color-text-muted: #AEB7C5;
   --color-border: #2A313D;
-  --color-focus-ring: rgba(90, 202, 202, .28);
+  --color-focus-ring: rgba(169, 159, 255, .28);
 
   --color-success: #62C174;
   --color-warning: #F0B35A;
   --color-danger: #F06B6B;
-  --color-info: #5ACACA;
+  --color-info: #A99FFF;
 }
 
 html {
