@@ -2,7 +2,7 @@
 
 ## Current state
 
-- **目前開發版本：`2.0.31`。**
+- **目前開發版本：`2.0.32`。**
 - `RULES.md`：長期開發規則。
 - `ITEM_SCHEMA.md`：Item 資料契約。
 - `ITEM_TYPES.md`：Category registry。
@@ -12,15 +12,15 @@
 
 ### PageSpeed / 效能改善
 
-- [ ] 圖片傳輸最佳化...
-- [ ] Cache lifetime 最佳化...
-- [ ] CSS 載入管線整理...
-- [ ] CSS 使用量最佳化...
-- [ ] Desktop CLS 排查...
-- [ ] Accessibility / Agent Browsing 語意修正...
-- [ ] Mobile 主執行緒負載優化...
-- [ ] Legacy JavaScript / Font display...
-- [ ] 動畫與非 composited animation...
+- [ ] 盤點封面圖與詳情圖的格式、尺寸及實際傳輸量，優先處理最大的圖片資產。
+- [ ] 檢查靜態資產與資料 API 的 Cache-Control，確認版本化資產可長快取、動態資料不會被錯誤快取。
+- [ ] 以實際入口依賴圖整理 CSS 載入順序，確認共用 tokens 只由入口載入一次。
+- [ ] 以 build 產物與瀏覽器覆蓋率定位未使用 CSS，只有確認無引用並完成視覺驗收後才移除。
+- [ ] 在正式網站檢查桌面首頁與收藏頁的 CLS，記錄造成位移的元素與修正結果。
+- [ ] 檢查互動控制項的名稱、鍵盤操作、焦點可見性及非互動標籤語意。
+- [ ] 用效能剖析定位手機端長任務，優先處理大量收藏渲染、搜尋與圖片載入。
+- [ ] 檢查首屏 JavaScript 與字型載入策略，避免不必要的同步工作及文字閃爍。
+- [ ] 盤點非必要動畫與 layout-triggering transition，尊重 `prefers-reduced-motion`。
 
 ### 全站整合驗收
 
