@@ -347,11 +347,16 @@
         history.replaceState(null, '', '/oauth-callback.html');
         const savedState = sessionStorage.getItem('chi-auth-oauth-state');
         const verifier = sessionStorage.getItem('chi-auth-oauth-verifier');
+        const createdAt = Number(sessionStorage.getItem('chi-auth-oauth-created-at'));
         sessionStorage.removeItem('chi-auth-oauth-state');
         sessionStorage.removeItem('chi-auth-oauth-verifier');
+        sessionStorage.removeItem('chi-auth-oauth-created-at');
 
         if (p.has('error')) throw new Error(p.get('error_description') || p.get('error'));
-        if (!code || !state || state !== savedState || !verifier) throw new Error('登入狀態無效，請重新登入。');
+        if (!code || !state || state !== savedState || !verifier ||
+            !Number.isFinite(createdAt) || Date.now() - createdAt > 5 * 60 * 1000 || Date.now() < createdAt) {
+          throw new Error('登入狀態無效或已逾時，請重新登入。');
+        }
 
         const cr = await fetch('/api/auth/config', { cache: 'no-store' });
         const cp = await cr.json();
