@@ -115,15 +115,16 @@
     .brand-mark {
       width: 28px;
       height: 28px;
+      flex: 0 0 28px;
       display: grid;
       place-items: center;
-      border-radius: 8px;
-      background: var(--accent);
-      color: var(--on-accent);
-      font-size: 15px;
-      font-weight: 800;
-      letter-spacing: -.04em;
+      overflow: hidden;
+      background: transparent;
     }
+    .brand-mark img { display: block; width: 100%; height: 100%; object-fit: contain; }
+    .brand-logo-dark { display: none; }
+    :root[data-theme="dark"] .brand-logo-light { display: none; }
+    :root[data-theme="dark"] .brand-logo-dark { display: block; }
     .brand-product {
       margin-left: 2px;
       color: var(--text-muted);
@@ -275,7 +276,7 @@
   <header class="topbar">
     <div class="topbar-inner">
       <a class="brand" href="/" aria-label="Chi MERCH 首頁">
-        <span class="brand-mark" aria-hidden="true">C</span>
+        <span class="brand-mark" aria-hidden="true"><img class="brand-logo-light" src="https://raw.githubusercontent.com/tsai97216/chi-design-system/main/logo/purple-b.png" alt=""><img class="brand-logo-dark" src="https://raw.githubusercontent.com/tsai97216/chi-design-system/main/logo/purple-w.png" alt=""></span>
         <span>Chi<span class="brand-product"> MERCH</span></span>
       </a>
       <div class="topbar-tools">
