@@ -1,6 +1,5 @@
 import './theme.css';
 import './theme-refinement.css';
-import './design-tokens.css';
 
 type Theme = 'light' | 'dark' | 'system';
 const STORAGE_KEY = 'merch-theme';
