@@ -52,3 +52,56 @@ html[data-theme='dark'] .item-detail-text p{color:var(--color-text-muted)}
 html[data-theme='dark'] .footer,html[data-theme='dark'] .sidebar-footer{color:var(--color-text-muted)}
 html[data-theme='dark'] .item-detail-topbar,html[data-theme='dark'] .item-detail-header,html[data-theme='dark'] .item-detail-grid dl>div,html[data-theme='dark'] .item-detail-text>div+div{border-color:var(--color-border)}
 html[data-theme='dark'] .item-detail-modal{color:var(--color-text)}
+
+/* Mobile appearance settings: prevent text and status rows from overflowing. */
+.settings-panel,
+.settings-panel-heading,
+.settings-panel-title-group,
+.theme-choice-group,
+.theme-choice,
+.theme-choice-copy,
+.settings-theme-footnote {
+  min-width: 0;
+  box-sizing: border-box;
+}
+.theme-choice {
+  width: 100%;
+  max-width: 100%;
+}
+.theme-choice-preview,
+.theme-choice-check {
+  flex: 0 0 auto;
+}
+.theme-choice-copy {
+  flex: 1 1 auto;
+  overflow-wrap: anywhere;
+}
+.theme-choice-copy strong,
+.theme-choice-copy small {
+  overflow-wrap: anywhere;
+}
+.settings-theme-footnote {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  line-height: 1.5;
+}
+.settings-theme-footnote > span {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 560px) {
+  .theme-choice-group {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .theme-choice {
+    gap: 10px;
+    padding: 12px;
+  }
+  .settings-theme-footnote {
+    justify-content: flex-start;
+  }
+}
