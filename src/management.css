@@ -11,6 +11,10 @@
 .management-search-row{display:flex;align-items:center;gap:var(--chi-space-3);min-width:0}
 .management-search{flex:1;min-width:0}
 .management-search .chi-input{min-width:0}
+/* Keep the input visually inside the Chi search shell; merch.css has broad global input rules. */
+.management-search.chi-search input.chi-input{width:100%;min-width:0;min-height:0;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;color:var(--chi-color-text);font:inherit;line-height:inherit}
+.management-search.chi-search input.chi-input:focus{outline:0;box-shadow:none}
+.management-search.chi-search input.chi-input::placeholder{color:var(--chi-color-text-subtle)}
 .management-search-count{flex-shrink:0;color:var(--chi-color-text-muted);font-size:var(--chi-text-xs);font-variant-numeric:tabular-nums}
 .management-picker-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;align-items:end;gap:var(--chi-space-3)}
 .management-picker-grid .chi-field{display:grid;gap:var(--chi-space-2);min-width:0}
