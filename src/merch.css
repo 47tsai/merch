@@ -658,3 +658,53 @@ html[data-theme="dark"] .button.danger { border-color: #71343c; background: #362
 @media (prefers-reduced-motion: reduce) {
   .home-page .item-card.compact { transition: none; }
 }
+
+
+/* Keep destructive actions readable and visually consistent across every page.
+   The legacy control rules have higher specificity than page-level .button rules,
+   so normalize both shared button variants explicitly at the end of the stylesheet. */
+.button.danger,
+button.button.danger,
+a.button.danger,
+.chi-button.chi-button--danger {
+  border: 1px solid var(--chi-color-danger-border, #f4c7cc);
+  background: var(--chi-color-danger-soft, #fff1f2);
+  color: var(--chi-color-danger);
+  -webkit-text-fill-color: currentColor;
+  text-shadow: none;
+}
+
+.button.danger:hover,
+button.button.danger:hover,
+a.button.danger:hover,
+.chi-button.chi-button--danger:hover {
+  border-color: var(--chi-color-danger);
+  background: color-mix(in srgb, var(--chi-color-danger-soft, #fff1f2) 72%, var(--chi-color-danger) 28%);
+  color: var(--chi-color-danger);
+  -webkit-text-fill-color: currentColor;
+}
+
+.button.danger:active,
+button.button.danger:active,
+a.button.danger:active,
+.chi-button.chi-button--danger:active {
+  background: color-mix(in srgb, var(--chi-color-danger-soft, #fff1f2) 58%, var(--chi-color-danger) 42%);
+  color: var(--chi-color-danger);
+}
+
+html[data-theme="dark"] .button.danger,
+html[data-theme="dark"] button.button.danger,
+html[data-theme="dark"] a.button.danger,
+html[data-theme="dark"] .chi-button.chi-button--danger {
+  border-color: var(--chi-color-danger-border, #71343c);
+  background: var(--chi-color-danger-soft, #362329);
+  color: var(--chi-color-danger);
+  -webkit-text-fill-color: currentColor;
+}
+
+html[data-theme="dark"] .button.danger:hover,
+html[data-theme="dark"] button.button.danger:hover,
+html[data-theme="dark"] a.button.danger:hover,
+html[data-theme="dark"] .chi-button.chi-button--danger:hover {
+  background: color-mix(in srgb, var(--chi-color-danger-soft, #362329) 72%, var(--chi-color-danger) 28%);
+}
