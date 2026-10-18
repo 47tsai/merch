@@ -10,6 +10,12 @@
 - `UI_ARCHITECTURE.md`：共用 UI 與 responsive baseline。
 - 本文件只保留尚未完成的工作。
 
+### CSS 載入盤點（2026-10-18）
+
+- 已確認 `main.ts` 是主要 CSS 入口，依序載入 legacy `styles.css`、Chi tokens/components 與 MERCH page styles；`theme.ts` 另載入主題樣式。
+- `styles.css` 約 9.1 KB、`merch.css` 約 35.1 KB；兩者有大量同名 selector，但目前比對未發現可直接整段刪除的完全相同 selector/declaration，因此不可只依 selector 重複就移除。
+- `collection.css` 與 `item-detail-modal.css` 含頁面／元件專屬覆寫；先保留。下一步應取得瀏覽器 CSS coverage 或 build 產物後，再按實際未使用規則逐項清理。
+
 ### PageSpeed / 效能改善
 
 - [ ] 盤點封面圖與詳情圖的格式、尺寸及實際傳輸量，優先處理最大的圖片資產。
