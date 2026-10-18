@@ -257,14 +257,11 @@
     .footer-label { color: var(--text-muted); font-weight: 650; }
     @keyframes spin { to { transform: rotate(360deg); } }
     @media (max-width: 480px) {
-      .topbar-inner, .footer-inner { width: min(calc(100% - 24px), 960px); }
-      .topbar-tools { gap: 8px; }
-      .context { display: none; }
-      .theme-choice { padding-inline: 7px; }
       .topbar-inner, .footer-inner { width: min(calc(100% - 32px), 960px); }
+      .topbar-tools { gap: 8px; }
+      .theme-choice { padding-inline: 7px; }
       main { width: min(calc(100% - 32px), 440px); padding-block: 40px 48px; }
       .status-panel { padding: 18px; }
-      .context { display: none; }
       .footer-inner { align-items: flex-start; flex-direction: column; gap: 4px; }
     }
     @media (prefers-reduced-motion: reduce) {
