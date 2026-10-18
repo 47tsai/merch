@@ -9,6 +9,8 @@
   <script>
     (() => { let preference = "system"; try { const saved = localStorage.getItem("merch-theme"); if (saved === "light" || saved === "dark") preference = saved; } catch {} const dark = preference === "dark" || (preference === "system" && matchMedia("(prefers-color-scheme: dark)").matches); document.documentElement.dataset.themePreference = preference; document.documentElement.dataset.theme = dark ? "dark" : "light"; document.documentElement.style.colorScheme = dark ? "dark" : "light"; })();
   </script>
+  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/tsai97216/chi-design-system/main/logo/purple-w.png">
+  <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/tsai97216/chi-design-system/main/logo/purple-w.png">
   <title>Chi MERCH 登入</title>
   <style>
     :root {
@@ -22,9 +24,9 @@
       --text-subtle: #9299a7;
       --border: #e8ebf2;
       --border-strong: #d4dae6;
-      --accent: #4a88fc;
-      --accent-hover: #3476e8;
-      --accent-soft: #eaf2ff;
+      --accent: #5b4bc4;
+      --accent-hover: #493ba8;
+      --accent-soft: #efedff;
       --on-accent: #071a36;
       --success: #237a50;
       --success-soft: #ecfdf3;
@@ -45,7 +47,7 @@
       --space-6: 24px;
       --space-8: 32px;
       --space-10: 40px;
-      --focus: 0 0 0 3px rgb(74 136 252 / 28%);
+      --focus: 0 0 0 3px rgb(91 75 196 / 28%);
     }
     :root[data-theme="dark"] {      
       --page: #17191f;
@@ -57,9 +59,9 @@
       --text-subtle: #8c94a6;
       --border: #353a49;
       --border-strong: #4b5265;
-      --accent: #4a88fc;
-      --accent-hover: #76a7ff;
-      --accent-soft: #202f49;
+      --accent: #5b4bc4;
+      --accent-hover: #b6adff;
+      --accent-soft: #302b4b;
       --success: #7ed6a7;
       --success-soft: #1e3029;
       --success-border: #285a43;
@@ -68,7 +70,7 @@
       --danger-border: #71343c;
     }
     @media (prefers-color-scheme: dark) {
-      :root[data-theme-preference="system"] { color-scheme: dark; --page: #17191f; --surface: #20232c; --surface-soft: #282c38; --text: #e8eaf1; --text-strong: #f7f8fc; --text-muted: #b2b8c7; --text-subtle: #8c94a6; --border: #353a49; --border-strong: #4b5265; --accent: #4a88fc; --accent-hover: #76a7ff; --accent-soft: #202f49; --success: #7ed6a7; --success-soft: #1e3029; --success-border: #285a43; --danger: #ff969e; --danger-soft: #362329; --danger-border: #71343c; }
+      :root[data-theme-preference="system"] { color-scheme: dark; --page: #17191f; --surface: #20232c; --surface-soft: #282c38; --text: #e8eaf1; --text-strong: #f7f8fc; --text-muted: #b2b8c7; --text-subtle: #8c94a6; --border: #353a49; --border-strong: #4b5265; --accent: #5b4bc4; --accent-hover: #b6adff; --accent-soft: #302b4b; --success: #7ed6a7; --success-soft: #1e3029; --success-border: #285a43; --danger: #ff969e; --danger-soft: #362329; --danger-border: #71343c; }
     }
     *, *::before, *::after { box-sizing: border-box; }
     html { min-height: 100%; background: var(--page); }
