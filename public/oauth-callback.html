@@ -345,6 +345,9 @@
         const p = new URLSearchParams(location.search);
         const code = p.get('code');
         const state = p.get('state');
+        // Remove OAuth parameters from the address bar before any network request,
+        // including error paths, so the authorization code is not left in history.
+        history.replaceState(null, '', '/oauth-callback.html');
         const savedState = sessionStorage.getItem('chi-auth-oauth-state');
         const verifier = sessionStorage.getItem('chi-auth-oauth-verifier');
         sessionStorage.removeItem('chi-auth-oauth-state');
@@ -378,7 +381,6 @@
         }
 
         sessionStorage.setItem('chi-auth-token', token.access_token);
-        history.replaceState(null, '', '/oauth-callback.html');
         location.replace('/#/settings');
       } catch (e) {
         document.body.dataset.state = 'error';
