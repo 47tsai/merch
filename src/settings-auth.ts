@@ -16,6 +16,7 @@ async function login():Promise<void>{
     const challenge=btoa(binary).replaceAll('+','-').replaceAll('/','_').replace(/=+$/,'');
     sessionStorage.setItem('chi-auth-oauth-state',state);
     sessionStorage.setItem('chi-auth-oauth-verifier',verifier);
+    sessionStorage.setItem('chi-auth-oauth-created-at',String(Date.now()));
     const redirectUri=`${location.origin}/oauth-callback.html`;
     const authorize=new URL('/api/authorize',config.authUrl);
     authorize.searchParams.set('response_type','code');
