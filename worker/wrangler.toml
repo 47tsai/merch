@@ -8,7 +8,7 @@ routes = [
 
 [vars]
 ALLOWED_ORIGIN = "https://merch.chi.qzz.io"
-GITHUB_REPO = "tsai97216/merch"
+GITHUB_REPO = "47tsai/merch"
 GITHUB_BRANCH = "main"
 CHI_AUTH_URL = "https://auth.chi.qzz.io"
 CHI_AUTH_CLIENT_ID = "T4sJJ0exZ0iiqaL5nrjUly-RU-KgoVp0"
