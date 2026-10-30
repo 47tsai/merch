@@ -144,7 +144,7 @@ jobs:
             -H "X-GitHub-Api-Version: 2022-11-28" \
             https://api.github.com/repos/47tsai/merch | jq -r '.permissions.push // false')
           if [ "$permissions" != 'true' ]; then
-            echo 'MERCH_GITHUB_TOKEN does not have GitHub contents write permission for tsai97216/merch.'
+            echo 'MERCH_GITHUB_TOKEN does not have GitHub contents write permission for 47tsai/merch.'
             exit 1
           fi
           echo 'Worker GitHub token has repository write permission.'
