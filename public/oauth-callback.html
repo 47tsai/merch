@@ -9,8 +9,8 @@
   <script>
     (() => { let preference = "system"; try { const saved = localStorage.getItem("merch-theme"); if (saved === "light" || saved === "dark") preference = saved; } catch {} const dark = preference === "dark" || (preference === "system" && matchMedia("(prefers-color-scheme: dark)").matches); document.documentElement.dataset.themePreference = preference; document.documentElement.dataset.theme = dark ? "dark" : "light"; document.documentElement.style.colorScheme = dark ? "dark" : "light"; })();
   </script>
-  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/tsai97216/chi-design-system/main/logo/purple-w.png">
-  <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/tsai97216/chi-design-system/main/logo/purple-w.png">
+  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/47tsai/chi-design-system/main/logo/purple-w.png">
+  <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/47tsai/chi-design-system/main/logo/purple-w.png">
   <title>Chi MERCH 登入</title>
   <style>
     :root {
@@ -276,7 +276,7 @@
   <header class="topbar">
     <div class="topbar-inner">
       <a class="brand" href="/" aria-label="Chi MERCH 首頁">
-        <span class="brand-mark" aria-hidden="true"><img class="brand-logo-light" src="https://raw.githubusercontent.com/tsai97216/chi-design-system/main/logo/purple-b.png" alt=""><img class="brand-logo-dark" src="https://raw.githubusercontent.com/tsai97216/chi-design-system/main/logo/purple-w.png" alt=""></span>
+        <span class="brand-mark" aria-hidden="true"><img class="brand-logo-light" src="https://raw.githubusercontent.com/47tsai/chi-design-system/main/logo/purple-b.png" alt=""><img class="brand-logo-dark" src="https://raw.githubusercontent.com/47tsai/chi-design-system/main/logo/purple-w.png" alt=""></span>
         <span>Chi<span class="brand-product"> MERCH</span></span>
       </a>
       <div class="topbar-tools">
