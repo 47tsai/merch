@@ -55,7 +55,7 @@ function makeEnv(options = {}) {
   return {
     env: {
       ALLOWED_ORIGIN: origin,
-      GITHUB_REPO: 'tsai97216/merch',
+      GITHUB_REPO: '47tsai/merch',
       GITHUB_BRANCH: 'main',
       GITHUB_TOKEN: 'test-token',
       CHI_AUTH_URL: 'https://auth.chi.qzz.io',
