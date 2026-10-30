@@ -1,6 +1,6 @@
 const API_BASE = ((import.meta as ImportMeta & { env?: { VITE_MERCH_API_URL?: string } }).env?.VITE_MERCH_API_URL || '/api').replace(/\/$/, '');
 const API_ASSET_PREFIX = `${API_BASE}/assets/`;
-const RAW_ASSET_PREFIX = 'https://raw.githubusercontent.com/tsai97216/merch/main/';
+const RAW_ASSET_PREFIX = 'https://raw.githubusercontent.com/47tsai/merch/main/';
 
 function assetPathFromSource(source: string): string {
   try {
