@@ -5,7 +5,7 @@ export const CATEGORY_OPTIONS = [
   ['t', '貼紙'], ['v', '服飾'], ['w', '餐具／生活用品'], ['y', '特典'],
 ] as const;
 
-export const CATEGORY_CODES = new Set(CATEGORY_OPTIONS.map(([code]) => code));
+export const CATEGORY_CODES: Set<string> = new Set(CATEGORY_OPTIONS.map(([code]) => code));
 const CATEGORY_NAMES: Record<string, string> = Object.fromEntries(CATEGORY_OPTIONS);
 
 export function categoryName(code: string | undefined | null): string {

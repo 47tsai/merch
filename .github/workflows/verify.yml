@@ -78,6 +78,8 @@ jobs:
         run: npm run verify:work-registry
       - name: Verify Home ranking contract
         run: npm run verify:home-ranking
+      - name: Verify statistics arithmetic
+        run: npm run verify:statistics-arithmetic
       - name: Verify statistics date boundaries
         run: npm run verify:statistics
       - name: Verify statistics year isolation

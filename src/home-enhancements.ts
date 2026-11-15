@@ -1,12 +1,9 @@
 import './home-enhancements.css';
 import { getStore, type MerchStore } from './store';
-import type { Item } from './types';
-import { rankAt, rankValueAt, sortCharacterRanking, type CharacterRankingRow } from './home-ranking';
-
-const money = (n: number) => `NT$ ${new Intl.NumberFormat('zh-TW').format(Number(n))}`;
-const quantityOf = (item: Item) => Number.isInteger(item.quantity) && item.quantity > 0 ? item.quantity : 1;
-const itemValue = (item: Item) => Number(item.purchase?.price || 0) * quantityOf(item);
-const escapeHtml = (value: unknown) => String(value ?? '').replace(/[&<>\\"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '\\"':'&quot;', "'":'&#39;' }[c] as string));
+import { aggregateCharacterSpending, characterItemCounts, rankAt, rankValueAt, type CharacterRankingRow } from './home-ranking';
+import { itemValue } from './utils/item-math';
+import { escapeHtml } from './utils/dom';
+import { formatMoney as money } from './utils/format';
 
 let storeRef: MerchStore | null = null;
 let characterModal: HTMLElement | null = null;
@@ -24,24 +21,14 @@ function getWorkRows(store: MerchStore) {
     .sort((a, b) => b.spend - a.spend || a.name.localeCompare(b.name, 'zh-Hant'));
 }
 
+// Spending and count rules live in home-ranking.ts so they can be tested;
+// see the note there on why the two numbers on one line use different bases.
 function getCharacterRows(store: MerchStore): CharacterRankingRow[] {
-  const spendingByCharacter = new Map<string, number>();
-  store.snapshot.items.forEach((item) => {
-    const characters = [...new Set((item.characters || []).map((character) => String(character).trim()).filter(Boolean))];
-    if (!characters.length) return;
-    const share = itemValue(item) / characters.length;
-    characters.forEach((character) => spendingByCharacter.set(character, (spendingByCharacter.get(character) || 0) + share));
-  });
-  return sortCharacterRanking([...spendingByCharacter.entries()]);
+  return aggregateCharacterSpending(store.snapshot.items);
 }
 
 function getCharacterItemCounts(store: MerchStore): Map<string, number> {
-  const counts = new Map<string, number>();
-  store.snapshot.items.forEach((item) => {
-    const characters = [...new Set((item.characters || []).map((character) => String(character).trim()).filter(Boolean))];
-    characters.forEach((character) => counts.set(character, (counts.get(character) || 0) + quantityOf(item)));
-  });
-  return counts;
+  return characterItemCounts(store.snapshot.items);
 }
 
 function renderWorkRankingRows(list: HTMLElement, rows: ReturnType<typeof getWorkRows>, limit = 5): void {
@@ -119,7 +106,7 @@ function ensureCharacterModal() {
   const modal = document.createElement('div');
   modal.className = 'item-detail-modal';
   modal.hidden = true;
-  modal.innerHTML = `<div class="item-detail-backdrop" data-character-close></div><section class="item-detail-dialog favorite-character-dialog" role="dialog" aria-modal="true" aria-labelledby="character-title"><button type="button" class="item-detail-close" aria-label="關閉" data-character-close><i class="fa-solid fa-xmark"></i></button><div class="item-detail-heading"><span class="eyebrow">CHARACTER SPENDING</span><h2 id="character-title">角色消費排行</h2><p>依角色分攤後的消費金額排序，點擊角色可直接搜尋。</p></div><ul id="character-list-all" class="character-ranking-list"></ul></section>`;
+  modal.innerHTML = `<div class="item-detail-backdrop" data-character-close></div><section class="item-detail-dialog favorite-character-dialog" role="dialog" aria-modal="true" aria-labelledby="character-title"><button type="button" class="item-detail-close" aria-label="關閉" data-character-close><i class="fa-solid fa-xmark"></i></button><div class="item-detail-heading"><span class="eyebrow">CHARACTER SPENDING</span><h2 id="character-title">角色消費排行</h2><p>依角色分攤後的消費金額排序；金額由多角色商品均分，件數為每位角色各計一件，點擊角色可直接搜尋。</p></div><ul id="character-list-all" class="character-ranking-list"></ul></section>`;
   document.body.appendChild(modal);
   modal.querySelectorAll('[data-character-close]').forEach((node) => node.addEventListener('click', closeCharacterModal));
   characterModal = modal;
