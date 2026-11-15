@@ -62,31 +62,31 @@ jobs:
         run: npm run verify:worker-scope
       - name: Verify worker target read scope
         run: npm run verify:worker-read
-      - name: Verify search contract
-        run: npm run verify:search
-      - name: Verify category search contract
-        run: npm run verify:category-search
-      - name: Verify statistics contract
-        run: npm run verify:statistics
-      - name: Verify statistics category contract
-        run: npm run verify:statistics-category
-      - name: Verify Home contract
-        run: npm run verify:home
-      - name: Verify Home category contract
-        run: npm run verify:home-category
+      - name: Verify worker image mutation semantics
+        run: npm run verify:worker-image
+      - name: Verify worker transaction semantics
+        run: npm run verify:worker-transaction
+      - name: Verify API load and fallback contract
+        run: npm run verify:api-load
+      - name: Verify API mutation contract
+        run: npm run verify:api-mutation
+      - name: Verify Work identity contract
+        run: npm run verify:work-identity
+      - name: Verify Work registry fixture
+        run: npm run verify:work-registry-fixture
+      - name: Verify Work registry contract
+        run: npm run verify:work-registry
       - name: Verify Home ranking contract
         run: npm run verify:home-ranking
       - name: Verify statistics arithmetic
         run: npm run verify:statistics-arithmetic
       - name: Verify statistics date boundaries
-        run: npm run verify:statistics-date-boundaries
-      - name: Verify statistics date boundary transitions
-        run: npm run verify:statistics-date-boundary-transitions
-      - name: Verify statistics category boundary transitions
-        run: npm run verify:statistics-category-boundary-transitions
-      - name: Verify works statistics contract
-        run: npm run verify:works-statistics
-      - name: Verify works statistics date boundaries
-        run: npm run verify:works-statistics-date-boundaries
-      - name: Verify works statistics date boundary transitions
-        run: npm run verify:works-statistics-date-boundary-transitions
+        run: npm run verify:statistics
+      - name: Verify statistics year isolation
+        run: npm run verify:statistics-year
+      - name: Verify statistics year contract
+        run: npm run verify:statistics-year-contract
+      - name: Verify version consistency
+        run: npm run verify:version
+      - name: TypeScript and Vite build
+        run: npm run build
