@@ -16,16 +16,18 @@ import { showToast } from './utils/toast';
 import { categoryName } from './category-label';
 import { renderItemDetailShipping } from './item-detail-shipping';
 import type { Item } from './types';
+import { escapeHtml } from './utils/dom';
+import { formatMoney } from './utils/format';
+import { itemValue, quantityOf } from './utils/item-math';
 
 const $ = <T extends Element>(selector: string, root: ParentNode = document) => root.querySelector<T>(selector);
 const $$ = <T extends Element>(selector: string, root: ParentNode = document) => [...root.querySelectorAll<T>(selector)];
 const COLLECTION_PAGE_SIZE = 24;
-const escapeHtml = (value: unknown) => String(value ?? '').replace(/[&<>\\"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c] as string));
-const money = (n?: number) => n == null ? '—' : `NT$ ${new Intl.NumberFormat('zh-TW').format(Number(n))}`;
+// Shared item math / escaping live in utils/item-math.ts and utils/dom.ts
+// (previously copy-pasted here, in home-enhancements.ts and statistics-data.ts).
+const money = (n?: number) => n == null ? '—' : formatMoney(n);
 const statusText = (s: string) => ({ received:'已收到', preorder:'預購中', pending:'待到貨' } as Record<string,string>)[s] || s || '未設定';
 const dateText = (s?: string | null) => { const date = parseDate(s || undefined); return date ? date.toLocaleDateString('zh-TW') : '—'; };
-const quantityOf = (item: Item) => Number.isInteger(item.quantity) && item.quantity > 0 ? item.quantity : 1;
-const itemValue = (item: Item) => Number(item.purchase?.price || 0) * quantityOf(item);
 const itemDate = (item: Item) => item.purchase?.date || item.arrival?.receivedDate || '';
 function getItemIdParts(item: Item) { return parseItemId(item.id); }
 function itemSearchText(item: Item): string { const parsed = getItemIdParts(item); const idParts = parsed ? [parsed.workCode, parsed.categoryCode, `${parsed.workCode}${parsed.categoryCode}`, String(parsed.sequence).padStart(3, '0')] : []; return [item.id, ...idParts, item.title, item.workName, ...(item.series || []), item.category, categoryName(item.category), item.manufacturer, ...(item.characters || []), item.notes, item.description, item.purchase?.platform, statusText(item.status), item.status].filter(Boolean).join(' ').toLowerCase(); }
@@ -118,7 +120,7 @@ function renderCollection(store: MerchStore) {
   host.classList.toggle('list-mode', ui.collectionView === 'list');
 
   const count = $('#collection-count');
-  if (count) count.textContent = `共 ${filtered.reduce((sum, item) => sum + quantityOf(item), 0)} 件`;
+  if (count) count.textContent = `共 ${filtered.reduce((sum, item) => sum + quantityOf(item), 0)} 件（${total} 筆）`;
 
   const resultCount = $('#collection-result-count');
   if (resultCount) {
