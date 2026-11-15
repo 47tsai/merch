@@ -30,7 +30,7 @@ for (const name of ['isRecord', 'isStringArray', 'isValidImage', 'isValidShippin
 for (const field of ['workName', 'shipping', 'material', 'release', 'createdAt', 'updatedAt']) {
   if (!storeSource.includes(`'${field}'`)) errors.push(`store.ts canonical validation 缺少 forbidden field contract：${field}`);
 }
-requirePattern(storeSource, /const CATEGORY_CODES = new Set/, 'store.ts 缺少 canonical Category code boundary');
+requirePattern(storeSource, /import \{ CATEGORY_CODES \} from '\.\/category-label';/, 'store.ts 必須從 category-label.ts 匯入唯一的 Category code registry，不得手寫第二份 Set');
 requirePattern(storeSource, /parseItemId\(value\.id\)/, 'store.ts 缺少 Item ID canonical boundary');
 requirePattern(storeSource, /parsed\.workCode !== work\.code/, 'store.ts 缺少 Work identity 精確比對');
 requirePattern(storeSource, /normalizeQuantity\(value\.quantity, label\)/, 'store.ts 缺少 quantity canonical normalization');
