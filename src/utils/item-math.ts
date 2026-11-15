@@ -1,1 +1,17 @@
-aW1wb3J0IHR5cGUgeyBJdGVtIH0gZnJvbSAnLi4vdHlwZXMnOwoKLyoqCiAqIFNpbmdsZSBzb3VyY2Ugb2YgdHJ1dGggZm9yIHBlci1JdGVtIHF1YW50aXR5IC8gdmFsdWUgbWF0aC4KICogUHJldmlvdXNseSBgcXVhbnRpdHlPZmAgLyBgaXRlbVZhbHVlYCB3ZXJlIGNvcHktcGFzdGVkIGluIG1haW4udHMsCiAqIGhvbWUtZW5oYW5jZW1lbnRzLnRzIGFuZCBzdGF0aXN0aWNzLWRhdGEudHMgKGFzIGBxdWFudGl0eWAgLyBgdmFsdWVgKSwKICogc28gb25lIHJ1bGUgY2hhbmdlIGhhZCB0byBiZSBhcHBsaWVkIGluIGZvdXIgcGxhY2VzLgogKiBgcXVhbnRpdHlgIG1pc3Npbmcgb3IgaW52YWxpZCBkZWZhdWx0cyB0byAxOyBhIG1hbGZvcm1lZCB2YWx1ZSBtdXN0CiAqIG5ldmVyIGJlIHNpbGVudGx5IHRyZWF0ZWQgYXMgMSBieSB0aGUgU3RvcmUgKHNlZSBzdG9yZS50cykuCiAqLwoKZXhwb3J0IGZ1bmN0aW9uIHF1YW50aXR5T2YoaXRlbTogSXRlbSk6IG51bWJlciB7CiAgcmV0dXJuIE51bWJlci5pc0ludGVnZXIoaXRlbS5xdWFudGl0eSkgJiYgaXRlbS5xdWFudGl0eSA+IDAgPyBpdGVtLnF1YW50aXR5IDogMTsKfQoKZXhwb3J0IGZ1bmN0aW9uIGl0ZW1WYWx1ZShpdGVtOiBJdGVtKTogbnVtYmVyIHsKICByZXR1cm4gTnVtYmVyKGl0ZW0ucHVyY2hhc2U/LnByaWNlIHx8IDApICogcXVhbnRpdHlPZihpdGVtKTsKfQo=
+import type { Item } from '../types';
+
+/**
+ * Single source of truth for per-Item quantity / value math.
+ * Previously `quantityOf` / `itemValue` were copy-pasted in main.ts,
+ * home-enhancements.ts and statistics-data.ts (as `quantity` / `value`),
+ * so one rule change had to be applied in four places.
+ * `quantity` missing or invalid defaults to 1; a malformed value must
+ * never be silently treated as 1 by the Store (see store.ts).
+ */
+export function quantityOf(item: Item): number {
+  return Number.isInteger(item.quantity) && item.quantity > 0 ? item.quantity : 1;
+}
+
+export function itemValue(item: Item): number {
+  return Number(item.purchase?.price || 0) * quantityOf(item);
+}
