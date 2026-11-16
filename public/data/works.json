@@ -24,6 +24,12 @@
       "name": "鳴潮",
       "code": "WW",
       "path": "data/wuthering-waves"
+    },
+    {
+      "id": "arknights-endfield",
+      "name": "明日方舟：終末地",
+      "code": "AKE",
+      "path": "data/arknights-endfield"
     }
   ]
 }
