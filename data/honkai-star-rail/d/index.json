@@ -4,18 +4,6 @@
   "category": "d",
   "items": [
     {
-      "id": "HSRd002",
-      "path": "data/honkai-star-rail/d/HSRd002/data.json",
-      "title": "昔漣 光錐系列 壓克力流沙立牌擺件",
-      "characters": [
-        "昔漣"
-      ],
-      "manufacturer": "米哈遊",
-      "quantity": 1,
-      "status": "pending",
-      "cover": "HSRd002.jpeg"
-    },
-    {
       "id": "HSRd003",
       "path": "data/honkai-star-rail/d/HSRd003/data.json",
       "title": "如我所書系列 壓克力立牌 昔漣",
@@ -38,6 +26,18 @@
       "quantity": 1,
       "status": "received",
       "cover": "HSRd001.jpeg"
+    },
+    {
+      "id": "HSRd002",
+      "path": "data/honkai-star-rail/d/HSRd002/data.json",
+      "title": "昔漣 光錐系列 壓克力流沙立牌擺件",
+      "characters": [
+        "昔漣"
+      ],
+      "manufacturer": "米哈遊",
+      "quantity": 1,
+      "status": "received",
+      "cover": "HSRd002.jpeg"
     }
   ]
 }
