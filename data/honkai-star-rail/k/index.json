@@ -4,17 +4,6 @@
   "category": "k",
   "items": [
     {
-      "id": "HSRk001",
-      "path": "data/honkai-star-rail/k/HSRk001/data.json",
-      "title": "仲夏螢火之約系列 亞克力合影卡",
-      "characters": [
-        "流螢"
-      ],
-      "manufacturer": "米哈遊",
-      "quantity": 1,
-      "status": "pending"
-    },
-    {
       "id": "HSRk003",
       "path": "data/honkai-star-rail/k/HSRk003/data.json",
       "title": "歡愉信號—嗶波！炫彩亞克力鑰匙圈 銀狼 LV999款",
@@ -61,6 +50,17 @@
       "quantity": 1,
       "status": "received",
       "cover": "HSRk002.jpeg"
+    },
+    {
+      "id": "HSRk001",
+      "path": "data/honkai-star-rail/k/HSRk001/data.json",
+      "title": "仲夏螢火之約系列 亞克力合影卡",
+      "characters": [
+        "流螢"
+      ],
+      "manufacturer": "米哈遊",
+      "quantity": 1,
+      "status": "received"
     }
   ]
 }
