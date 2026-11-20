@@ -5,7 +5,11 @@ import { currentYear } from './utils/date';
 import { escapeHtml, qs, qsa } from './utils/dom';
 import { formatMoney, formatPercent, formatQuantity } from './utils/format';
 
-const chartColors = ['#5B4BC4','#4B3BA8','#8D80E8','#3D2F91','#B5ADF4','#E1DDFF'];
+// Donut 色階：以 --chi-color-accent（凍結品牌色，淺 #584CCC／深 #A8A2E4）
+// 為底的 color-mix 階梯，定義在 src/statistics.css 的統計頁橋接裡。
+// 第一片就是凍結品牌色；淺色接近原本的紫階，深色跟主題變亮。
+// 填色用 var() 寫進 SVG fill 屬性，瀏覽器會解析成 CSS；算式不動。
+const chartColors = ['var(--chi-chart-1)','var(--chi-chart-2)','var(--chi-chart-3)','var(--chi-chart-4)','var(--chi-chart-5)','var(--chi-chart-6)'];
 let selectedYear = currentYear();
 
 function chartSvg(chart: Chart, large = false): string {
@@ -96,7 +100,7 @@ function donutSvg(chart: Chart, width: number, height: number, large: boolean, m
 }
 
 function detailTable(chart: Chart): string {
-  return `<div class="statistics-data"><div class="statistics-data-head"><span>完整資料</span><span>${chart.details.length} 筆</span></div><div class="statistics-data-table"><div class="statistics-data-table-row statistics-data-table-header"><span>項目</span><span>數量</span><span>消費</span><span>占比</span><span>補充</span></div>${chart.details.map(row => `<div class="statistics-data-table-row${chart.id === 'work-spending' ? ' statistics-work-detail-row' : ''}"${chart.id === 'work-spending' ? ' data-work-detail="' + escapeHtml(row.label) + '" tabindex="0" role="button"' : ''}><strong class="statistics-data-item">${escapeHtml(row.label)}</strong><span class="statistics-data-quantity">${escapeHtml(formatQuantity(row.quantity))}</span><span class="statistics-data-spend">${escapeHtml(formatMoney(row.spend))}</span><span class="statistics-data-share">${formatPercent(row.share)}</span><span class="statistics-data-extra">${escapeHtml(row.extra || '')}</span></div>`).join('') || '<div class="empty-state">目前沒有資料</div>'}</div></div>`;
+  return `<div class="statistics-data"><div class="statistics-data-head"><span>完整資料</span><span>${chart.details.length} 筆</span></div><div class="statistics-data-table"><div class="statistics-data-table-row statistics-data-table-header"><span>項目</span><span>數量</span><span>消費</span><span>占比</span><span>補充</span></div>${chart.details.map(row => `<div class="statistics-data-table-row${chart.id === 'work-spending' ? ' statistics-work-detail-row' : ''}"${chart.id === 'work-spending' ? ' data-work-detail="' + escapeHtml(row.label) + '" tabindex="0" role="button"' : ''}><strong class="statistics-data-item">${escapeHtml(row.label)}</strong><span class="statistics-data-quantity">${escapeHtml(formatQuantity(row.quantity))}</span><span class="statistics-data-spend">${escapeHtml(formatMoney(row.spend))}</span><span class="statistics-data-share">${formatPercent(row.share)}</span><span class="statistics-data-extra">${escapeHtml(row.extra || '')}</span></div>`).join('') || '<div class="chi-state"><span class="chi-state__title">目前沒有資料</span></div>'}</div></div>`;
 }
 
 function workItemsDetail(workName: string, items: WorkItemDetail[]): string {
@@ -138,7 +142,7 @@ function openDetail(chart: Chart): void {
   const modal = document.createElement('div');
   modal.className = 'statistics-detail';
   const mobile = window.matchMedia('(max-width: 700px)').matches;
-  modal.innerHTML = `<div class="statistics-detail-backdrop" data-stat-close></div><section class="chi-panel statistics-detail-dialog${mobile ? ' statistics-detail-dialog-mobile' : ''}" role="dialog" aria-modal="true" aria-labelledby="statistics-detail-title"><header class="statistics-detail-header"><div><span class="eyebrow">STATISTICS / DETAIL</span><h2 id="statistics-detail-title">${escapeHtml(chart.title)}</h2><p>${escapeHtml(chart.description)}</p></div><button type="button" class="chi-button statistics-detail-close" data-stat-close aria-label="關閉詳細統計"><svg class="statistics-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="/icons.svg#x"></use></svg></button></header><div class="statistics-summary-grid">${chart.summary.map(item => `<div class="chi-stat statistics-summary-card"><span class="chi-stat__label">${escapeHtml(item.label)}</span><strong class="chi-stat__value">${escapeHtml(item.value)}</strong></div>`).join('')}</div><div class="statistics-large-chart statistics-large-chart-${escapeHtml(chart.id)}" style="--statistics-row-count:${chart.rows.length}">${chartSvg(chart, true)}</div>${detailTable(chart)}</section>`;
+  modal.innerHTML = `<div class="statistics-detail-backdrop" data-stat-close></div><section class="chi-panel statistics-detail-dialog${mobile ? ' statistics-detail-dialog-mobile' : ''}" role="dialog" aria-modal="true" aria-labelledby="statistics-detail-title"><header class="statistics-detail-header"><div><span class="eyebrow">STATISTICS / DETAIL</span><h2 id="statistics-detail-title">${escapeHtml(chart.title)}</h2><p>${escapeHtml(chart.description)}</p></div><button type="button" class="chi-btn statistics-detail-close" data-stat-close aria-label="關閉詳細統計"><svg class="statistics-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="/icons.svg#x"></use></svg></button></header><div class="statistics-summary-grid">${chart.summary.map(item => `<div class="chi-stat statistics-summary-card"><span class="chi-stat__label">${escapeHtml(item.label)}</span><strong class="chi-stat__value">${escapeHtml(item.value)}</strong></div>`).join('')}</div><div class="statistics-large-chart statistics-large-chart-${escapeHtml(chart.id)}" style="--statistics-row-count:${chart.rows.length}">${chartSvg(chart, true)}</div>${detailTable(chart)}</section>`;
   document.body.appendChild(modal);
   document.body.classList.add('statistics-detail-open');
   const close = () => { modal.remove(); document.body.classList.remove('statistics-detail-open'); document.removeEventListener('keydown', keydown); };
@@ -170,9 +174,9 @@ function render(charts: Chart[], years: number[]): void {
     const isMonthly = chart.id === 'monthly-spending';
     const yearControl = isMonthly
       ? `<div class="statistics-year-control" role="group" aria-label="月度年份">
-          <button type="button" class="chi-button statistics-year-step" data-stat-year-prev aria-label="上一年"><svg class="statistics-icon statistics-icon--previous" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="/icons.svg#arrow-right"></use></svg></button>
+          <button type="button" class="chi-btn statistics-year-step" data-stat-year-prev aria-label="上一年"><svg class="statistics-icon statistics-icon--previous" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="/icons.svg#arrow-right"></use></svg></button>
           <span data-stat-year-label>${chart.year ?? currentYear()} 年</span>
-          <button type="button" class="chi-button statistics-year-step" data-stat-year-next aria-label="下一年"><svg class="statistics-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="/icons.svg#arrow-right"></use></svg></button>
+          <button type="button" class="chi-btn statistics-year-step" data-stat-year-next aria-label="下一年"><svg class="statistics-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="/icons.svg#arrow-right"></use></svg></button>
         </div>`
       : '';
     return `<article class="chi-panel statistics-chart-card" data-chart-id="${escapeHtml(chart.id)}">
@@ -257,7 +261,7 @@ async function boot(): Promise<void> {
   const host = qs<HTMLElement>('#statistics-charts');
   if (!host) return;
   try { mount(await getStore()); }
-  catch { host.innerHTML = '<div class="empty-state wide">統計資料載入失敗</div>'; }
+  catch { host.innerHTML = '<div class="chi-state"><span class="chi-state__title">統計資料載入失敗</span></div>'; }
 }
 
 void boot();
