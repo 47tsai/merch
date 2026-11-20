@@ -1,5 +1,28 @@
-/* Add page: composition only. Shared controls and semantic states come from Chi foundation. */
+/* Add page: chi-system v1.2.0 (pinned a7f018b) — 新增頁遷移。
+ * Token 對照（舊版 chi-library / merch.css 的 token 名 → v1.2.0 正式名，
+ * 只用 token，不寫原始色值）：
+ *   --chi-color-text / --chi-color-text-strong → --chi-color-text-primary
+ *   --chi-color-text-subtle → --chi-color-text-muted
+ *   --chi-color-border → --chi-color-border-subtle
+ *   --chi-color-accent-soft → color-mix(accent 8%, transparent)
+ *   --chi-color-accent-border → color-mix(accent 40%, transparent)
+ *   --chi-color-focus → --chi-color-focus-ring（merch 淺 #584CCC／深 #A8A2E4）
+ * Accent 橋接（見下方 .add-page 規則）：bundle 裡 merch.css／
+ * chi-library-tokens.css 的 :root 在 vendored 連結之後載入，把
+ * --chi-color-accent 蓋成 #5b4bc4（淺），與凍結品牌色 #584CCC 不符；
+ * 深色因 vendored [data-chi-theme="dark"][data-chi-brand="merch"] 權重較高，
+ * 本來就是 #A8A2E4。橋接把它指回乾淨的
+ * --chi-button-primary-background（vendored merch 值，淺 #584CCC／深
+ * #A8A2E4），只在新增頁內生效；徹底修法是刪掉舊檔的 :root 重定義，
+ * 那是全站範圍，留待以後整站 token 清理再做。
+ * 元件對照：chi-button → chi-btn（正式版，index.html 新增區已換）；
+ * chi-label → chi-field__label（正式版）；chi-input／chi-select／
+ * chi-textarea／chi-field／chi-panel 本來就是正式版或保留的本站定義。
+ * 寫入邏輯（add.ts 的 submit／驗證／store.addItem）一律不動。
+ */
 .add-page {
+  /* Accent 橋接（只在新增頁內）：見上方 header 註解。 */
+  --chi-color-accent: var(--chi-button-primary-background);
   width: min(100%, 1120px);
   margin-inline: auto;
   padding-bottom: var(--chi-space-8);
@@ -27,7 +50,7 @@
 
 .add-page-header h1 {
   margin: var(--chi-space-2) 0 0;
-  color: var(--chi-color-text-strong);
+  color: var(--chi-color-text-primary);
   font-size: var(--chi-text-display);
   font-weight: 800;
   line-height: 1.2;
@@ -59,7 +82,7 @@
 .add-section.chi-panel {
   min-width: 0;
   padding: clamp(1.1rem, 2.2vw, 1.65rem);
-  border: 1px solid var(--chi-color-border);
+  border: 1px solid var(--chi-color-border-subtle);
   border-radius: var(--chi-radius-lg);
   background: var(--chi-color-surface);
   box-shadow: var(--chi-shadow-sm);
@@ -79,9 +102,9 @@
   place-items: center;
   flex: 0 0 2.25rem;
   min-height: 2.25rem;
-  border: 1px solid var(--chi-color-accent-border);
+  border: 1px solid color-mix(in srgb, var(--chi-color-accent) 40%, transparent);
   border-radius: var(--chi-radius-md);
-  background: var(--chi-color-accent-soft);
+  background: color-mix(in srgb, var(--chi-color-accent) 8%, transparent);
   color: var(--chi-color-accent);
   font-size: var(--chi-text-sm);
   font-weight: 800;
@@ -92,7 +115,7 @@
 
 .add-section-heading h2 {
   margin: 0;
-  color: var(--chi-color-text-strong);
+  color: var(--chi-color-text-primary);
   font-size: var(--chi-text-lg);
   font-weight: 750;
   line-height: 1.45;
@@ -121,18 +144,18 @@
 
 .add-grid .wide { grid-column: 1 / -1; }
 
-.add-grid .chi-label {
+.add-grid .chi-field__label {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: .25rem;
-  color: var(--chi-color-text);
+  color: var(--chi-color-text-primary);
   font-size: var(--chi-text-sm);
   font-weight: 650;
   line-height: 1.5;
 }
 
-.add-grid .chi-label b {
+.add-grid .chi-field__label b {
   color: var(--chi-color-danger);
   font-size: var(--chi-text-xs);
   font-weight: 750;
@@ -174,14 +197,14 @@
   padding: var(--chi-space-1) 0 var(--chi-space-4);
 }
 
-.add-form-footer .chi-button { min-height: 2.75rem; }
+.add-form-footer .chi-btn { min-height: 2.75rem; }
 
-.add-form-footer .chi-button--primary {
+.add-form-footer .chi-btn--primary {
   min-width: 10rem;
   box-shadow: var(--chi-shadow-accent);
 }
 
-.add-form-footer .chi-button--primary:hover {
+.add-form-footer .chi-btn--primary:hover {
   box-shadow: var(--chi-shadow-accent-hover);
 }
 
@@ -196,7 +219,7 @@
 
 #add-result .modal-dialog h2 {
   margin: var(--chi-space-2) 0;
-  color: var(--chi-color-text-strong);
+  color: var(--chi-color-text-primary);
   font-size: var(--chi-text-xl);
   line-height: 1.35;
 }
@@ -244,16 +267,16 @@
     justify-content: stretch;
     margin-inline: -.25rem;
     padding: var(--chi-space-3);
-    border: 1px solid var(--chi-color-border);
+    border: 1px solid var(--chi-color-border-subtle);
     border-radius: var(--chi-radius-lg);
     background: color-mix(in srgb, var(--chi-color-surface) 90%, transparent);
     box-shadow: var(--chi-shadow-md);
     backdrop-filter: blur(16px);
   }
-  .add-form-footer .chi-button { flex: 1 1 0; min-width: 0; padding-inline: var(--chi-space-3); }
-  .add-form-footer .chi-button--primary { min-width: 0; }
+  .add-form-footer .chi-btn { flex: 1 1 0; min-width: 0; padding-inline: var(--chi-space-3); }
+  .add-form-footer .chi-btn--primary { min-width: 0; }
   #add-result .modal-actions { display: grid; grid-template-columns: 1fr; }
-  #add-result .modal-actions .chi-button { width: 100%; }
+  #add-result .modal-actions .chi-btn { width: 100%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
