@@ -1,0 +1,183 @@
+/* chi-system 首頁試點：merch 自己的殼橋接層（本站擁有，可改）。
+ *
+ * 只做三件事：
+ *  1. 把 merch 舊的 --color-* / --brand-* 語意變數接到 chi-system v1.2 token
+ *    （--chi-* 由 public/chi-system/tokens.css 定義，data-chi-brand="merch"），
+ *     讓首頁與共用殼用凍結品牌色 #584CCC（淺）／#A8A2E4（深）。
+ *  2. 把 chi-shell 版式接到 merch 現有的 .main / .content（取消舊 .main 的
+ *     margin-left: 248px，側邊欄改由 .chi-shell flex 排版）。
+ *  3. 手機版例外（齊 2026-11-20 定案）：不用 chi-system 預設抽屜，保留 merch
+ *     現有的底部一排導覽。≤560px 底部導覽列、561–767px 左側圖示列。
+ *
+ * 不動：統計圖表、收藏篩選／分頁、新增／管理、Worker、Chi Auth、data/、
+ * verify 腳本、資料載入與計算。vendored 的 public/chi-system/* 一律不改。
+ */
+
+/* 1. Token 橋接：--color-* / --brand-* 接到 chi token（--chi-* 會隨
+ * data-chi-theme 淺深切換，這裡不寫原始色值）。[data-chi-theme="dark"] 那段
+ * 是為了蓋過 design-tokens.css 的 html[data-theme='dark']（同權重、後載入者勝）。 */
+:root {
+  --color-bg: var(--chi-color-canvas);
+  --color-surface: var(--chi-color-surface);
+  --color-surface-soft: var(--chi-color-surface-sunken);
+  --color-text: var(--chi-color-text-primary);
+  --color-text-muted: var(--chi-color-text-secondary);
+  --color-border: var(--chi-color-border-subtle);
+  --color-focus-ring: var(--chi-color-focus-ring);
+  --color-success: var(--chi-color-success);
+  --color-warning: var(--chi-color-warning);
+  --color-danger: var(--chi-color-danger);
+  --color-info: var(--chi-color-info);
+  --brand: var(--chi-color-brand);
+  --brand-hover: var(--chi-color-accent-hover);
+  --brand-active: var(--chi-color-accent-active);
+  --brand-text: var(--chi-color-accent);
+  /* 舊別名：styles.css / statistics.css / sync-overlay.css 等仍用
+   * var(--chi-brand)，先指到 chi 品牌色，之後全站 token 遷完再逐檔改掉。
+   * （design-tokens.css 原本寫死 #5B4BC4，與凍結的 #584CCC 不一致，已移除。） */
+  --chi-brand: var(--chi-color-brand);
+}
+
+[data-chi-theme="dark"] {
+  --color-bg: var(--chi-color-canvas);
+  --color-surface: var(--chi-color-surface);
+  --color-surface-soft: var(--chi-color-surface-sunken);
+  --color-text: var(--chi-color-text-primary);
+  --color-text-muted: var(--chi-color-text-secondary);
+  --color-border: var(--chi-color-border-subtle);
+  --color-focus-ring: var(--chi-color-focus-ring);
+  --color-success: var(--chi-color-success);
+  --color-warning: var(--chi-color-warning);
+  --color-danger: var(--chi-color-danger);
+  --color-info: var(--chi-color-info);
+  --brand: var(--chi-color-brand);
+  --brand-hover: var(--chi-color-accent-hover);
+  --brand-active: var(--chi-color-accent-active);
+  --brand-text: var(--chi-color-accent);
+  --chi-brand: var(--chi-color-brand);
+}
+
+/* 2. 版式接線：chi-shell flex 排版，.main 不再自己留 248px 左邊距。 */
+.chi-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.chi-content .main {
+  margin-left: 0;
+  min-height: 100vh;
+}
+
+/* 側邊欄導覽圖示沿用 Font Awesome（與遷移前同一組 <i>），撐滿 chi 圖示格。 */
+.chi-sidebar__icon i {
+  font-size: 16px;
+}
+
+/* 3. 手機版例外：不開抽屜。chi sidebar.js 在 <768px 會把側邊欄判為抽屜
+ *（transform 藏到畫面外、inert、遮罩），這裡用 CSS 蓋掉位移與遮罩，
+ * inert／aria-hidden 由 src/chi-shell-bridge.ts 在執行期擋下。 */
+@media (max-width: 767px) {
+  .chi-sidebar {
+    transform: none;
+  }
+  .chi-sidebar__scrim {
+    display: none !important;
+  }
+  html.chi-sidebar-open body {
+    overflow: visible;
+  }
+}
+
+/* 561–767px：左側圖示列（與遷移前 merch ≤850px 的圖示列、chi ≥768px 的
+ * 圖示列同一外觀；只把 chi 的 768px 門檻往下延到 561px）。 */
+@media (min-width: 561px) and (max-width: 767px) {
+  .chi-sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    width: var(--chi-layout-sidebar-collapsed-width);
+  }
+  .chi-sidebar__name,
+  .chi-sidebar__label,
+  .chi-sidebar__version {
+    display: none;
+  }
+  .chi-sidebar__top {
+    flex-direction: column;
+    height: auto;
+    padding: var(--chi-space-2);
+    gap: var(--chi-space-2);
+  }
+  .chi-sidebar__bottom {
+    flex-direction: column;
+    padding: var(--chi-space-2);
+  }
+  .chi-sidebar__nav a {
+    justify-content: center;
+    padding: 0;
+  }
+  .chi-sidebar__trigger {
+    display: none;
+  }
+}
+
+/* ≤560px：底部一排導覽列（與遷移前 merch 的手機版同一位置、同一項目順序、
+ * 同一 62px 欄寬；品牌、收合鍵、版本在底部列隱藏，導覽連結本身不動）。 */
+@media (max-width: 560px) {
+  .chi-sidebar {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 30;
+    width: 100%;
+    height: auto;
+    padding: 7px 8px calc(7px + env(safe-area-inset-bottom));
+    border: 0;
+    border-top: var(--chi-base-border-default-width) solid var(--chi-color-border-subtle);
+    background: var(--chi-sidebar-background);
+  }
+  .chi-sidebar__top,
+  .chi-sidebar__bottom {
+    display: none;
+  }
+  .chi-sidebar__nav {
+    display: flex;
+    width: 100%;
+    gap: 4px;
+    overflow-x: auto;
+    overflow-y: visible;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    padding: 0;
+  }
+  .chi-sidebar__nav::-webkit-scrollbar {
+    display: none;
+  }
+  .chi-sidebar__nav a {
+    flex: 0 0 62px;
+    min-width: 62px;
+    min-height: 50px;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    padding: 5px 2px;
+    border-radius: var(--chi-radius-md);
+    font-size: 10px;
+    line-height: 1.25;
+  }
+  .chi-sidebar__nav a .chi-sidebar__label {
+    display: block;
+    overflow: hidden;
+    max-width: 100%;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .chi-sidebar__nav a .chi-sidebar__icon i {
+    font-size: 15px;
+  }
+  .chi-content .main {
+    padding-inline: 12px;
+  }
+  .chi-content .content {
+    padding-bottom: 100px;
+  }
+}
