@@ -33,19 +33,14 @@
 .chi-card__description{margin:0;color:var(--chi-color-text-muted);font-size:var(--chi-text-sm);line-height:1.75}
 .chi-icon-circle{width:3rem;height:3rem;flex:none;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--chi-radius-md);background:var(--chi-color-accent-soft);color:var(--chi-color-accent-blue);font-size:1.25rem}
 .chi-feature-list{display:grid;grid-template-columns:1fr;gap:var(--chi-space-4)}
-.chi-button{display:inline-flex;min-height:var(--chi-control-height);align-items:center;justify-content:center;gap:var(--chi-space-2);padding:0 var(--chi-space-5);border:1px solid var(--chi-color-border-strong);border-radius:var(--chi-radius-md);background:var(--chi-color-surface);color:var(--chi-color-text);font:inherit;font-size:var(--chi-text-sm);font-weight:650;text-decoration:none;cursor:pointer;transition:transform var(--chi-transition-fast),background var(--chi-transition-fast),border-color var(--chi-transition-fast),box-shadow var(--chi-transition-fast),color var(--chi-transition-fast)}
-.chi-button:hover{background:var(--chi-color-surface-muted)}
-.chi-button:active{transform:translateY(1px)}
-.chi-button--primary{border-color:transparent;background:var(--chi-color-accent);color:var(--chi-color-on-accent)}
-.chi-button--primary:hover{border-color:transparent;background:var(--chi-color-accent-hover)}
-.chi-button--pill{min-height:44px;padding-inline:2rem;border-radius:var(--chi-radius-pill)}
+/* Token 清理：本地 .chi-button 系統已全數換成正式版 chi-btn，規則刪除。 */
 .chi-field{display:flex;flex-direction:column;gap:var(--chi-space-2)}
 .chi-label{font-size:var(--chi-text-sm);font-weight:650}
 .chi-input,.chi-select,.chi-textarea{width:100%;min-height:var(--chi-control-height);padding:var(--chi-space-2) var(--chi-space-3);border:1px solid var(--chi-color-border-strong);border-radius:var(--chi-radius-md);background:var(--chi-color-surface);color:var(--chi-color-text);font:inherit}
 .chi-textarea{min-height:112px;resize:vertical}
 .chi-help{margin:0;color:var(--chi-color-text-muted);font-size:var(--chi-text-sm);line-height:1.6}
 .chi-input::placeholder,.chi-textarea::placeholder{color:var(--chi-color-text-subtle)}
-.chi-input:focus-visible,.chi-select:focus-visible,.chi-textarea:focus-visible,.chi-button:focus-visible,.chi-link:focus-visible,.chi-nav a:focus-visible{outline:3px solid var(--chi-color-focus);outline-offset:2px}
+.chi-input:focus-visible,.chi-select:focus-visible,.chi-textarea:focus-visible,.chi-link:focus-visible,.chi-nav a:focus-visible{outline:3px solid var(--chi-color-focus);outline-offset:2px}
 .chi-link{color:var(--chi-color-accent);text-underline-offset:3px}
 .chi-badge{display:inline-flex;align-items:center;padding:2px 9px;border:1px solid var(--chi-color-border);border-radius:var(--chi-radius-pill);background:var(--chi-color-surface-muted);color:var(--chi-color-text-muted);font-size:var(--chi-text-xs);line-height:1.6;white-space:nowrap}
 .chi-badge--success{color:var(--chi-color-success)}.chi-badge--warning{color:var(--chi-color-warning)}.chi-badge--danger{color:var(--chi-color-danger)}
@@ -70,9 +65,7 @@
 
 /* Extended everyday components */
 .chi-kicker{margin:0;color:var(--chi-color-text-subtle);font-size:var(--chi-text-xs);font-weight:700;letter-spacing:.08em;text-transform:uppercase}
-.chi-button--small{min-height:34px;padding-inline:var(--chi-space-3);font-size:var(--chi-text-xs)}
-.chi-button--danger{border-color:transparent;background:var(--chi-color-danger);color:var(--chi-color-on-danger)}
-.chi-button:disabled,.chi-input:disabled,.chi-select:disabled,.chi-textarea:disabled{cursor:not-allowed;opacity:.55}
+.chi-input:disabled,.chi-select:disabled,.chi-textarea:disabled{cursor:not-allowed;opacity:.55}
 .chi-field__hint{margin:0;color:var(--chi-color-text-muted);font-size:var(--chi-text-xs)}
 .chi-field__error{margin:0;color:var(--chi-color-danger);font-size:var(--chi-text-xs)}
 .chi-input[aria-invalid=true],.chi-select[aria-invalid=true],.chi-textarea[aria-invalid=true]{border-color:var(--chi-color-danger)}
@@ -139,7 +132,6 @@
 .chi-timeline__meta{margin:.2rem 0 0;color:var(--chi-color-text-subtle);font-size:var(--chi-text-xs)}
 .chi-toast{display:flex;align-items:center;gap:.75rem;padding:.85rem 1rem;border:1px solid var(--chi-color-border);border-radius:var(--chi-radius-md);background:var(--chi-color-surface);box-shadow:var(--chi-shadow-md);font-size:var(--chi-text-sm)}
 .chi-toast__message{min-width:0;flex:1}
-[data-chi-theme=dark] .chi-button--danger{color:var(--chi-color-on-danger)}
 [data-chi-theme=dark] .chi-alert--info{border-color:var(--chi-color-accent-border);background:var(--chi-color-accent-soft)}
 [data-chi-theme=dark] .chi-alert--success{border-color:var(--chi-color-success-border);background:var(--chi-color-success-soft)}
 [data-chi-theme=dark] .chi-alert--warning{border-color:var(--chi-color-warning-border);background:var(--chi-color-warning-soft)}
@@ -211,4 +203,3 @@
 .chi-icon-gallery__item>code{max-width:100%;overflow-wrap:anywhere;color:var(--chi-color-text-subtle);font-family:var(--chi-font-mono);font-size:.65rem}
 
 /* Icon-only action button: shared control sizing and focus behavior. */
-.chi-button--icon,.chi-icon-button{width:var(--chi-control-height);min-width:var(--chi-control-height);min-height:var(--chi-control-height);padding:0;border-radius:var(--chi-radius-pill)}

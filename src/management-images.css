@@ -10,7 +10,7 @@
  *   --chi-color-focus → --chi-color-focus-ring
  *   --chi-color-danger-soft → --chi-color-danger-bg
  *   --chi-color-danger-border → color-mix(danger 40%, transparent)
- * 圖片按鈕沿用跨頁共用的本地 .button 系統（controls.css），本支不改類名。
+ * 圖片按鈕已由本地 .button 換成正式版 chi-btn（整站 token 清理）。
  * 圖片上傳／替換／刪除／主圖邏輯（management.ts）一律不動。
  */
 .management-image-upload{display:flex;align-items:center;gap:var(--chi-space-3);flex-wrap:wrap;padding:var(--chi-space-3);border:1px dashed var(--chi-color-border-strong);border-radius:var(--chi-radius-md);margin-bottom:var(--chi-space-3);min-width:0;max-width:100%;box-sizing:border-box}
@@ -23,12 +23,12 @@
 .management-image-info strong{min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--chi-color-text-primary);font-size:var(--chi-text-sm)}
 .management-image-info small{min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--chi-color-text-muted);font-family:var(--chi-font-mono);font-size:var(--chi-text-xs)}
 .management-image-actions{display:flex;gap:var(--chi-space-2);flex-wrap:wrap;justify-content:flex-end;min-width:0;max-width:100%}
-.management-image-actions .button{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:0 var(--chi-space-3);border:1px solid var(--chi-color-border-strong);border-radius:var(--chi-radius-md);background:var(--chi-color-surface);color:var(--chi-color-text-primary);font:inherit;font-size:var(--chi-text-xs);font-weight:650;white-space:nowrap;cursor:pointer;transition:background var(--chi-transition-fast),border-color var(--chi-transition-fast),color var(--chi-transition-fast)}
-.management-image-actions .button:hover:not(:disabled){border-color:color-mix(in srgb, var(--chi-color-accent) 40%, transparent);background:color-mix(in srgb, var(--chi-color-accent) 8%, transparent);color:var(--chi-color-accent)}
-.management-image-actions .button:focus-visible{outline:3px solid var(--chi-color-focus-ring);outline-offset:2px}
-.management-image-actions .button:disabled{opacity:.5;cursor:not-allowed}
-.management-image-actions .button.danger{border-color:color-mix(in srgb, var(--chi-color-danger) 40%, transparent);color:var(--chi-color-danger)}
-.management-image-actions .button.danger:hover:not(:disabled){background:var(--chi-color-danger-bg)}
+.management-image-actions .chi-btn{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:0 var(--chi-space-3);border:1px solid var(--chi-color-border-strong);border-radius:var(--chi-radius-md);background:var(--chi-color-surface);color:var(--chi-color-text-primary);font:inherit;font-size:var(--chi-text-xs);font-weight:650;white-space:nowrap;cursor:pointer;transition:background var(--chi-transition-fast),border-color var(--chi-transition-fast),color var(--chi-transition-fast)}
+.management-image-actions .chi-btn:hover:not(:disabled){border-color:color-mix(in srgb, var(--chi-color-accent) 40%, transparent);background:color-mix(in srgb, var(--chi-color-accent) 8%, transparent);color:var(--chi-color-accent)}
+.management-image-actions .chi-btn:focus-visible{outline:3px solid var(--chi-color-focus-ring);outline-offset:2px}
+.management-image-actions .chi-btn:disabled{opacity:.5;cursor:not-allowed}
+.management-image-actions .chi-btn.danger{border-color:color-mix(in srgb, var(--chi-color-danger) 40%, transparent);color:var(--chi-color-danger)}
+.management-image-actions .chi-btn.danger:hover:not(:disabled){background:var(--chi-color-danger-bg)}
 .management-image-replace{cursor:pointer}
-@media(max-width:820px){.management-image-row{grid-template-columns:72px minmax(0,1fr);gap:var(--chi-space-3)}.management-image-preview{width:72px;height:72px}.management-image-actions{grid-column:1/-1;width:100%;justify-content:stretch}.management-image-actions .button{flex:1 1 0;min-width:0}}
-@media(max-width:420px){.management-image-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.management-image-actions .button{padding-inline:var(--chi-space-2)}}
+@media(max-width:820px){.management-image-row{grid-template-columns:72px minmax(0,1fr);gap:var(--chi-space-3)}.management-image-preview{width:72px;height:72px}.management-image-actions{grid-column:1/-1;width:100%;justify-content:stretch}.management-image-actions .chi-btn{flex:1 1 0;min-width:0}}
+@media(max-width:420px){.management-image-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.management-image-actions .chi-btn{padding-inline:var(--chi-space-2)}}

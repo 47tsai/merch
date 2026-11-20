@@ -10,11 +10,11 @@
       <p class="home-page-description">收藏概況與支出紀錄</p>
     </div>
     <div class="home-page-actions">
-      <a class="chi-button" href="#/collection">
+      <a class="chi-btn" href="#/collection">
         <svg class="home-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="/icons.svg#layers"></use></svg>
         瀏覽收藏
       </a>
-      <a class="chi-button chi-button--primary" href="#/add">
+      <a class="chi-btn chi-btn--primary" href="#/add">
         
         新增收藏
       </a>
@@ -81,7 +81,7 @@
   <section class="home-recent-section" id="recent-section" aria-labelledby="recent-title">
     <header class="home-section-heading home-recent-heading">
       <div><p class="eyebrow">RECENTLY ADDED</p><h2 id="recent-title">最近收藏</h2></div>
-      <a class="chi-button chi-button--small" href="#/collection">全部收藏
+      <a class="chi-btn chi-btn--sm" href="#/collection">全部收藏
         <svg class="home-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="/icons.svg#arrow-right"></use></svg>
       </a>
     </header>
@@ -111,27 +111,27 @@
     <div class="collection-filter-row">
       <label class="chi-field collection-control-group">
         <span class="chi-field__label">狀態</span>
-        <select class="chi-select" id="filter-status" aria-label="狀態篩選"><option value="all">全部狀態</option><option value="pending">待到貨</option></select>
+        <span class="chi-select-wrap"><select class="chi-select" id="filter-status" aria-label="狀態篩選"><option value="all">全部狀態</option><option value="pending">待到貨</option></select><svg class="chi-icon" aria-hidden="true"><use href="/icons.svg#chevron-down"/></svg></span>
       </label>
       <label class="chi-field collection-control-group">
         <span class="chi-field__label">類型</span>
-        <select class="chi-select" id="filter-category" aria-label="類型篩選"><option value="all">全部類型</option></select>
+        <span class="chi-select-wrap"><select class="chi-select" id="filter-category" aria-label="類型篩選"><option value="all">全部類型</option></select><svg class="chi-icon" aria-hidden="true"><use href="/icons.svg#chevron-down"/></svg></span>
       </label>
       <label class="chi-field collection-control-group">
         <span class="chi-field__label">作品</span>
-        <select class="chi-select" id="filter-work" aria-label="作品篩選" hidden><option value="all">全部作品</option></select>
+        <span class="chi-select-wrap" hidden><select class="chi-select" id="filter-work" aria-label="作品篩選"><option value="all">全部作品</option></select><svg class="chi-icon" aria-hidden="true"><use href="/icons.svg#chevron-down"/></svg></span>
       </label>
       <label class="chi-field collection-control-group">
         <span class="chi-field__label">角色</span>
-        <select class="chi-select" id="filter-character" aria-label="角色篩選" hidden><option value="all">全部角色</option></select>
+        <span class="chi-select-wrap" hidden><select class="chi-select" id="filter-character" aria-label="角色篩選"><option value="all">全部角色</option></select><svg class="chi-icon" aria-hidden="true"><use href="/icons.svg#chevron-down"/></svg></span>
       </label>
       <label class="chi-field collection-control-group">
         <span class="chi-field__label">廠商</span>
-        <select class="chi-select" id="filter-manufacturer" aria-label="廠商篩選" hidden><option value="all">全部廠商</option></select>
+        <span class="chi-select-wrap" hidden><select class="chi-select" id="filter-manufacturer" aria-label="廠商篩選"><option value="all">全部廠商</option></select><svg class="chi-icon" aria-hidden="true"><use href="/icons.svg#chevron-down"/></svg></span>
       </label>
       <label class="chi-field collection-control-group collection-sort-group">
         <span class="chi-field__label">排序</span>
-        <select class="chi-select" id="sort" aria-label="排序"><option value="purchase">最新收藏</option><option value="title">名稱</option><option value="price">價格（高至低）</option></select>
+        <span class="chi-select-wrap"><select class="chi-select" id="sort" aria-label="排序"><option value="purchase">最新收藏</option><option value="title">名稱</option><option value="price">價格（高至低）</option></select><svg class="chi-icon" aria-hidden="true"><use href="/icons.svg#chevron-down"/></svg></span>
       </label>
       <div class="chi-field collection-control-group collection-view-group">
         <span class="chi-field__label">顯示方式</span>
@@ -224,14 +224,14 @@
         <div><h2 id="add-basic-heading">基本資料</h2><p>先確認作品、類型與商品名稱。圖片可在儲存後到管理頁補上。</p></div>
       </header>
       <div class="add-grid">
-        <label class="chi-field"><span class="chi-field__label">作品 <b>*</b></span><select class="chi-select" id="add-work" required></select></label>
-        <label class="chi-field"><span class="chi-field__label">類型 <b>*</b></span><select class="chi-select" id="add-category" required><option value="b">徽章／吧唧</option><option value="c">卡片</option><option value="d">立牌／擺件</option><option value="e">電子產品</option><option value="f">手辦／模型</option><option value="g">文具</option><option value="h">海報／掛畫／掛軸</option><option value="k">掛件／吊飾</option><option value="l">文件／資料夾</option><option value="m">書籍／漫畫</option><option value="n">明信片</option><option value="o">其他</option><option value="p">毛絨／布偶</option><option value="q">鑰匙圈</option><option value="r">雷射票</option><option value="s">色紙</option><option value="v">服飾</option><option value="w">餐具／生活用品</option><option value="y">特典</option></select></label>
+        <label class="chi-field"><span class="chi-field__label">作品 <b>*</b></span><span class="chi-select-wrap"><select class="chi-select" id="add-work" required></select><svg class="chi-icon" aria-hidden="true"><use href="/icons.svg#chevron-down"/></svg></span></label>
+        <label class="chi-field"><span class="chi-field__label">類型 <b>*</b></span><span class="chi-select-wrap"><select class="chi-select" id="add-category" required><option value="b">徽章／吧唧</option><option value="c">卡片</option><option value="d">立牌／擺件</option><option value="e">電子產品</option><option value="f">手辦／模型</option><option value="g">文具</option><option value="h">海報／掛畫／掛軸</option><option value="k">掛件／吊飾</option><option value="l">文件／資料夾</option><option value="m">書籍／漫畫</option><option value="n">明信片</option><option value="o">其他</option><option value="p">毛絨／布偶</option><option value="q">鑰匙圈</option><option value="r">雷射票</option><option value="s">色紙</option><option value="v">服飾</option><option value="w">餐具／生活用品</option><option value="y">特典</option></select><svg class="chi-icon" aria-hidden="true"><use href="/icons.svg#chevron-down"/></svg></span></label>
         <label class="chi-field wide"><span class="chi-field__label">標題 <b>*</b></span><input class="chi-input" id="add-title" required maxlength="200" autocomplete="off" placeholder="輸入商品名稱"></label>
         <label class="chi-field"><span class="chi-field__label">系列</span><input class="chi-input" id="add-series" placeholder="多個項目請用逗號分隔"></label>
         <label class="chi-field"><span class="chi-field__label">角色</span><input class="chi-input" id="add-characters" placeholder="多個角色請用逗號分隔"></label>
         <label class="chi-field"><span class="chi-field__label">製造商</span><input class="chi-input" id="add-manufacturer" placeholder="商品製造商"></label>
         <label class="chi-field"><span class="chi-field__label">數量 <b>*</b></span><input class="chi-input" id="add-quantity" type="number" min="1" step="1" value="1" required></label>
-        <label class="chi-field"><span class="chi-field__label">狀態 <b>*</b></span><select class="chi-select" id="add-status"><option value="pending">待到貨</option><option value="preorder">預購中</option><option value="received">已收到</option></select></label>
+        <label class="chi-field"><span class="chi-field__label">狀態 <b>*</b></span><span class="chi-select-wrap"><select class="chi-select" id="add-status"><option value="pending">待到貨</option><option value="preorder">預購中</option><option value="received">已收到</option></select><svg class="chi-icon" aria-hidden="true"><use href="/icons.svg#chevron-down"/></svg></span></label>
       </div>
     </section>
     <section class="chi-panel add-section" aria-labelledby="add-purchase-heading">
@@ -283,9 +283,9 @@
           <span id="management-search-count" class="muted management-search-count" role="status">載入中…</span>
         </div>
         <div class="management-picker-grid">
-          <label class="chi-field compact"><span class="chi-field__label">作品</span><select class="chi-select" id="management-picker-work" aria-label="選擇作品"></select></label>
-          <label class="chi-field compact"><span class="chi-field__label">類型</span><select class="chi-select" id="management-picker-category" aria-label="選擇周邊類型"></select></label>
-          <label class="chi-field compact"><span class="chi-field__label">收藏項目</span><select class="chi-select" id="management-picker-serial" aria-label="選擇收藏"></select></label>
+          <label class="chi-field compact"><span class="chi-field__label">作品</span><span class="chi-select-wrap"><select class="chi-select" id="management-picker-work" aria-label="選擇作品"></select><svg class="chi-icon" aria-hidden="true"><use href="/icons.svg#chevron-down"/></svg></span></label>
+          <label class="chi-field compact"><span class="chi-field__label">類型</span><span class="chi-select-wrap"><select class="chi-select" id="management-picker-category" aria-label="選擇周邊類型"></select><svg class="chi-icon" aria-hidden="true"><use href="/icons.svg#chevron-down"/></svg></span></label>
+          <label class="chi-field compact"><span class="chi-field__label">收藏項目</span><span class="chi-select-wrap"><select class="chi-select" id="management-picker-serial" aria-label="選擇收藏"></select><svg class="chi-icon" aria-hidden="true"><use href="/icons.svg#chevron-down"/></svg></span></label>
           <div class="management-toolbar-actions"><button class="chi-btn" id="management-new" type="button">新增收藏</button></div>
         </div>
       </div>
@@ -298,7 +298,7 @@
           <label class="chi-field"><span class="chi-field__label">角色</span><input class="chi-input" id="management-characters" placeholder="多個角色請用逗號分隔"></label>
           <label class="chi-field"><span class="chi-field__label">製造商</span><input class="chi-input" id="management-manufacturer"></label>
           <label class="chi-field"><span class="chi-field__label">數量 <b>*</b></span><input class="chi-input" id="management-quantity" type="number" min="1" step="1" required></label>
-          <label class="chi-field"><span class="chi-field__label">狀態 <b>*</b></span><select class="chi-select" id="management-status"><option value="pending">待到貨</option><option value="preorder">預購中</option><option value="received">已收到</option></select></label>
+          <label class="chi-field"><span class="chi-field__label">狀態 <b>*</b></span><span class="chi-select-wrap"><select class="chi-select" id="management-status"><option value="pending">待到貨</option><option value="preorder">預購中</option><option value="received">已收到</option></select><svg class="chi-icon" aria-hidden="true"><use href="/icons.svg#chevron-down"/></svg></span></label>
           <label class="chi-field"><span class="chi-field__label">單價</span><input class="chi-input" id="management-price" type="number" min="0" step="0.01"></label>
           <label class="chi-field"><span class="chi-field__label">幣別</span><input class="chi-input" id="management-currency" value="TWD"></label>
           <label class="chi-field"><span class="chi-field__label">平台</span><input class="chi-input" id="management-platform"></label>
@@ -414,4 +414,4 @@
     </div>
   </div>
 </section>
-<section class="page" data-page="detail" hidden id="detail"></section><section class="page" data-page="404" hidden><div class="page-heading"><div><span class="eyebrow">404 / NOT FOUND</span><h1>找不到頁面</h1><p>這個網址沒有對應的頁面。</p></div><a class="button" href="#/home">返回首頁</a></div></section></div><footer class="footer"><span>Chi MERCH</span><span>Personal Collection Database</span><span class="version">v--</span></footer></main></div></div><noscript><div class="noscript">此網站需要啟用 JavaScript 才能使用完整功能。</div></noscript><script type="module" src="/src/main.ts"></script><script type="module" src="/src/cross-navigation.ts"></script><script type="module" src="/src/collection-controls.ts"></script><script type="module" src="/src/detail-focus.ts"></script><script type="module" src="/src/image-viewer.ts"></script><script type="module" src="/src/statistics.ts"></script><script type="module" src="/src/home-enhancements.ts"></script><script type="module" src="/src/management.ts"></script><script type="module" src="/src/shipping.ts"></script><script type="module" src="/src/works-management.ts"></script><script type="module" src="/src/add.ts"></script><script type="module" src="/src/settings-auth.ts"></script></body></html>
+<section class="page" data-page="detail" hidden id="detail"></section><section class="page" data-page="404" hidden><div class="page-heading"><div><span class="eyebrow">404 / NOT FOUND</span><h1>找不到頁面</h1><p>這個網址沒有對應的頁面。</p></div><a class="chi-btn chi-btn--primary" href="#/home">返回首頁</a></div></section></div><footer class="footer"><span>Chi MERCH</span><span>Personal Collection Database</span><span class="version">v--</span></footer></main></div></div><noscript><div class="noscript">此網站需要啟用 JavaScript 才能使用完整功能。</div></noscript><script type="module" src="/src/main.ts"></script><script type="module" src="/src/cross-navigation.ts"></script><script type="module" src="/src/collection-controls.ts"></script><script type="module" src="/src/detail-focus.ts"></script><script type="module" src="/src/image-viewer.ts"></script><script type="module" src="/src/statistics.ts"></script><script type="module" src="/src/home-enhancements.ts"></script><script type="module" src="/src/management.ts"></script><script type="module" src="/src/shipping.ts"></script><script type="module" src="/src/works-management.ts"></script><script type="module" src="/src/add.ts"></script><script type="module" src="/src/settings-auth.ts"></script></body></html>

@@ -1,45 +1,8 @@
 /* Shared control foundation. Page-specific CSS may size/layout controls, but not redefine their semantic states. */
-.button,
-button.button,
-a.button {
-  min-height: var(--control-height);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  padding: 0 var(--space-4);
-  border: var(--border-width) solid transparent;
-  border-radius: var(--radius-sm);
-  background: var(--brand);
-  color: #fff;
-  font: inherit;
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-semibold);
-  line-height: 1;
-  text-decoration: none;
-  cursor: pointer;
-  transition: background-color .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease, transform .16s ease;
-}
+/* Token 清理：本地 .button 系統已全數換成正式版 chi-btn，規則刪除。
+ * input／select／textarea 的共用規則保留。 */
 
-.button:hover,
-button.button:hover,
-a.button:hover {
-  background: var(--brand-hover);
-}
-
-.button:active,
-button.button:active,
-a.button:active {
-  background: var(--brand-active);
-  transform: translateY(1px);
-}
-
-.button:focus-visible,
-button.button:focus-visible,
-a.button:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
+input:focus-visible, select:focus-visible, textarea:focus-visible {
   outline: 0;
   box-shadow: 0 0 0 3px var(--color-focus-ring);
 }
@@ -56,58 +19,6 @@ textarea:focus-visible {
   border-color: var(--color-border);
 }
 
-.button:disabled,
-button.button:disabled,
-.button[aria-disabled='true'],
-a.button[aria-disabled='true'] {
-  opacity: .52;
-  cursor: not-allowed;
-  pointer-events: none;
-  transform: none;
-}
-
-.button.secondary,
-button.button.secondary,
-a.button.secondary {
-  background: var(--color-surface);
-  color: var(--color-text);
-  border-color: var(--color-border);
-}
-
-.button.secondary:hover,
-button.button.secondary:hover,
-a.button.secondary:hover {
-  background: var(--color-surface-soft);
-  border-color: var(--brand-border);
-  color: var(--brand-text);
-}
-
-.button.secondary:active,
-button.button.secondary:active,
-a.button.secondary:active {
-  background: var(--brand-soft);
-}
-
-.button.danger,
-button.button.danger,
-a.button.danger {
-  background: var(--color-danger);
-  color: #fff;
-}
-
-.button.danger:hover,
-button.button.danger:hover,
-a.button.danger:hover {
-  filter: brightness(.94);
-}
-
-.button.compact,
-button.button.compact,
-a.button.compact {
-  min-height: var(--control-height-compact);
-  padding-inline: var(--space-3);
-  font-size: var(--font-size-sm);
-}
 
 input,
 select,

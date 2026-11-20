@@ -7,22 +7,15 @@
  *   --chi-color-accent-soft → color-mix(accent 8%, transparent)
  *   --chi-color-accent-border → color-mix(accent 40%, transparent)
  *   --chi-color-focus → --chi-color-focus-ring（merch 淺 #584CCC／深 #A8A2E4）
- * Accent 橋接（見下方 .add-page 規則）：bundle 裡 merch.css／
- * chi-library-tokens.css 的 :root 在 vendored 連結之後載入，把
- * --chi-color-accent 蓋成 #5b4bc4（淺），與凍結品牌色 #584CCC 不符；
- * 深色因 vendored [data-chi-theme="dark"][data-chi-brand="merch"] 權重較高，
- * 本來就是 #A8A2E4。橋接把它指回乾淨的
- * --chi-button-primary-background（vendored merch 值，淺 #584CCC／深
- * #A8A2E4），只在新增頁內生效；徹底修法是刪掉舊檔的 :root 重定義，
- * 那是全站範圍，留待以後整站 token 清理再做。
+ * Accent 橋接已移除：整站 token 清理刪掉了 merch.css／
+ * chi-library-tokens.css 的 :root 舊值，--chi-color-accent 改由 vendored
+ * tokens.css（data-chi-brand="merch"）提供凍結值（淺 #584CCC／深 #A8A2E4）。
  * 元件對照：chi-button → chi-btn（正式版，index.html 新增區已換）；
  * chi-label → chi-field__label（正式版）；chi-input／chi-select／
  * chi-textarea／chi-field／chi-panel 本來就是正式版或保留的本站定義。
  * 寫入邏輯（add.ts 的 submit／驗證／store.addItem）一律不動。
  */
 .add-page {
-  /* Accent 橋接（只在新增頁內）：見上方 header 註解。 */
-  --chi-color-accent: var(--chi-button-primary-background);
   width: min(100%, 1120px);
   margin-inline: auto;
   padding-bottom: var(--chi-space-8);

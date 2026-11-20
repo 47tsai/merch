@@ -14,14 +14,9 @@
  *   --chi-brand（長條圖填色）→ --chi-color-accent（跟隨主題的凍結品牌色，
  *     淺 #584CCC／深 #A8A2E4；原本 --chi-brand 指到不跟主題變的
  *     --chi-color-brand，深色長條是 #584CCC）
- * Accent 橋接（見下方 .statistics-page 規則）：bundle 裡 merch.css／
- * chi-library-tokens.css 的 :root 在 vendored 連結之後載入，把
- * --chi-color-accent 蓋成 #5b4bc4（淺），與凍結品牌色 #584CCC 不符；
- * 深色因 vendored [data-chi-theme="dark"][data-chi-brand="merch"] 權重較高，
- * 本來就是 #A8A2E4。橋接把它指回乾淨的
- * --chi-button-primary-background（vendored merch 值，淺 #584CCC／深
- * #A8A2E4），只在統計頁內生效；徹底修法是刪掉舊檔的 :root 重定義，
- * 那是全站範圍，留待以後整站 token 清理再做。
+ * Accent 橋接已移除：整站 token 清理刪掉了 merch.css／
+ * chi-library-tokens.css 的 :root 舊值，--chi-color-accent 改由 vendored
+ * tokens.css（data-chi-brand="merch"）提供凍結值（淺 #584CCC／深 #A8A2E4）。
  * Donut 六色（見下方 --chi-chart-1..6）：原本寫死六個紫
  * #5B4BC4／#4B3BA8／#8D80E8／#3D2F91／#B5ADF4／#E1DDFF，第一片也不是
  * 凍結品牌色，深色也不跟主題變。改成以 --chi-color-accent 為底的
@@ -32,12 +27,11 @@
  * v1.2.0 沒有正式版元件，保留；chi-stat／chi-badge 是正式版類名，
  * 本來就是；空狀態 empty-state → chi-state（正式版）。
  */
-/* Accent 橋接與 donut 色階（只在統計頁內生效）：見上方 header 註解。
+/* Donut 色階（只在統計頁內生效）：見上方 header 註解。
  * 注意：詳細對話框（.statistics-detail）與作品明細彈窗
  * （.statistics-work-popup）是掛在 document.body 下，不在
- * .statistics-page 裡面，所以橋接要同時寫在這三個選擇器上。 */
+ * .statistics-page 裡面，所以色階要同時寫在這三個選擇器上。 */
 .statistics-page, .statistics-detail, .statistics-work-popup {
-  --chi-color-accent: var(--chi-button-primary-background);
   --chi-chart-1: var(--chi-color-accent);
   --chi-chart-2: color-mix(in srgb, var(--chi-color-accent) 78%, black);
   --chi-chart-3: color-mix(in srgb, var(--chi-color-accent) 70%, white);

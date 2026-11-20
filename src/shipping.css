@@ -12,26 +12,19 @@
  *   --chi-color-danger-border → color-mix(danger 40%, transparent)
  *   --chi-color-focus → --chi-color-focus-ring（merch 淺 #584CCC／深 #A8A2E4）
  *   --chi-control-height → --chi-size-control（44px → 40px，v1.2.0 正式控制高度）
- * Accent 橋接（見下方 .shipping-page 與 .shipping-detail 規則）：bundle 裡
- * merch.css／chi-library-tokens.css 的 :root 在 vendored 連結之後載入，把
- * --chi-color-accent 蓋成 #5b4bc4（淺），與凍結品牌色 #584CCC 不符；深色
- * 因 vendored [data-chi-theme="dark"][data-chi-brand="merch"] 權重較高，
- * 本來就是 #A8A2E4。橋接把它指回乾淨的 --chi-button-primary-background
- * （vendored merch 值，淺 #584CCC／深 #A8A2E4），只在運費頁內生效；
- * 運費詳情彈窗掛在 document.body 下、不在 .shipping-page 裡，所以橋接
- * 同時寫在 .shipping-detail 上；徹底修法是刪掉舊檔的 :root 重定義，
- * 那是全站範圍，留待以後整站 token 清理再做。
+ * Accent 橋接已移除：整站 token 清理刪掉了 merch.css／
+ * chi-library-tokens.css 的 :root 舊值，--chi-color-accent 改由 vendored
+ * tokens.css（data-chi-brand="merch"）提供凍結值（淺 #584CCC／深 #A8A2E4）。
  * 元件對照：chi-button → chi-btn（正式版，index.html 運費區與 shipping.ts
  * 的動態按鈕已換）；chi-label → chi-field__label（正式版）；空狀態
  * empty-state → chi-state（正式版，shipping.ts 與 shipping-detail-modal.ts
  * 已換，本檔的 .empty-state 虛線框規則隨之移除）；chi-input／chi-select／
  * chi-textarea／chi-field／chi-badge／chi-panel 本來就是正式版類名；
- * .button（運費卡片編輯／刪除、詳情關閉）是跨頁共用的本地 .button 系統
- * （controls.css，詳情頁也在用），留待整站元件清理，本支不動。
+ * 運費卡片編輯／刪除、詳情關閉已由本地 .button 換成正式版 chi-btn。
  * 運費計算、寫入、驗證、Worker、Chi Auth、data/ 一律不動。
  */
 /* Shipping page · Chi Design System */
-.shipping-page{width:min(100%,1180px);margin-inline:auto;color:var(--chi-color-text-primary);--chi-color-accent:var(--chi-button-primary-background)}
+.shipping-page{width:min(100%,1180px);margin-inline:auto;color:var(--chi-color-text-primary)}
 .shipping-page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--chi-space-5);margin-bottom:var(--chi-space-6)}
 .shipping-page-header h1{margin:var(--chi-space-2) 0 0;color:var(--chi-color-text-primary);font-size:clamp(1.8rem,3vw,2.4rem);line-height:1.2;letter-spacing:-.035em}
 .shipping-page-header p{margin:var(--chi-space-3) 0 0;color:var(--chi-color-text-muted);line-height:1.75}
@@ -94,7 +87,7 @@
 .shipping-items-pagination,.shipping-records-pagination{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--chi-space-3);margin-top:var(--chi-space-3);color:var(--chi-color-text-muted);font-size:var(--chi-text-xs)}
 .shipping-pagination-controls{display:flex;align-items:center;gap:var(--chi-space-2)}
 .shipping-pagination-controls>span{min-width:44px;text-align:center;font-variant-numeric:tabular-nums}
-.shipping-pagination-controls .chi-btn,.shipping-records-pagination .button{min-height:36px;padding-inline:var(--chi-space-3)}
+.shipping-pagination-controls .chi-btn,.shipping-records-pagination .chi-btn{min-height:36px;padding-inline:var(--chi-space-3)}
 .shipping-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:var(--chi-space-3);margin-top:var(--chi-space-2)}
 .shipping-actions .chi-btn{min-height:var(--chi-size-control)}
 .shipping-list{display:grid;align-content:start;gap:var(--chi-space-4)}
@@ -108,11 +101,11 @@
 .shipping-card p{margin:var(--chi-space-2) 0;color:var(--chi-color-text-muted);line-height:1.65;overflow-wrap:anywhere}
 .shipping-card small{display:block;margin-bottom:var(--chi-space-3)}
 .shipping-card-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:var(--chi-space-2)}
-.shipping-card-actions .button,.shipping-records-pagination .button{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding-inline:var(--chi-space-3);border:1px solid var(--chi-color-border-strong);border-radius:var(--chi-radius-md);background:var(--chi-color-surface);color:var(--chi-color-text-primary);font:inherit;font-size:var(--chi-text-xs);font-weight:650;cursor:pointer}
-.shipping-card-actions .button:hover,.shipping-records-pagination .button:hover{border-color:color-mix(in srgb, var(--chi-color-accent) 40%, transparent);color:var(--chi-color-accent)}
-.shipping-card-actions .button.danger{border-color:color-mix(in srgb, var(--chi-color-danger) 40%, transparent);color:var(--chi-color-danger)}
-.shipping-card-actions .button:disabled,.shipping-records-pagination .button:disabled{opacity:.5;cursor:not-allowed}
-.shipping-detail{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:var(--chi-space-4);--chi-color-accent:var(--chi-button-primary-background)}
+.shipping-card-actions .chi-btn,.shipping-records-pagination .chi-btn{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding-inline:var(--chi-space-3);border:1px solid var(--chi-color-border-strong);border-radius:var(--chi-radius-md);background:var(--chi-color-surface);color:var(--chi-color-text-primary);font:inherit;font-size:var(--chi-text-xs);font-weight:650;cursor:pointer}
+.shipping-card-actions .chi-btn:hover,.shipping-records-pagination .chi-btn:hover{border-color:color-mix(in srgb, var(--chi-color-accent) 40%, transparent);color:var(--chi-color-accent)}
+.shipping-card-actions .chi-btn--danger{border-color:color-mix(in srgb, var(--chi-color-danger) 40%, transparent);color:var(--chi-color-danger)}
+.shipping-card-actions .chi-btn:disabled,.shipping-records-pagination .chi-btn:disabled{opacity:.5;cursor:not-allowed}
+.shipping-detail{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:var(--chi-space-4)}
 .shipping-detail-backdrop{position:absolute;inset:0;background:rgb(0 0 0 / 38%);backdrop-filter:blur(4px)}
 .shipping-detail-dialog{position:relative;width:min(680px,100%);max-height:82vh;overflow:auto;padding:var(--chi-space-5);border:1px solid var(--chi-color-border-subtle);border-radius:var(--chi-radius-lg);background:var(--chi-color-surface);color:var(--chi-color-text-primary);box-shadow:var(--chi-shadow-md)}
 .shipping-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--chi-space-3);margin:var(--chi-space-4) 0}
