@@ -118,7 +118,7 @@ function renderCollection(store: MerchStore) {
   const start = (page - 1) * COLLECTION_PAGE_SIZE;
   const visible = filtered.slice(start, start + COLLECTION_PAGE_SIZE);
   host.innerHTML = visible.map((item) => itemCard(item)).join('')
-    || '<div class="chi-empty-state collection-empty-state"><p class="chi-empty-state__title">目前沒有符合條件的收藏</p><p class="chi-empty-state__description">試著調整搜尋文字或篩選條件，看看其他收藏。</p></div>';
+    || '<div class="chi-state collection-empty-state"><p class="chi-state__title">目前沒有符合條件的收藏</p><p class="chi-state__desc">試著調整搜尋文字或篩選條件，看看其他收藏。</p></div>';
   host.classList.toggle('list-mode', ui.collectionView === 'list');
 
   const count = $('#collection-count');
