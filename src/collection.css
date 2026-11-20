@@ -12,14 +12,9 @@
  *     （基線 #F0EDFF 淺／#292442 深；8% 混色最接近）
  *   --chi-color-accent-border → color-mix(accent 40%, transparent)
  *     （基線 #D3CAFF 淺／#554A83 深；40% 混色，略深一點）
- * Accent 橋接（見下方 .collection-page 規則）：bundle 裡 merch.css／
- * chi-library-tokens.css 的 :root 在 vendored 連結之後載入，把
- * --chi-color-accent 蓋成 #5b4bc4（淺），與凍結品牌色 #584CCC 不符；
- * 深色因 vendored [data-chi-theme="dark"][data-chi-brand="merch"] 權重較高，
- * 本來就是 #A8A2E4。橋接把它指回乾淨的
- * --chi-button-primary-background（vendored merch 值，淺 #584CCC／深
- * #A8A2E4），只在收藏頁內生效；徹底修法是刪掉舊檔的 :root 重定義，
- * 那是全站範圍，留待以後整站 token 清理再做。
+ * Accent 橋接已移除：整站 token 清理刪掉了 merch.css／
+ * chi-library-tokens.css 的 :root 舊值，--chi-color-accent 改由 vendored
+ * tokens.css（data-chi-brand="merch"）提供凍結值（淺 #584CCC／深 #A8A2E4）。
  * 元件對照：chi-button → chi-btn（正式版，index.html 收藏區已換）；
  * chi-label → chi-field__label（正式版）；空狀態 chi-empty-state →
  * chi-state（正式版，main.ts renderCollection 已換）；chi-select／
@@ -27,11 +22,6 @@
  * 與 chi-pagination（分頁）在 v1.2.0 沒有正式版元件，保留本站定義，
  * 已確認它們只用 chi token。
  */
-/* Accent 橋接（只在收藏頁內）：見上方 header 註解。 */
-.collection-page {
-  --chi-color-accent: var(--chi-button-primary-background);
-}
-
 .collection-page { min-width: 0; }
 .collection-page-header {
   display: flex;
@@ -270,7 +260,9 @@
   .collection-tools { gap: 14px; }
   .collection-filter-row { gap: 10px; }
   .collection-page .collection-control-group .chi-field__label { font-size: 11px; }
-  .collection-page .collection-control-group .chi-select { padding-inline: 9px 25px; font-size: 12px; }
+  .collection-page .collection-control-group .chi-select { font-size: 12px; }
+  /* Token 清理：手機版右側留白不再寫 25px，改由 chi-shell.css 的正式版
+   * .chi-select-wrap 留白（36px）提供，否則 chevron 會壓到文字。 */
   .collection-results-heading h2 { font-size: 19px; }
   .collection-page .collection-pagination { gap: 1px; }
   .collection-page .collection-pagination .chi-pagination__item { min-width: 34px; height: 36px; padding-inline: 6px; }

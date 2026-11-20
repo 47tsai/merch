@@ -57,6 +57,12 @@
   --chi-brand: var(--chi-color-brand);
 }
 
+/* Token 清理：.chi-select 正式版包法（.chi-select-wrap＋chevron）。
+ * vendored 的 .chi-select 設 appearance:none＋右側留白 36px，但本地
+ * chi-components.css 的 .chi-select padding（後載入、同權重）會把右側
+ * 留白蓋回 12px，chevron 會壓到文字；這裡用較高權重補回正式版留白。 */
+.chi-select-wrap .chi-select { padding-right: var(--chi-base-form-select-icon-padding); }
+
 /* 2. 版式接線：chi-shell flex 排版，.main 不再自己留 248px 左邊距。 */
 .chi-content {
   display: flex;

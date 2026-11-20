@@ -15,10 +15,10 @@
 #works-management-list .data-list-main span,#works-management-list .data-list-main small{color:var(--chi-color-text-muted);font-size:var(--chi-text-xs)}
 #works-management-list .data-list-main small{font-family:var(--chi-font-mono)}
 #works-management-list .data-list-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:var(--chi-space-2);width:auto}
-#works-management-list .data-list-actions .button{display:inline-flex;align-items:center;justify-content:center;min-width:72px;min-height:36px;padding:0 var(--chi-space-3);border:1px solid var(--chi-color-border-strong);border-radius:var(--chi-radius-md);background:var(--chi-color-surface);color:var(--chi-color-text);font:inherit;font-size:var(--chi-text-xs);font-weight:650;white-space:nowrap;cursor:pointer}
-#works-management-list .data-list-actions .button:hover:not(:disabled){border-color:var(--chi-color-accent-border);background:var(--chi-color-accent-soft);color:var(--chi-color-accent)}
-#works-management-list .data-list-actions .button:focus-visible{outline:3px solid var(--chi-color-focus);outline-offset:2px}
-#works-management-list .data-list-actions .button:disabled{opacity:.5;cursor:not-allowed}
-#works-management-list .data-list-actions .button.danger{border-color:var(--chi-color-danger-border);color:var(--chi-color-danger)}
-#works-management-list .data-list-actions .button.danger:hover:not(:disabled){background:var(--chi-color-danger-soft)}
-@media(max-width:560px){.works-management-grid{grid-template-columns:minmax(0,1fr)}#works-management-list .data-list-row{grid-template-columns:minmax(0,1fr);align-items:start}#works-management-list .data-list-actions{justify-content:stretch}#works-management-list .data-list-actions .button{flex:1}}
+#works-management-list .data-list-actions .chi-btn{display:inline-flex;align-items:center;justify-content:center;min-width:72px;min-height:36px;padding:0 var(--chi-space-3);border:1px solid var(--chi-color-border-strong);border-radius:var(--chi-radius-md);background:var(--chi-color-surface);color:var(--chi-color-text);font:inherit;font-size:var(--chi-text-xs);font-weight:650;white-space:nowrap;cursor:pointer}
+#works-management-list .data-list-actions .chi-btn:hover:not(:disabled){border-color:var(--chi-color-accent-border);background:var(--chi-color-accent-soft);color:var(--chi-color-accent)}
+#works-management-list .data-list-actions .chi-btn:focus-visible{outline:3px solid var(--chi-color-focus);outline-offset:2px}
+#works-management-list .data-list-actions .chi-btn:disabled{opacity:.5;cursor:not-allowed}
+#works-management-list .data-list-actions .chi-btn.danger{border-color:var(--chi-color-danger-border);color:var(--chi-color-danger)}
+#works-management-list .data-list-actions .chi-btn.danger:hover:not(:disabled){background:var(--chi-color-danger-soft)}
+@media(max-width:560px){.works-management-grid{grid-template-columns:minmax(0,1fr)}#works-management-list .data-list-row{grid-template-columns:minmax(0,1fr);align-items:start}#works-management-list .data-list-actions{justify-content:stretch}#works-management-list .data-list-actions .chi-btn{flex:1}}

@@ -10,24 +10,19 @@
  *   --chi-color-accent-soft → color-mix(accent 8%, transparent)
  *   --chi-color-accent-border → color-mix(accent 40%, transparent)
  *   --chi-color-focus → --chi-color-focus-ring（merch 淺 #584CCC／深 #A8A2E4）
- * Accent 橋接（見下方 .management-page 規則）：bundle 裡 merch.css／
- * chi-library-tokens.css 的 :root 在 vendored 連結之後載入，把
- * --chi-color-accent 蓋成 #5b4bc4（淺），與凍結品牌色 #584CCC 不符；
- * 深色因 vendored [data-chi-theme="dark"][data-chi-brand="merch"] 權重較高，
- * 本來就是 #A8A2E4。橋接把它指回乾淨的
- * --chi-button-primary-background（vendored merch 值，淺 #584CCC／深
- * #A8A2E4），只在管理頁內生效（作品管理區也在 .management-page 內）；
- * 徹底修法是刪掉舊檔的 :root 重定義，那是全站範圍，留待以後整站 token
- * 清理再做。
+ * Accent 橋接已移除：整站 token 清理刪掉了 merch.css／
+ * chi-library-tokens.css 的 :root 舊值，--chi-color-accent 改由 vendored
+ * tokens.css（data-chi-brand="merch"）提供凍結值（淺 #584CCC／深 #A8A2E4）。
  * 元件對照：chi-button → chi-btn（正式版，index.html 管理區已換）；
  * chi-label → chi-field__label（正式版）；chi-input／chi-select／
  * chi-textarea／chi-field／chi-badge／chi-panel 本來就是正式版或保留的
- * 本站定義；動態產生的圖片按鈕與作品按鈕用跨頁共用的本地 .button 系統
- * （controls.css，運費／詳情頁也在用），留待整站元件清理，本支不動。
+ * 本站定義；動態產生的圖片按鈕與作品按鈕已由本地 .button 換成正式版
+ * chi-btn（整站 token 清理）。
  * 寫入邏輯（management.ts／works-management.ts 的 submit／驗證／
- * updateItem／deleteItem／圖片上傳）一律不動。
+ * updateItem／deleteItem／圖片上傳）一律不動；圖片與作品按鈕已由本地
+ * .button 換成正式版 chi-btn（見 works-management.ts／management.ts）。
  */
-.management-page{width:min(100%,1120px);margin-inline:auto;color:var(--chi-color-text-primary);--chi-color-accent:var(--chi-button-primary-background)}
+.management-page{width:min(100%,1120px);margin-inline:auto;color:var(--chi-color-text-primary)}
 .management-page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--chi-space-5);margin-bottom:var(--chi-space-6)}
 .management-page-header h1{margin:var(--chi-space-2) 0 0;color:var(--chi-color-text-primary);font-size:clamp(1.8rem,3vw,2.35rem);line-height:1.2;letter-spacing:-.035em}
 .management-page-header p{max-width:62ch;margin:var(--chi-space-3) 0 0;color:var(--chi-color-text-muted);line-height:1.75}

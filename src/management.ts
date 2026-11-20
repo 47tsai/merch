@@ -144,11 +144,11 @@ function renderImageArea(item: Item | undefined): void {
     const strong = document.createElement('strong'); strong.textContent = image.isCover ? '主圖' : `圖片 ${index + 1}`;
     const small = document.createElement('small'); small.textContent = image.file; info.append(strong, small);
     const actions = document.createElement('div'); actions.className = 'management-image-actions';
-    const cover = document.createElement('button'); cover.className = 'button secondary'; cover.type = 'button'; cover.textContent = image.isCover ? '目前主圖' : '設為主圖'; cover.disabled = imageSaving || Boolean(image.isCover);
-    const up = document.createElement('button'); up.className = 'button secondary'; up.type = 'button'; up.textContent = '↑'; up.title = '上移'; up.setAttribute('aria-label', `將圖片 ${index + 1} 上移`); up.disabled = imageSaving || index === 0;
-    const down = document.createElement('button'); down.className = 'button secondary'; down.type = 'button'; down.textContent = '↓'; down.title = '下移'; down.setAttribute('aria-label', `將圖片 ${index + 1} 下移`); down.disabled = imageSaving || index === images.length - 1;
-    const replaceLabel = document.createElement('label'); replaceLabel.className = 'button secondary management-image-replace'; replaceLabel.appendChild(document.createTextNode('替換')); const replace = document.createElement('input'); replace.type = 'file'; replace.accept = '.jpg,.jpeg,.png,.webp,.gif,.avif,image/jpeg,image/png,image/webp,image/gif,image/avif'; replace.hidden = true; replace.disabled = imageSaving; replaceLabel.appendChild(replace);
-    const remove = document.createElement('button'); remove.className = 'button danger'; remove.type = 'button'; remove.textContent = '刪除'; remove.disabled = imageSaving;
+    const cover = document.createElement('button'); cover.className = 'chi-btn chi-btn--secondary'; cover.type = 'button'; cover.textContent = image.isCover ? '目前主圖' : '設為主圖'; cover.disabled = imageSaving || Boolean(image.isCover);
+    const up = document.createElement('button'); up.className = 'chi-btn chi-btn--secondary'; up.type = 'button'; up.textContent = '↑'; up.title = '上移'; up.setAttribute('aria-label', `將圖片 ${index + 1} 上移`); up.disabled = imageSaving || index === 0;
+    const down = document.createElement('button'); down.className = 'chi-btn chi-btn--secondary'; down.type = 'button'; down.textContent = '↓'; down.title = '下移'; down.setAttribute('aria-label', `將圖片 ${index + 1} 下移`); down.disabled = imageSaving || index === images.length - 1;
+    const replaceLabel = document.createElement('label'); replaceLabel.className = 'chi-btn chi-btn--secondary management-image-replace'; replaceLabel.appendChild(document.createTextNode('替換')); const replace = document.createElement('input'); replace.type = 'file'; replace.accept = '.jpg,.jpeg,.png,.webp,.gif,.avif,image/jpeg,image/png,image/webp,image/gif,image/avif'; replace.hidden = true; replace.disabled = imageSaving; replaceLabel.appendChild(replace);
+    const remove = document.createElement('button'); remove.className = 'chi-btn chi-btn--danger'; remove.type = 'button'; remove.textContent = '刪除'; remove.disabled = imageSaving;
     actions.append(cover, up, down, replaceLabel, remove); row.append(preview, info, actions); root.appendChild(row);
   });
 }

@@ -14,14 +14,9 @@
  *   --chi-color-warning-border → color-mix(warning 40%, transparent)
  *     （v1.2.0 沒有 --chi-color-warning-border 這個 token）
  *   --chi-color-focus → --chi-color-focus-ring（merch 淺 #584CCC／深 #A8A2E4）
- * Accent 橋接（見下方 .settings-page 規則）：bundle 裡 merch.css／
- * chi-library-tokens.css 的 :root 在 vendored 連結之後載入，把
- * --chi-color-accent 蓋成 #5b4bc4（淺），與凍結品牌色 #584CCC 不符；深色
- * 因 vendored [data-chi-theme="dark"][data-chi-brand="merch"] 權重較高，
- * 本來就是 #A8A2E4。橋接把它指回乾淨的 --chi-button-primary-background
- * （vendored merch 值，淺 #584CCC／深 #A8A2E4），只在設定頁內生效；
- * 徹底修法是刪掉舊檔的 :root 重定義，那是全站範圍，留待以後整站 token
- * 清理再做。
+ * Accent 橋接已移除：整站 token 清理刪掉了 merch.css／
+ * chi-library-tokens.css 的 :root 舊值，--chi-color-accent 改由 vendored
+ * tokens.css（data-chi-brand="merch"）提供凍結值（淺 #584CCC／深 #A8A2E4）。
  * 元件對照：chi-button → chi-btn（正式版，index.html 設定區已換）；
  * theme-choice（三態按鈕）是本站自訂元件，v1.2.0 沒有正式版，保留，
  * 行為不動（theme.ts 的薄包裝仍接 chi theme.js，key chi-theme-mode）；
@@ -30,7 +25,7 @@
  * chi-panel 本來就是正式版類名。設定儲存邏輯、Chi Auth、data/ 一律不動。
  */
 /* Settings page: focused account, appearance and system sections. */
-.settings-page{width:min(100%,1040px);margin-inline:auto;min-width:0;--chi-color-accent:var(--chi-button-primary-background)}
+.settings-page{width:min(100%,1040px);margin-inline:auto;min-width:0}
 .settings-page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--chi-space-5);margin-bottom:var(--chi-space-6)}
 .settings-page-heading{min-width:0}
 .settings-page-header h1{margin:var(--chi-space-2) 0 0;color:var(--chi-color-text-primary);font-size:clamp(1.9rem,3vw,2.5rem);line-height:1.2;letter-spacing:-.04em}

@@ -22,6 +22,21 @@ const RECORD_PAGE_SIZE = 12;
 const allItems=()=>storeRef?.snapshot.items??[];
 const money=(n:number,c:string)=>`${c||'TWD'} ${new Intl.NumberFormat('zh-TW').format(n)}`;
 function setValue(id:string,value:string):void{const el=qs<HTMLInputElement|HTMLTextAreaElement|HTMLSelectElement>(`#${id}`);if(el)el.value=value;}
+function wrapSelect(select: HTMLSelectElement): HTMLElement {
+  // chi-system v1.2.0 正式版 select 包法：.chi-select-wrap＋chevron-down 圖示。
+  const wrap = document.createElement('span');
+  wrap.className = 'chi-select-wrap';
+  wrap.appendChild(select);
+  const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  icon.setAttribute('class', 'chi-icon');
+  icon.setAttribute('aria-hidden', 'true');
+  const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+  use.setAttribute('href', '/icons.svg#chevron-down');
+  icon.appendChild(use);
+  wrap.appendChild(icon);
+  return wrap;
+}
+
 function renderItems(selected:ShippingRecord|undefined):void{
   const root=qs<HTMLElement>('[data-shipping-items]');
   if(!root)return;
@@ -88,13 +103,13 @@ function renderItems(selected:ShippingRecord|undefined):void{
   const workSelect=document.createElement('select');workSelect.className='chi-select';workSelect.disabled=saving;workSelect.dataset.shippingWorkFilter='true';
   const allWorks=document.createElement('option');allWorks.value='';allWorks.textContent='全部作品';workSelect.appendChild(allWorks);
   for(const workId of workOptions){const option=document.createElement('option');option.value=workId;option.textContent=items.find(item=>item.workId===workId)?.workName||workId;workSelect.appendChild(option);}
-  workSelect.value=itemWorkFilter;workLabel.append(workCaption,workSelect);
+  workSelect.value=itemWorkFilter;workLabel.append(workCaption,wrapSelect(workSelect));
   const categoryLabel=document.createElement('label');categoryLabel.className='shipping-filter-field';
   const categoryCaption=document.createElement('span');categoryCaption.textContent='類型';
   const categorySelect=document.createElement('select');categorySelect.className='chi-select';categorySelect.disabled=saving;categorySelect.dataset.shippingCategoryFilter='true';
   const allCategories=document.createElement('option');allCategories.value='';allCategories.textContent='全部類型';categorySelect.appendChild(allCategories);
   for(const category of categoryOptions){const option=document.createElement('option');option.value=category;option.textContent=category;categorySelect.appendChild(option);}
-  categorySelect.value=itemCategoryFilter;categoryLabel.append(categoryCaption,categorySelect);
+  categorySelect.value=itemCategoryFilter;categoryLabel.append(categoryCaption,wrapSelect(categorySelect));
   const selectedLabel=document.createElement('label');selectedLabel.className='shipping-item-filter';
   const selectedCheckbox=document.createElement('input');selectedCheckbox.type='checkbox';selectedCheckbox.checked=showSelectedItems;selectedCheckbox.disabled=saving;selectedCheckbox.dataset.shippingShowSelected='true';
   const selectedText=document.createElement('span');selectedText.textContent='只看已選';selectedLabel.append(selectedCheckbox,selectedText);
@@ -167,16 +182,16 @@ function renderRecords():void{
     const note=document.createElement('p');note.textContent=`${r.carrier||'未設定物流'}${r.note?` · ${r.note}`:''}`;
     const count=document.createElement('small');count.textContent=`關聯 ${r.itemIds.length} 件周邊`;
     const actions=document.createElement('div');actions.className='shipping-card-actions';
-    const edit=document.createElement('button');edit.className='button secondary';edit.type='button';edit.dataset.shippingEdit=r.id;edit.disabled=saving;edit.textContent='編輯';
-    const del=document.createElement('button');del.className='button danger';del.type='button';del.dataset.shippingDelete=r.id;del.disabled=saving;del.textContent='刪除';
+    const edit=document.createElement('button');edit.className='chi-btn chi-btn--secondary';edit.type='button';edit.dataset.shippingEdit=r.id;edit.disabled=saving;edit.textContent='編輯';
+    const del=document.createElement('button');del.className='chi-btn chi-btn--danger';del.type='button';del.dataset.shippingDelete=r.id;del.disabled=saving;del.textContent='刪除';
     actions.append(edit,del);card.append(head,note,count,actions);fragment.appendChild(card);
   }
   root.appendChild(fragment);
   const pager=document.createElement('div');pager.className='shipping-records-pagination';
   const summary=document.createElement('span');summary.textContent=`顯示 ${start+1}–${Math.min(start+RECORD_PAGE_SIZE,records.length)} / ${records.length} 筆`;
-  const prev=document.createElement('button');prev.className='button secondary compact';prev.type='button';prev.textContent='上一頁';prev.disabled=saving||recordPage<=1;prev.dataset.shippingRecordPage=String(recordPage-1);
+  const prev=document.createElement('button');prev.className='chi-btn chi-btn--secondary chi-btn--sm';prev.type='button';prev.textContent='上一頁';prev.disabled=saving||recordPage<=1;prev.dataset.shippingRecordPage=String(recordPage-1);
   const pageLabel=document.createElement('span');pageLabel.textContent=`第 ${recordPage} / ${totalPages} 頁`;
-  const next=document.createElement('button');next.className='button secondary compact';next.type='button';next.textContent='下一頁';next.disabled=saving||recordPage>=totalPages;next.dataset.shippingRecordPage=String(recordPage+1);
+  const next=document.createElement('button');next.className='chi-btn chi-btn--secondary chi-btn--sm';next.type='button';next.textContent='下一頁';next.disabled=saving||recordPage>=totalPages;next.dataset.shippingRecordPage=String(recordPage+1);
   pager.append(summary,prev,pageLabel,next);root.appendChild(pager);
 }
 function render():void{if(!storeRef)return;const records=storeRef.snapshot.shipping??[];const selected=records.find(x=>x.id===editingId);const title=qs<HTMLElement>('[data-shipping-editor-title]');if(title)title.textContent=selected?'編輯運費':'新增運費';setValue('shipping-amount',selected?String(selected.amount):'');setValue('shipping-currency',selected?.currency??'TWD');setValue('shipping-date',selected?.date??'');setValue('shipping-carrier',selected?.carrier??'');setValue('shipping-note',selected?.note??'');const form=qs<HTMLFormElement>('#shipping-form');if(form)form.setAttribute('aria-busy',String(saving));form?.querySelectorAll<HTMLInputElement|HTMLTextAreaElement|HTMLSelectElement>('input,textarea,select').forEach(el=>{if(!el.matches('[data-shipping-item-checkbox],[data-shipping-item-search],[data-shipping-show-selected]'))el.disabled=saving;});const submit=qs<HTMLButtonElement>('#shipping-form button[type="submit"]');if(submit){submit.disabled=saving;submit.textContent=saving?'同步中…':selected?'儲存修改':'新增運費';}const cancel=qs<HTMLButtonElement>('#shipping-cancel');if(cancel){cancel.hidden=!selected;cancel.disabled=saving;}renderItems(selected);renderRecords();}

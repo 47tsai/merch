@@ -30,10 +30,12 @@ function setupCollectionControlGroups(): void {
   const view = document.querySelector<HTMLElement>('.view-switch');
   if (!tools || !status || !category || !sort || !view) return;
 
-  if (!status.closest('.collection-control-group')) wrapCollectionControl(status, '狀態');
-  if (!category.closest('.collection-control-group')) wrapCollectionControl(category, '類型');
+  // select 已包 .chi-select-wrap，分組搬移時搬 wrap 整體，否則 chevron 會被留在原地。
+  if (!status.closest('.collection-control-group')) wrapCollectionControl(status.closest('.chi-select-wrap') ?? status, '狀態');
+  if (!category.closest('.collection-control-group')) wrapCollectionControl(category.closest('.chi-select-wrap') ?? category, '類型');
 
   if (!sort.closest('.collection-control-group')) {
+    const sortWrap = sort.closest('.chi-select-wrap') ?? sort;
     const sortGroup = document.createElement('div');
     sortGroup.className = 'collection-control-group collection-sort-group';
     const sortLabel = document.createElement('span');
@@ -41,9 +43,9 @@ function setupCollectionControlGroups(): void {
     sortLabel.textContent = '排序';
     const sortBody = document.createElement('div');
     sortBody.className = 'collection-control-body';
-    sort.parentElement?.insertBefore(sortGroup, sort);
+    sortWrap.parentElement?.insertBefore(sortGroup, sortWrap);
     sortGroup.append(sortLabel, sortBody);
-    sortBody.appendChild(sort);
+    sortBody.appendChild(sortWrap);
   }
 
   if (!view.closest('.collection-control-group')) {
@@ -80,7 +82,8 @@ function setupCollectionControls(): void {
   const tools = document.querySelector<HTMLElement>('.collection-tools');
   if (!sort || !tools) return;
 
-  ['#filter-work', '#filter-character', '#filter-manufacturer'].forEach((selector) => document.querySelector<HTMLElement>(selector)?.setAttribute('hidden', ''));
+  // 這三個篩選 select 是舊控制（目前未顯示），hidden 改寫在 .chi-select-wrap 上。
+  ['#filter-work', '#filter-character', '#filter-manufacturer'].forEach((selector) => document.querySelector<HTMLElement>(selector)?.closest('.chi-select-wrap')?.setAttribute('hidden', ''));
   ensureStatusOptions();
   setupCollectionControlGroups();
 
