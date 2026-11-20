@@ -4,18 +4,6 @@
   "category": "v",
   "items": [
     {
-      "id": "HSRv001",
-      "path": "data/honkai-star-rail/v/HSRv001/data.json",
-      "title": "流螢 主題印象系列T恤",
-      "characters": [
-        "流螢"
-      ],
-      "manufacturer": "米哈遊",
-      "quantity": 1,
-      "status": "pending",
-      "cover": "HSRv001.jpeg"
-    },
-    {
       "id": "HSRv002",
       "path": "data/honkai-star-rail/v/HSRv002/data.json",
       "title": "主題排汗衫",
@@ -32,6 +20,18 @@
       "manufacturer": "米哈遊",
       "quantity": 1,
       "status": "received"
+    },
+    {
+      "id": "HSRv001",
+      "path": "data/honkai-star-rail/v/HSRv001/data.json",
+      "title": "流螢 主題印象系列T恤",
+      "characters": [
+        "流螢"
+      ],
+      "manufacturer": "米哈遊",
+      "quantity": 1,
+      "status": "received",
+      "cover": "HSRv001.jpeg"
     }
   ]
 }
