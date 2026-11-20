@@ -337,15 +337,15 @@
       <section class="shipping-editor chi-panel" aria-labelledby="shipping-editor-heading">
         <header class="shipping-panel-heading"><div><span class="panel-label">SHIPPING RECORD</span><h2 id="shipping-editor-heading" data-shipping-editor-title>新增運費</h2><p>至少選擇一件關聯周邊後即可儲存。</p></div></header>
         <form id="shipping-form" aria-busy="false">
-          <label class="chi-field"><span class="chi-label">運費金額 <b>*</b></span><input class="chi-input" id="shipping-amount" type="number" min="0" step="0.01" inputmode="decimal" required placeholder="0"></label>
+          <label class="chi-field"><span class="chi-field__label">運費金額 <b>*</b></span><input class="chi-input" id="shipping-amount" type="number" min="0" step="0.01" inputmode="decimal" required placeholder="0"></label>
           <div class="shipping-form-row">
-            <label class="chi-field"><span class="chi-label">幣別 <b>*</b></span><input class="chi-input" id="shipping-currency" value="TWD" required maxlength="8"></label>
-            <label class="chi-field"><span class="chi-label">日期</span><input class="chi-input" id="shipping-date" type="date"></label>
+            <label class="chi-field"><span class="chi-field__label">幣別 <b>*</b></span><input class="chi-input" id="shipping-currency" value="TWD" required maxlength="8"></label>
+            <label class="chi-field"><span class="chi-field__label">日期</span><input class="chi-input" id="shipping-date" type="date"></label>
           </div>
-          <label class="chi-field"><span class="chi-label">物流／平台</span><input class="chi-input" id="shipping-carrier" placeholder="物流名稱或購買平台"></label>
-          <label class="chi-field"><span class="chi-label">備註</span><textarea class="chi-textarea" id="shipping-note" rows="3" placeholder="包裹、合併寄送或其他說明"></textarea></label>
+          <label class="chi-field"><span class="chi-field__label">物流／平台</span><input class="chi-input" id="shipping-carrier" placeholder="物流名稱或購買平台"></label>
+          <label class="chi-field"><span class="chi-field__label">備註</span><textarea class="chi-textarea" id="shipping-note" rows="3" placeholder="包裹、合併寄送或其他說明"></textarea></label>
           <section class="shipping-linked-items" aria-labelledby="shipping-linked-items-title"><div class="shipping-subheading"><h3 id="shipping-linked-items-title">關聯周邊</h3><span>選取此筆運費涵蓋的商品</span></div><div class="shipping-item-picker" data-shipping-items><span class="muted">載入中…</span></div></section>
-          <footer class="shipping-actions"><button class="chi-button chi-button--primary" type="submit">新增運費</button><button class="chi-button" type="button" id="shipping-cancel" hidden>取消編輯</button></footer>
+          <footer class="shipping-actions"><button class="chi-btn chi-btn--primary" type="submit">新增運費</button><button class="chi-btn" type="button" id="shipping-cancel" hidden>取消編輯</button></footer>
         </form>
       </section>
       <section class="shipping-list chi-panel" aria-labelledby="shipping-records-title">
@@ -374,8 +374,8 @@
       <p class="settings-panel-description">透過 Chi Auth 與 Passkey 驗證管理權限。登入憑證僅保存在目前分頁的記憶體中，重新整理後需重新登入。</p>
       <div class="settings-auth-controls">
         <div class="settings-auth-buttons">
-          <button type="button" class="chi-button chi-button--primary" data-auth-verify><svg class="settings-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="/icons.svg#external-link"></use></svg>使用 Chi Auth 登入</button>
-          <button type="button" class="chi-button" data-auth-clear><svg class="settings-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="/icons.svg#x"></use></svg>登出</button>
+          <button type="button" class="chi-btn chi-btn--primary" data-auth-verify><svg class="settings-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="/icons.svg#external-link"></use></svg>使用 Chi Auth 登入</button>
+          <button type="button" class="chi-btn" data-auth-clear><svg class="settings-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="/icons.svg#x"></use></svg>登出</button>
         </div>
       </div>
       <p class="settings-auth-message" data-auth-message role="status" aria-live="polite"></p>
