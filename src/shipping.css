@@ -1,13 +1,45 @@
+/* Shipping page: chi-system v1.2.0 (pinned a7f018b) — 運費頁遷移。
+ * Token 對照（舊版 chi-library / merch.css 的 token 名 → v1.2.0 正式名，
+ * 只用 token，不寫原始色值）：
+ *   --chi-color-text / --chi-color-text-primary → --chi-color-text-primary
+ *   --chi-color-text-subtle → --chi-color-text-muted（本檔本來就用 muted，見下方）
+ *   --chi-color-border → --chi-color-border-subtle
+ *     （--chi-color-border-strong 是 v1.2.0 正式名，保留）
+ *   --chi-color-page-soft → --chi-color-surface-sunken
+ *     （舊值與 surface-muted 相同，淺 #edf2fc／深 #282c38）
+ *   --chi-color-accent-soft → color-mix(accent 8%, transparent)
+ *   --chi-color-accent-border → color-mix(accent 40%, transparent)
+ *   --chi-color-danger-border → color-mix(danger 40%, transparent)
+ *   --chi-color-focus → --chi-color-focus-ring（merch 淺 #584CCC／深 #A8A2E4）
+ *   --chi-control-height → --chi-size-control（44px → 40px，v1.2.0 正式控制高度）
+ * Accent 橋接（見下方 .shipping-page 與 .shipping-detail 規則）：bundle 裡
+ * merch.css／chi-library-tokens.css 的 :root 在 vendored 連結之後載入，把
+ * --chi-color-accent 蓋成 #5b4bc4（淺），與凍結品牌色 #584CCC 不符；深色
+ * 因 vendored [data-chi-theme="dark"][data-chi-brand="merch"] 權重較高，
+ * 本來就是 #A8A2E4。橋接把它指回乾淨的 --chi-button-primary-background
+ * （vendored merch 值，淺 #584CCC／深 #A8A2E4），只在運費頁內生效；
+ * 運費詳情彈窗掛在 document.body 下、不在 .shipping-page 裡，所以橋接
+ * 同時寫在 .shipping-detail 上；徹底修法是刪掉舊檔的 :root 重定義，
+ * 那是全站範圍，留待以後整站 token 清理再做。
+ * 元件對照：chi-button → chi-btn（正式版，index.html 運費區與 shipping.ts
+ * 的動態按鈕已換）；chi-label → chi-field__label（正式版）；空狀態
+ * empty-state → chi-state（正式版，shipping.ts 與 shipping-detail-modal.ts
+ * 已換，本檔的 .empty-state 虛線框規則隨之移除）；chi-input／chi-select／
+ * chi-textarea／chi-field／chi-badge／chi-panel 本來就是正式版類名；
+ * .button（運費卡片編輯／刪除、詳情關閉）是跨頁共用的本地 .button 系統
+ * （controls.css，詳情頁也在用），留待整站元件清理，本支不動。
+ * 運費計算、寫入、驗證、Worker、Chi Auth、data/ 一律不動。
+ */
 /* Shipping page · Chi Design System */
-.shipping-page{width:min(100%,1180px);margin-inline:auto;color:var(--chi-color-text)}
+.shipping-page{width:min(100%,1180px);margin-inline:auto;color:var(--chi-color-text-primary);--chi-color-accent:var(--chi-button-primary-background)}
 .shipping-page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--chi-space-5);margin-bottom:var(--chi-space-6)}
-.shipping-page-header h1{margin:var(--chi-space-2) 0 0;color:var(--chi-color-text-strong);font-size:clamp(1.8rem,3vw,2.4rem);line-height:1.2;letter-spacing:-.035em}
+.shipping-page-header h1{margin:var(--chi-space-2) 0 0;color:var(--chi-color-text-primary);font-size:clamp(1.8rem,3vw,2.4rem);line-height:1.2;letter-spacing:-.035em}
 .shipping-page-header p{margin:var(--chi-space-3) 0 0;color:var(--chi-color-text-muted);line-height:1.75}
 .shipping-page-header>.chi-badge{flex-shrink:0;margin-top:var(--chi-space-2)}
 .shipping-layout{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:var(--chi-space-5);align-items:start}
-.shipping-editor.chi-panel,.shipping-list.chi-panel{min-width:0;padding:clamp(1rem,2vw,1.5rem);border:1px solid var(--chi-color-border);border-radius:var(--chi-radius-lg);background:var(--chi-color-surface);box-shadow:var(--chi-shadow-sm)}
+.shipping-editor.chi-panel,.shipping-list.chi-panel{min-width:0;padding:clamp(1rem,2vw,1.5rem);border:1px solid var(--chi-color-border-subtle);border-radius:var(--chi-radius-lg);background:var(--chi-color-surface);box-shadow:var(--chi-shadow-sm)}
 .shipping-panel-heading{display:flex;justify-content:space-between;gap:var(--chi-space-3);margin-bottom:var(--chi-space-5)}
-.shipping-panel-heading h2{margin:var(--chi-space-2) 0 0;color:var(--chi-color-text-strong);font-size:var(--chi-text-xl)}
+.shipping-panel-heading h2{margin:var(--chi-space-2) 0 0;color:var(--chi-color-text-primary);font-size:var(--chi-text-xl)}
 .shipping-panel-heading p{margin:var(--chi-space-2) 0 0;color:var(--chi-color-text-muted);font-size:var(--chi-text-sm);line-height:1.7}
 .shipping-editor form{display:grid;gap:var(--chi-space-4)}
 .shipping-editor .chi-field{display:grid;gap:var(--chi-space-2);min-width:0}
@@ -15,25 +47,25 @@
 .shipping-editor .chi-textarea{resize:vertical;min-height:5.5rem}
 .shipping-editor .chi-label b{color:var(--chi-color-accent)}
 .shipping-form-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--chi-space-3)}
-.shipping-linked-items{min-width:0;margin-top:var(--chi-space-2);padding:var(--chi-space-4);border:1px solid var(--chi-color-border);border-radius:var(--chi-radius-lg);background:var(--chi-color-page-soft)}
+.shipping-linked-items{min-width:0;margin-top:var(--chi-space-2);padding:var(--chi-space-4);border:1px solid var(--chi-color-border-subtle);border-radius:var(--chi-radius-lg);background:var(--chi-color-surface-sunken)}
 .shipping-subheading{display:flex;align-items:baseline;justify-content:space-between;gap:var(--chi-space-3);flex-wrap:wrap;margin-bottom:var(--chi-space-3)}
-.shipping-subheading h3{margin:0;color:var(--chi-color-text-strong);font-size:var(--chi-text-md)}
+.shipping-subheading h3{margin:0;color:var(--chi-color-text-primary);font-size:var(--chi-text-md)}
 .shipping-subheading>span{color:var(--chi-color-text-muted);font-size:var(--chi-text-xs)}
-.shipping-selected-panel{padding:var(--chi-space-3);border:1px solid var(--chi-color-accent-border);border-radius:var(--chi-radius-md);background:var(--chi-color-surface)}
+.shipping-selected-panel{padding:var(--chi-space-3);border:1px solid color-mix(in srgb, var(--chi-color-accent) 40%, transparent);border-radius:var(--chi-radius-md);background:var(--chi-color-surface)}
 .shipping-selected-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--chi-space-3)}
 .shipping-selected-heading>div{display:grid;gap:var(--chi-space-1);min-width:0}
 .shipping-mini-label{color:var(--chi-color-accent);font-size:var(--chi-text-2xs);font-weight:750;letter-spacing:.1em}
-.shipping-selected-count{color:var(--chi-color-text-strong);font-size:var(--chi-text-md)}
+.shipping-selected-count{color:var(--chi-color-text-primary);font-size:var(--chi-text-md)}
 .shipping-selected-heading p{margin:0;color:var(--chi-color-text-muted);font-size:var(--chi-text-xs);line-height:1.55}
 .shipping-clear-selection{flex:0 0 auto;min-height:34px;padding:0 var(--chi-space-3);font-size:var(--chi-text-xs)}
 .shipping-clear-selection:disabled{opacity:.45;cursor:not-allowed}
 .shipping-selected-chips{display:flex;flex-wrap:wrap;gap:var(--chi-space-2);margin-top:var(--chi-space-3)}
-.shipping-selected-chip{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:var(--chi-space-2);align-items:center;max-width:100%;min-width:0;padding:var(--chi-space-2) var(--chi-space-2) var(--chi-space-2) var(--chi-space-3);border:1px solid var(--chi-color-accent-border);border-radius:var(--chi-radius-md);background:var(--chi-color-accent-soft)}
-.shipping-selected-chip>span{grid-column:1;min-width:0;max-width:100%;overflow-wrap:anywhere;color:var(--chi-color-text-strong);font-size:var(--chi-text-xs);font-weight:650}
+.shipping-selected-chip{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:var(--chi-space-2);align-items:center;max-width:100%;min-width:0;padding:var(--chi-space-2) var(--chi-space-2) var(--chi-space-2) var(--chi-space-3);border:1px solid color-mix(in srgb, var(--chi-color-accent) 40%, transparent);border-radius:var(--chi-radius-md);background:color-mix(in srgb, var(--chi-color-accent) 8%, transparent)}
+.shipping-selected-chip>span{grid-column:1;min-width:0;max-width:100%;overflow-wrap:anywhere;color:var(--chi-color-text-primary);font-size:var(--chi-text-xs);font-weight:650}
 .shipping-selected-chip>small{grid-column:1;color:var(--chi-color-text-muted);font-family:var(--chi-font-mono);font-size:var(--chi-text-2xs)}
 .shipping-selected-chip>button{grid-column:2;grid-row:1/3;display:grid;place-items:center;width:28px;height:28px;border:0;border-radius:var(--chi-radius-sm);background:transparent;color:var(--chi-color-text-muted);font-size:1.2rem;cursor:pointer}
 .shipping-selected-chip>button:hover{background:var(--chi-color-surface);color:var(--chi-color-danger)}
-.shipping-selected-chip>button:focus-visible{outline:2px solid var(--chi-color-focus);outline-offset:1px}
+.shipping-selected-chip>button:focus-visible{outline:2px solid var(--chi-color-focus-ring);outline-offset:1px}
 .shipping-selected-empty{color:var(--chi-color-text-muted);font-size:var(--chi-text-xs)}
 .shipping-item-picker{display:grid;gap:var(--chi-space-3);min-width:0}
 .shipping-items-toolbar{display:grid;gap:var(--chi-space-3);margin-block:var(--chi-space-3)}
@@ -46,53 +78,52 @@
 .shipping-item-filter input,.shipping-item input{width:17px;height:17px;min-height:0;accent-color:var(--chi-color-accent);flex:0 0 auto}
 .shipping-results-heading{display:flex;align-items:center;justify-content:space-between;gap:var(--chi-space-3);margin-top:var(--chi-space-4);color:var(--chi-color-text-muted);font-size:var(--chi-text-xs)}
 .shipping-visible-actions{display:flex;gap:var(--chi-space-2)}
-.shipping-visible-actions .chi-button{min-height:34px;padding:0 var(--chi-space-3);font-size:var(--chi-text-xs)}
+.shipping-visible-actions .chi-btn{min-height:34px;padding:0 var(--chi-space-3);font-size:var(--chi-text-xs)}
 .shipping-items{display:grid;gap:var(--chi-space-2);max-height:360px;overflow:auto;margin-top:var(--chi-space-3);padding:2px;overscroll-behavior:contain}
-.shipping-item{display:grid!important;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:var(--chi-space-3);min-width:0;padding:var(--chi-space-3);border:1px solid var(--chi-color-border);border-radius:var(--chi-radius-md);background:var(--chi-color-surface);font-weight:400!important;cursor:pointer;transition:border-color var(--chi-transition-fast),background var(--chi-transition-fast)}
-.shipping-item:hover{border-color:var(--chi-color-accent-border)}
-.shipping-item.is-selected,.shipping-item:has(input:checked){border-color:var(--chi-color-accent-border);background:var(--chi-color-accent-soft)}
+.shipping-item{display:grid!important;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:var(--chi-space-3);min-width:0;padding:var(--chi-space-3);border:1px solid var(--chi-color-border-subtle);border-radius:var(--chi-radius-md);background:var(--chi-color-surface);font-weight:400!important;cursor:pointer;transition:border-color var(--chi-transition-fast),background var(--chi-transition-fast)}
+.shipping-item:hover{border-color:color-mix(in srgb, var(--chi-color-accent) 40%, transparent)}
+.shipping-item.is-selected,.shipping-item:has(input:checked){border-color:color-mix(in srgb, var(--chi-color-accent) 40%, transparent);background:color-mix(in srgb, var(--chi-color-accent) 8%, transparent)}
 .shipping-item-copy{display:grid;gap:3px;min-width:0}
-.shipping-item-copy strong{min-width:0;color:var(--chi-color-text-strong);font-size:var(--chi-text-sm);line-height:1.45;overflow-wrap:anywhere}
+.shipping-item-copy strong{min-width:0;color:var(--chi-color-text-primary);font-size:var(--chi-text-sm);line-height:1.45;overflow-wrap:anywhere}
 .shipping-item-copy small{min-width:0;color:var(--chi-color-text-muted);font-size:var(--chi-text-2xs);line-height:1.45;overflow-wrap:anywhere}
-.shipping-item-status{padding:3px 7px;border-radius:var(--chi-radius-pill);background:var(--chi-color-page-soft);color:var(--chi-color-text-muted);font-size:var(--chi-text-2xs);white-space:nowrap}
+.shipping-item-status{padding:3px 7px;border-radius:var(--chi-radius-pill);background:var(--chi-color-surface-sunken);color:var(--chi-color-text-muted);font-size:var(--chi-text-2xs);white-space:nowrap}
 .shipping-item.is-selected .shipping-item-status{background:var(--chi-color-surface);color:var(--chi-color-accent);font-weight:700}
 .shipping-items-empty{display:grid;gap:var(--chi-space-2);padding:var(--chi-space-6) var(--chi-space-3);border:1px dashed var(--chi-color-border-strong);border-radius:var(--chi-radius-md);text-align:center}
-.shipping-items-empty strong{color:var(--chi-color-text-strong);font-size:var(--chi-text-sm)}
+.shipping-items-empty strong{color:var(--chi-color-text-primary);font-size:var(--chi-text-sm)}
 .shipping-items-empty span{color:var(--chi-color-text-muted);font-size:var(--chi-text-xs);line-height:1.6}
 .shipping-items-pagination,.shipping-records-pagination{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--chi-space-3);margin-top:var(--chi-space-3);color:var(--chi-color-text-muted);font-size:var(--chi-text-xs)}
 .shipping-pagination-controls{display:flex;align-items:center;gap:var(--chi-space-2)}
 .shipping-pagination-controls>span{min-width:44px;text-align:center;font-variant-numeric:tabular-nums}
-.shipping-pagination-controls .chi-button,.shipping-records-pagination .button{min-height:36px;padding-inline:var(--chi-space-3)}
+.shipping-pagination-controls .chi-btn,.shipping-records-pagination .button{min-height:36px;padding-inline:var(--chi-space-3)}
 .shipping-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:var(--chi-space-3);margin-top:var(--chi-space-2)}
-.shipping-actions .chi-button{min-height:var(--chi-control-height)}
+.shipping-actions .chi-btn{min-height:var(--chi-size-control)}
 .shipping-list{display:grid;align-content:start;gap:var(--chi-space-4)}
 .shipping-list .shipping-panel-heading{margin-bottom:var(--chi-space-2)}
 .shipping-records{display:grid;gap:var(--chi-space-3);min-width:0}
-.shipping-card{padding:var(--chi-space-4);border:1px solid var(--chi-color-border);border-radius:var(--chi-radius-md);background:var(--chi-color-surface);cursor:pointer;transition:border-color var(--chi-transition-fast),background var(--chi-transition-fast)}
-.shipping-card:hover{border-color:var(--chi-color-accent-border);background:var(--chi-color-page-soft)}
+.shipping-card{padding:var(--chi-space-4);border:1px solid var(--chi-color-border-subtle);border-radius:var(--chi-radius-md);background:var(--chi-color-surface);cursor:pointer;transition:border-color var(--chi-transition-fast),background var(--chi-transition-fast)}
+.shipping-card:hover{border-color:color-mix(in srgb, var(--chi-color-accent) 40%, transparent);background:var(--chi-color-surface-sunken)}
 .shipping-card>div:first-child{display:flex;align-items:baseline;justify-content:space-between;gap:var(--chi-space-3)}
-.shipping-card>div:first-child strong{color:var(--chi-color-text-strong);font-size:1.05rem;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.shipping-card>div:first-child strong{color:var(--chi-color-text-primary);font-size:1.05rem;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .shipping-card>div:first-child span,.shipping-card small{color:var(--chi-color-text-muted);font-size:var(--chi-text-xs)}
 .shipping-card p{margin:var(--chi-space-2) 0;color:var(--chi-color-text-muted);line-height:1.65;overflow-wrap:anywhere}
 .shipping-card small{display:block;margin-bottom:var(--chi-space-3)}
 .shipping-card-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:var(--chi-space-2)}
-.shipping-card-actions .button,.shipping-records-pagination .button{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding-inline:var(--chi-space-3);border:1px solid var(--chi-color-border-strong);border-radius:var(--chi-radius-md);background:var(--chi-color-surface);color:var(--chi-color-text);font:inherit;font-size:var(--chi-text-xs);font-weight:650;cursor:pointer}
-.shipping-card-actions .button:hover,.shipping-records-pagination .button:hover{border-color:var(--chi-color-accent-border);color:var(--chi-color-accent)}
-.shipping-card-actions .button.danger{border-color:var(--chi-color-danger-border);color:var(--chi-color-danger)}
+.shipping-card-actions .button,.shipping-records-pagination .button{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding-inline:var(--chi-space-3);border:1px solid var(--chi-color-border-strong);border-radius:var(--chi-radius-md);background:var(--chi-color-surface);color:var(--chi-color-text-primary);font:inherit;font-size:var(--chi-text-xs);font-weight:650;cursor:pointer}
+.shipping-card-actions .button:hover,.shipping-records-pagination .button:hover{border-color:color-mix(in srgb, var(--chi-color-accent) 40%, transparent);color:var(--chi-color-accent)}
+.shipping-card-actions .button.danger{border-color:color-mix(in srgb, var(--chi-color-danger) 40%, transparent);color:var(--chi-color-danger)}
 .shipping-card-actions .button:disabled,.shipping-records-pagination .button:disabled{opacity:.5;cursor:not-allowed}
-.shipping-editor .empty-state,.shipping-list .empty-state{padding:var(--chi-space-6);border:1px dashed var(--chi-color-border-strong);border-radius:var(--chi-radius-md);color:var(--chi-color-text-muted);text-align:center}
-.shipping-detail{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:var(--chi-space-4)}
+.shipping-detail{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:var(--chi-space-4);--chi-color-accent:var(--chi-button-primary-background)}
 .shipping-detail-backdrop{position:absolute;inset:0;background:rgb(0 0 0 / 38%);backdrop-filter:blur(4px)}
-.shipping-detail-dialog{position:relative;width:min(680px,100%);max-height:82vh;overflow:auto;padding:var(--chi-space-5);border:1px solid var(--chi-color-border);border-radius:var(--chi-radius-lg);background:var(--chi-color-surface);color:var(--chi-color-text);box-shadow:var(--chi-shadow-md)}
+.shipping-detail-dialog{position:relative;width:min(680px,100%);max-height:82vh;overflow:auto;padding:var(--chi-space-5);border:1px solid var(--chi-color-border-subtle);border-radius:var(--chi-radius-lg);background:var(--chi-color-surface);color:var(--chi-color-text-primary);box-shadow:var(--chi-shadow-md)}
 .shipping-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--chi-space-3);margin:var(--chi-space-4) 0}
-.shipping-detail-grid>div{display:grid;gap:var(--chi-space-1);min-width:0;padding:var(--chi-space-3);border-radius:var(--chi-radius-md);background:var(--chi-color-page-soft)}
+.shipping-detail-grid>div{display:grid;gap:var(--chi-space-1);min-width:0;padding:var(--chi-space-3);border-radius:var(--chi-radius-md);background:var(--chi-color-surface-sunken)}
 .shipping-detail-grid span,.shipping-detail-note>span{color:var(--chi-color-text-muted);font-size:var(--chi-text-xs)}
-.shipping-detail-grid strong{overflow-wrap:anywhere;color:var(--chi-color-text-strong)}
-.shipping-detail-note{padding:var(--chi-space-3);border-radius:var(--chi-radius-md);background:var(--chi-color-page-soft)}
+.shipping-detail-grid strong{overflow-wrap:anywhere;color:var(--chi-color-text-primary)}
+.shipping-detail-note{padding:var(--chi-space-3);border-radius:var(--chi-radius-md);background:var(--chi-color-surface-sunken)}
 .shipping-detail-note p{margin:6px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
-.shipping-detail-items h3{margin:var(--chi-space-5) 0 var(--chi-space-3);color:var(--chi-color-text-strong)}
+.shipping-detail-items h3{margin:var(--chi-space-5) 0 var(--chi-space-3);color:var(--chi-color-text-primary)}
 .shipping-detail-items ul{display:grid;gap:var(--chi-space-2);margin:0;padding:0;list-style:none}
-.shipping-detail-items li{display:flex;gap:var(--chi-space-3);min-width:0;padding:var(--chi-space-3);border:1px solid var(--chi-color-border);border-radius:var(--chi-radius-md)}
+.shipping-detail-items li{display:flex;gap:var(--chi-space-3);min-width:0;padding:var(--chi-space-3);border:1px solid var(--chi-color-border-subtle);border-radius:var(--chi-radius-md)}
 .shipping-detail-items li strong,.shipping-detail-items li span{min-width:0;overflow-wrap:anywhere}
 .shipping-detail-items li span{color:var(--chi-color-text-muted)}
 @media(max-width:960px){.shipping-layout{grid-template-columns:minmax(0,1fr)}.shipping-items{max-height:420px}}
@@ -111,9 +142,9 @@
  .shipping-items-pagination,.shipping-records-pagination{align-items:stretch}
  .shipping-items-pagination>span,.shipping-records-pagination>span{flex-basis:100%}
  .shipping-pagination-controls{justify-content:space-between}
- .shipping-pagination-controls .chi-button{flex:1}
+ .shipping-pagination-controls .chi-btn{flex:1}
  .shipping-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
- .shipping-actions .chi-button{width:100%;justify-content:center}
+ .shipping-actions .chi-btn{width:100%;justify-content:center}
  .shipping-card{padding:var(--chi-space-3)}
  .shipping-card-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
  .shipping-detail{padding:7px}

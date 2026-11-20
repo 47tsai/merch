@@ -60,7 +60,7 @@ function renderItems(selected:ShippingRecord|undefined):void{
   const count=document.createElement('strong');count.className='shipping-selected-count';count.textContent=`已選 ${draftItemIds.size} 件周邊`;
   const selectedHint=document.createElement('p');selectedHint.textContent=selectedItems.length?'這些周邊會被記入同一筆運費。':'先從下方清單選取這筆運費涵蓋的周邊。';
   selectedTitle.append(eyebrow,count,selectedHint);
-  const clear=document.createElement('button');clear.type='button';clear.className='chi-button shipping-clear-selection';clear.textContent='清空選取';clear.disabled=saving||draftItemIds.size===0;clear.dataset.shippingClearSelection='true';
+  const clear=document.createElement('button');clear.type='button';clear.className='chi-btn shipping-clear-selection';clear.textContent='清空選取';clear.disabled=saving||draftItemIds.size===0;clear.dataset.shippingClearSelection='true';
   selectedHead.append(selectedTitle,clear);selectedPanel.appendChild(selectedHead);
   const chips=document.createElement('div');chips.className='shipping-selected-chips';
   if(selectedItems.length){
@@ -104,7 +104,7 @@ function renderItems(selected:ShippingRecord|undefined):void{
   const listHeading=document.createElement('div');listHeading.className='shipping-results-heading';
   const resultsCount=document.createElement('span');resultsCount.textContent=`符合 ${filtered.length} 件`;
   const pageActions=document.createElement('div');pageActions.className='shipping-visible-actions';
-  const selectVisible=document.createElement('button');selectVisible.type='button';selectVisible.className='chi-button';selectVisible.textContent=pageItems.length&&pageItems.every(item=>draftItemIds.has(item.id))?'取消本頁全選':'選取本頁';selectVisible.disabled=saving||pageItems.length===0;selectVisible.dataset.shippingSelectVisible='true';
+  const selectVisible=document.createElement('button');selectVisible.type='button';selectVisible.className='chi-btn';selectVisible.textContent=pageItems.length&&pageItems.every(item=>draftItemIds.has(item.id))?'取消本頁全選':'選取本頁';selectVisible.disabled=saving||pageItems.length===0;selectVisible.dataset.shippingSelectVisible='true';
   pageActions.appendChild(selectVisible);listHeading.append(resultsCount,pageActions);root.appendChild(listHeading);
 
   const list=document.createElement('div');list.className='shipping-items';
@@ -127,9 +127,9 @@ function renderItems(selected:ShippingRecord|undefined):void{
   const pager=document.createElement('div');pager.className='shipping-items-pagination';
   const summary=document.createElement('span');summary.textContent=`第 ${filtered.length?start+1:0}–${Math.min(start+ITEM_PAGE_SIZE,filtered.length)} 件，共 ${filtered.length} 件`;
   const controls=document.createElement('div');controls.className='shipping-pagination-controls';
-  const prev=document.createElement('button');prev.className='chi-button';prev.type='button';prev.textContent='上一頁';prev.disabled=saving||itemPage<=1;prev.dataset.shippingItemPage=String(itemPage-1);
+  const prev=document.createElement('button');prev.className='chi-btn';prev.type='button';prev.textContent='上一頁';prev.disabled=saving||itemPage<=1;prev.dataset.shippingItemPage=String(itemPage-1);
   const pageLabel=document.createElement('span');pageLabel.textContent=`${itemPage} / ${totalPages}`;
-  const next=document.createElement('button');next.className='chi-button';next.type='button';next.textContent='下一頁';next.disabled=saving||itemPage>=totalPages;next.dataset.shippingItemPage=String(itemPage+1);
+  const next=document.createElement('button');next.className='chi-btn';next.type='button';next.textContent='下一頁';next.disabled=saving||itemPage>=totalPages;next.dataset.shippingItemPage=String(itemPage+1);
   controls.append(prev,pageLabel,next);pager.append(summary,controls);root.appendChild(pager);
 }
 function renderRecords():void{
@@ -148,8 +148,11 @@ function renderRecords():void{
   if(!records.length){
     recordPage=1;
     const empty=document.createElement('div');
-    empty.className='empty-state';
-    empty.textContent='目前沒有運費紀錄。';
+    empty.className='chi-state';
+    const emptyTitle=document.createElement('span');
+    emptyTitle.className='chi-state__title';
+    emptyTitle.textContent='目前沒有運費紀錄。';
+    empty.appendChild(emptyTitle);
     root.appendChild(empty);
     return;
   }

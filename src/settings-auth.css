@@ -1,29 +1,60 @@
+/* Settings page: chi-system v1.2.0 (pinned a7f018b) — 設定頁遷移。
+ * Token 對照（舊版 chi-library / merch.css 的 token 名 → v1.2.0 正式名，
+ * 只用 token，不寫原始色值）：
+ *   --chi-color-text / --chi-color-text-primary → --chi-color-text-primary
+ *   --chi-color-border → --chi-color-border-subtle
+ *   --chi-color-page-soft → --chi-color-surface-sunken
+ *     （舊值與 surface-muted 相同，淺 #edf2fc／深 #282c38）
+ *   --chi-color-accent-soft → color-mix(accent 8%, transparent)
+ *   --chi-color-accent-border → color-mix(accent 40%, transparent)
+ *   --chi-color-success-soft → --chi-color-success-bg（正式名）
+ *   --chi-color-success-border → color-mix(success 40%, transparent)
+ *     （v1.2.0 沒有 --chi-color-success-border 這個 token）
+ *   --chi-color-warning-soft → --chi-color-warning-bg（正式名）
+ *   --chi-color-warning-border → color-mix(warning 40%, transparent)
+ *     （v1.2.0 沒有 --chi-color-warning-border 這個 token）
+ *   --chi-color-focus → --chi-color-focus-ring（merch 淺 #584CCC／深 #A8A2E4）
+ * Accent 橋接（見下方 .settings-page 規則）：bundle 裡 merch.css／
+ * chi-library-tokens.css 的 :root 在 vendored 連結之後載入，把
+ * --chi-color-accent 蓋成 #5b4bc4（淺），與凍結品牌色 #584CCC 不符；深色
+ * 因 vendored [data-chi-theme="dark"][data-chi-brand="merch"] 權重較高，
+ * 本來就是 #A8A2E4。橋接把它指回乾淨的 --chi-button-primary-background
+ * （vendored merch 值，淺 #584CCC／深 #A8A2E4），只在設定頁內生效；
+ * 徹底修法是刪掉舊檔的 :root 重定義，那是全站範圍，留待以後整站 token
+ * 清理再做。
+ * 元件對照：chi-button → chi-btn（正式版，index.html 設定區已換）；
+ * theme-choice（三態按鈕）是本站自訂元件，v1.2.0 沒有正式版，保留，
+ * 行為不動（theme.ts 的薄包裝仍接 chi theme.js，key chi-theme-mode）；
+ * 2026-11-20 修顯示模式跑版：三顆按鈕改直式堆疊（見下方
+ * .theme-choice-group 註解），修前桌機版文字被壓成逐字直排；
+ * chi-panel 本來就是正式版類名。設定儲存邏輯、Chi Auth、data/ 一律不動。
+ */
 /* Settings page: focused account, appearance and system sections. */
-.settings-page{width:min(100%,1040px);margin-inline:auto;min-width:0}
+.settings-page{width:min(100%,1040px);margin-inline:auto;min-width:0;--chi-color-accent:var(--chi-button-primary-background)}
 .settings-page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--chi-space-5);margin-bottom:var(--chi-space-6)}
 .settings-page-heading{min-width:0}
-.settings-page-header h1{margin:var(--chi-space-2) 0 0;color:var(--chi-color-text-strong);font-size:clamp(1.9rem,3vw,2.5rem);line-height:1.2;letter-spacing:-.04em}
+.settings-page-header h1{margin:var(--chi-space-2) 0 0;color:var(--chi-color-text-primary);font-size:clamp(1.9rem,3vw,2.5rem);line-height:1.2;letter-spacing:-.04em}
 .settings-page-header p{margin:var(--chi-space-3) 0 0;color:var(--chi-color-text-muted);line-height:1.75}
 .settings-page-badge{display:inline-flex;align-items:center;gap:8px;flex-shrink:0;margin-top:8px;padding:7px 11px}
 .settings-icon{display:block;width:18px;height:18px;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .settings-page-badge .settings-icon{width:15px;height:15px}
 .settings-layout{display:grid;gap:18px}
-[data-page="settings"] .settings-panel.chi-panel{min-width:0;padding:clamp(18px,2.5vw,26px);border:1px solid var(--chi-color-border);border-radius:var(--chi-radius-lg,16px);background:var(--chi-color-surface);box-shadow:none}
-[data-page="settings"] .settings-panel-featured.chi-panel{border-color:var(--chi-color-accent-border);background:var(--chi-color-surface)}
+[data-page="settings"] .settings-panel.chi-panel{min-width:0;padding:clamp(18px,2.5vw,26px);border:1px solid var(--chi-color-border-subtle);border-radius:var(--chi-radius-lg,16px);background:var(--chi-color-surface);box-shadow:none}
+[data-page="settings"] .settings-panel-featured.chi-panel{border-color:color-mix(in srgb, var(--chi-color-accent) 40%, transparent);background:var(--chi-color-surface)}
 [data-page="settings"] .settings-panel-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 14px}
 [data-page="settings"] .settings-panel-title-group{display:flex;align-items:center;gap:13px;min-width:0}
-[data-page="settings"] .settings-section-icon{display:grid;width:42px;height:42px;flex:0 0 auto;place-items:center;border:1px solid var(--chi-color-border);border-radius:12px;background:var(--chi-color-page-soft);color:var(--chi-color-text-muted)}
+[data-page="settings"] .settings-section-icon{display:grid;width:42px;height:42px;flex:0 0 auto;place-items:center;border:1px solid var(--chi-color-border-subtle);border-radius:12px;background:var(--chi-color-surface-sunken);color:var(--chi-color-text-muted)}
 [data-page="settings"] .settings-section-icon .settings-icon{width:20px;height:20px}
-[data-page="settings"] .settings-section-icon--auth{border-color:var(--chi-color-accent-border);background:var(--chi-color-accent-soft);color:var(--chi-color-accent)}
+[data-page="settings"] .settings-section-icon--auth{border-color:color-mix(in srgb, var(--chi-color-accent) 40%, transparent);background:color-mix(in srgb, var(--chi-color-accent) 8%, transparent);color:var(--chi-color-accent)}
 [data-page="settings"] .settings-panel-heading .panel-label{display:block;font-size:10px;letter-spacing:.11em}
-[data-page="settings"] .settings-panel-heading h2{margin:4px 0 0;color:var(--chi-color-text-strong);font-size:18px;line-height:1.4}
+[data-page="settings"] .settings-panel-heading h2{margin:4px 0 0;color:var(--chi-color-text-primary);font-size:18px;line-height:1.4}
 [data-page="settings"] .settings-panel-description{margin:0;color:var(--chi-color-text-muted);font-size:13px;line-height:1.8}
-[data-page="settings"] .settings-auth-status{flex:0 0 auto;padding:6px 10px;border:1px solid var(--chi-color-border);border-radius:999px;background:var(--chi-color-page-soft);color:var(--chi-color-text-muted);font-size:12px;font-weight:650;white-space:nowrap}
-[data-page="settings"] .settings-auth-status[data-authenticated="true"]{border-color:var(--chi-color-success-border,var(--chi-color-border));background:var(--chi-color-success-soft,var(--chi-color-page-soft));color:var(--chi-color-success)}
-[data-page="settings"] .settings-auth-status[data-authenticated="false"]{border-color:var(--chi-color-warning-border,var(--chi-color-border));background:var(--chi-color-warning-soft,var(--chi-color-page-soft));color:var(--chi-color-warning)}
+[data-page="settings"] .settings-auth-status{flex:0 0 auto;padding:6px 10px;border:1px solid var(--chi-color-border-subtle);border-radius:999px;background:var(--chi-color-surface-sunken);color:var(--chi-color-text-muted);font-size:12px;font-weight:650;white-space:nowrap}
+[data-page="settings"] .settings-auth-status[data-authenticated="true"]{border-color:color-mix(in srgb, var(--chi-color-success) 40%, transparent);background:var(--chi-color-success-bg,var(--chi-color-surface-sunken));color:var(--chi-color-success)}
+[data-page="settings"] .settings-auth-status[data-authenticated="false"]{border-color:color-mix(in srgb, var(--chi-color-warning) 40%, transparent);background:var(--chi-color-warning-bg,var(--chi-color-surface-sunken));color:var(--chi-color-warning)}
 [data-page="settings"] .settings-auth-controls{display:flex;align-items:center;gap:12px;margin-top:20px}
 [data-page="settings"] .settings-auth-buttons{display:flex;flex-wrap:wrap;gap:10px}
-[data-page="settings"] .settings-auth-buttons .chi-button{gap:8px}
+[data-page="settings"] .settings-auth-buttons .chi-btn{gap:8px}
 [data-page="settings"] .settings-auth-buttons .settings-icon{width:16px;height:16px}
 [data-page="settings"] .settings-auth-message{min-height:1.4em;margin:12px 0 0;color:var(--chi-color-text-muted);font-size:12px;line-height:1.65}
 [data-page="settings"] .settings-auth-message:empty{display:none}
@@ -31,29 +62,36 @@
 [data-page="settings"] .settings-auth-message[data-kind="success"]{color:var(--chi-color-success)}
 [data-page="settings"] .settings-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch;gap:18px;min-width:0}
 [data-page="settings"] .settings-columns>*{min-width:0}
-[data-page="settings"] .theme-choice-group{display:grid;gap:9px;margin-top:18px}
-[data-page="settings"] .theme-choice{position:relative;display:flex;width:100%;min-width:0;min-height:68px;align-items:center;gap:12px;padding:11px 13px;border:1px solid var(--chi-color-border);border-radius:12px;background:var(--chi-color-surface);color:var(--chi-color-text);text-align:left;cursor:pointer;transition:border-color .16s,background .16s}
-[data-page="settings"] .theme-choice-preview{display:grid;width:40px;height:40px;flex:0 0 auto;place-items:center;border:1px solid var(--chi-color-border);border-radius:10px;background:var(--chi-color-page-soft);color:var(--chi-color-text-muted)}
+[data-page="settings"] .theme-choice-group{display:grid;grid-template-columns:minmax(0,1fr);gap:9px;margin-top:18px}
+/* 顯示模式三態按鈕改直式堆疊：merch.css／theme-refinement.css 的
+ * .theme-choice-group 是 repeat(3, minmax(0,1fr))，但外觀面板只有一半寬，
+ * 三顆並排每顆只剩約 140px，圖示 40px＋勾勾 18px 扣掉後文字只剩約 50px，
+ * 中文被壓成逐字直排。按鈕本身就是橫向大按鈕設計（圖示＋文字＋勾勾），
+ * 直式堆疊才有足夠寬度讓標題與說明橫向顯示。本規則選擇器
+ * [data-page="settings"] .theme-choice-group 權重高於舊檔的單一 class，
+ * 所以能蓋過三欄設定；手機版本來就是 1fr，不受影響。 */
+[data-page="settings"] .theme-choice{position:relative;display:flex;width:100%;min-width:0;min-height:68px;align-items:center;gap:12px;padding:11px 13px;border:1px solid var(--chi-color-border-subtle);border-radius:12px;background:var(--chi-color-surface);color:var(--chi-color-text-primary);text-align:left;cursor:pointer;transition:border-color .16s,background .16s}
+[data-page="settings"] .theme-choice-preview{display:grid;width:40px;height:40px;flex:0 0 auto;place-items:center;border:1px solid var(--chi-color-border-subtle);border-radius:10px;background:var(--chi-color-surface-sunken);color:var(--chi-color-text-muted)}
 [data-page="settings"] .theme-choice-preview .settings-icon{width:19px;height:19px}
 [data-page="settings"] .theme-choice-copy{display:grid;min-width:0;gap:3px}
-[data-page="settings"] .theme-choice strong{color:var(--chi-color-text-strong);font-size:13px;font-weight:700}
+[data-page="settings"] .theme-choice strong{color:var(--chi-color-text-primary);font-size:13px;font-weight:700}
 [data-page="settings"] .theme-choice small{color:var(--chi-color-text-muted);font-size:11px;line-height:1.5}
 [data-page="settings"] .theme-choice-check{width:18px;height:18px;margin-left:auto;color:var(--chi-color-accent);opacity:0;transform:scale(.85);transition:opacity .16s,transform .16s}
-[data-page="settings"] .theme-choice:hover{border-color:var(--chi-color-accent-border)}
-[data-page="settings"] .theme-choice:focus-visible{outline:3px solid var(--chi-color-focus);outline-offset:2px}
-[data-page="settings"] .theme-choice[aria-pressed="true"]{border-color:var(--chi-color-accent);background:var(--chi-color-accent-soft)}
-[data-page="settings"] .theme-choice[aria-pressed="true"] .theme-choice-preview{border-color:var(--chi-color-accent-border);background:var(--chi-color-surface);color:var(--chi-color-accent)}
+[data-page="settings"] .theme-choice:hover{border-color:color-mix(in srgb, var(--chi-color-accent) 40%, transparent)}
+[data-page="settings"] .theme-choice:focus-visible{outline:3px solid var(--chi-color-focus-ring);outline-offset:2px}
+[data-page="settings"] .theme-choice[aria-pressed="true"]{border-color:var(--chi-color-accent);background:color-mix(in srgb, var(--chi-color-accent) 8%, transparent)}
+[data-page="settings"] .theme-choice[aria-pressed="true"] .theme-choice-preview{border-color:color-mix(in srgb, var(--chi-color-accent) 40%, transparent);background:var(--chi-color-surface);color:var(--chi-color-accent)}
 [data-page="settings"] .theme-choice[aria-pressed="true"] .theme-choice-check{opacity:1;transform:scale(1)}
 [data-page="settings"] .settings-theme-footnote{display:flex;justify-content:space-between;gap:12px;margin:14px 0 0;color:var(--chi-color-text-muted);font-size:11px;line-height:1.6}
 [data-page="settings"] .settings-info-list{display:grid;gap:0;margin:20px 0 0}
-[data-page="settings"] .settings-info-list>div{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 0;border-bottom:1px solid var(--chi-color-border)}
+[data-page="settings"] .settings-info-list>div{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 0;border-bottom:1px solid var(--chi-color-border-subtle)}
 [data-page="settings"] .settings-info-list>div:first-child{padding-top:0}
 [data-page="settings"] .settings-info-list>div:last-child{border-bottom:0}
 [data-page="settings"] .settings-info-list dt{color:var(--chi-color-text-muted);font-size:12px}
-[data-page="settings"] .settings-info-list dd{display:flex;align-items:center;gap:7px;margin:0;color:var(--chi-color-text-strong);font-size:12px;font-weight:650;text-align:right;overflow-wrap:anywhere}
+[data-page="settings"] .settings-info-list dd{display:flex;align-items:center;gap:7px;margin:0;color:var(--chi-color-text-primary);font-size:12px;font-weight:650;text-align:right;overflow-wrap:anywhere}
 [data-page="settings"] .settings-info-list .version{font-variant-numeric:tabular-nums}
 [data-page="settings"] .settings-info-dot{width:7px;height:7px;flex:0 0 auto;border-radius:50%;background:var(--chi-color-success)}
-[data-page="settings"] .settings-system-note{display:flex;align-items:flex-start;gap:8px;margin:16px 0 0;padding:11px 12px;border-radius:10px;background:var(--chi-color-page-soft);color:var(--chi-color-text-muted);font-size:11px;line-height:1.7}
+[data-page="settings"] .settings-system-note{display:flex;align-items:flex-start;gap:8px;margin:16px 0 0;padding:11px 12px;border-radius:10px;background:var(--chi-color-surface-sunken);color:var(--chi-color-text-muted);font-size:11px;line-height:1.7}
 [data-page="settings"] .settings-system-note .settings-icon{width:15px;height:15px;margin-top:2px}
 @media(max-width:760px){[data-page="settings"] .settings-columns{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:560px){
@@ -65,7 +103,7 @@
  [data-page="settings"] .settings-panel-heading{align-items:flex-start}
  [data-page="settings"] .settings-auth-status{font-size:11px}
  [data-page="settings"] .settings-auth-buttons{width:100%}
- [data-page="settings"] .settings-auth-buttons .chi-button{flex:1 1 auto;padding-inline:12px;font-size:12px}
+ [data-page="settings"] .settings-auth-buttons .chi-btn{flex:1 1 auto;padding-inline:12px;font-size:12px}
  [data-page="settings"] .theme-choice{min-height:64px;padding:10px}
  [data-page="settings"] .settings-theme-footnote{flex-direction:column;gap:3px}
 }
