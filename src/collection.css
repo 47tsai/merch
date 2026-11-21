@@ -150,6 +150,7 @@
   gap: 14px;
 }
 .collection-page .collection-control-group { min-width: 0; gap: 6px; }
+.collection-page .collection-control-group:has(.chi-select-wrap[hidden]),
 .collection-page .collection-control-group:has(select[hidden]) { display: none; }
 .collection-page .collection-control-group .chi-field__label { color: var(--chi-color-text-muted); font-size: 12px; }
 .collection-page .collection-control-group .chi-select { min-width: 0; font-size: 13px; }
