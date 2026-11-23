@@ -194,8 +194,19 @@ test('GitHub delete API failure restores the R2 mirror', async () => {
   assert.equal(calls.put, 1, 'rollback should restore the previous object once');
 });
 
-test('shipping PUT stays within the free-plan subrequest budget', async () => {
-  const { env } = makeEnv();
+test('failed delete rollback returns an explicit divergence error', async () => {
+  const { env, store, calls } = makeEnv({ previous: previousBytes, failPutAt: [1] });
+  const response = await withFetch(async () => new Response('{"message":"upstream unavailable"}', { status: 500 }), () =>
+    worker.fetch(deleteRequest(), env));
+
+  assert.equal(response.status, 502);
+  assert.equal((await response.json()).error.code, 'GITHUB_DELETE_RESPONSE_FAILED_ROLLBACK_FAILED');
+  assert.equal(store.has(assetPath), false, 'failed rollback leaves the mirror object absent');
+  assert.equal(calls.delete, 1);
+  assert.equal(calls.put, 1);
+});
+
+function makeShippingGithubMock({ dispatchFails = false } = {}) {
   const worksJson = JSON.stringify({ schemaVersion: 2, works: [{ id: 'honkai-star-rail', name: '崩壞：星穹鐵道', code: 'HSR', path: 'data/honkai-star-rail' }] });
   const versionJson = JSON.stringify({ version: '2.0.45' });
   const packageJson = JSON.stringify({ version: '2.0.45' });
@@ -230,20 +241,83 @@ test('shipping PUT stays within the free-plan subrequest budget', async () => {
     if (url.pathname === '/repos/47tsai/merch/git/trees' && init.method === 'POST') return json({ sha: 'new-tree-sha' }, 201);
     if (url.pathname === '/repos/47tsai/merch/git/commits' && init.method === 'POST') return json({ sha: 'new-commit-sha', tree: { sha: 'new-tree-sha' } }, 201);
     if (url.pathname === '/repos/47tsai/merch/git/refs/heads/main' && init.method === 'PATCH') return json({ object: { sha: 'new-commit-sha' } });
-    if (url.pathname === '/repos/47tsai/merch/dispatches' && init.method === 'POST') return new Response(null, { status: 204 });
+    if (url.pathname === '/repos/47tsai/merch/dispatches' && init.method === 'POST') {
+      if (dispatchFails) return new Response(null, { status: 500 });
+      return new Response(null, { status: 204 });
+    }
     throw new Error(`Unexpected GitHub call: ${init.method || 'GET'} ${url.pathname}`);
   };
-  const request = new Request('https://merch.chi.qzz.io/api/shipping/ship-test', {
+  return { mock, getGithubCalls: () => githubCalls };
+}
+
+function shippingPutRequest() {
+  return new Request('https://merch.chi.qzz.io/api/shipping/ship-test', {
     method: 'PUT',
     headers: { Origin: origin, Authorization: `Bearer ${'a'.repeat(43)}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ shipping: { id: 'ship-test', amount: 72, currency: 'TWD', date: '2026-11-23', carrier: '測試', itemIds: ['HSRk001'] } }),
   });
-  const response = await withFetch(mock, () => worker.fetch(request, env));
+}
+
+test('shipping PUT stays within the free-plan subrequest budget', async () => {
+  const { env } = makeEnv();
+  const { mock, getGithubCalls } = makeShippingGithubMock();
+  const response = await withFetch(mock, () => worker.fetch(shippingPutRequest(), env));
   const payload = await response.json();
   assert.equal(response.status, 200, `shipping PUT must succeed, got ${JSON.stringify(payload)}`);
   assert.equal(payload.ok, true);
   assert.equal(payload.data.version, '2.0.46');
   assert.equal(payload.data.shipping.length, 3);
   assert.equal(payload.data.shipping.find(x => x.id === 'ship-test')?.amount, 72);
-  assert.ok(githubCalls <= 20, `shipping PUT must stay within the free-plan subrequest budget, made ${githubCalls} GitHub calls`);
+  assert.ok(getGithubCalls() <= 20, `shipping PUT must stay within the free-plan subrequest budget, made ${getGithubCalls()} GitHub calls`);
+});
+
+test('shipping PUT still succeeds when the Verify dispatch fails', async () => {
+  const { env } = makeEnv();
+  const { mock } = makeShippingGithubMock({ dispatchFails: true });
+  const response = await withFetch(mock, () => worker.fetch(shippingPutRequest(), env));
+  const payload = await response.json();
+  assert.equal(response.status, 200, `shipping PUT must succeed even when dispatch fails, got ${JSON.stringify(payload)}`);
+  assert.equal(payload.ok, true);
+  assert.equal(payload.data.version, '2.0.46');
+  assert.equal(payload.data.shipping.length, 3);
+  assert.equal(payload.data.shipping.find(x => x.id === 'ship-test')?.amount, 72);
+});
+
+test('unchanged Item update returns the current version without creating a commit', async () => {
+  const { env } = makeEnv();
+  const item = { id: 'HSRk001', workId: 'honkai-star-rail', title: 'test', series: [], characters: [], category: 'k', manufacturer: 'test', quantity: 1, status: 'received', description: '', notes: '', purchase: {}, arrival: {}, afterSales: {}, images: [] };
+  const worksJson = JSON.stringify({ schemaVersion: 2, works: [{ id: 'honkai-star-rail', name: '崩壞：星穹鐵道', code: 'HSR', path: 'data/honkai-star-rail' }] });
+  const versionJson = JSON.stringify({ version: '2.0.45' });
+  const packageJson = JSON.stringify({ version: '2.0.45' });
+  const shippingJson = JSON.stringify({ schemaVersion: 1, records: [] });
+  const categoryJson = JSON.stringify({ schemaVersion: 1, workId: 'honkai-star-rail', category: 'k', items: [{ id: 'HSRk001', path: 'data/honkai-star-rail/k/HSRk001/data.json', title: 'test' }] });
+  const json = (payload, status = 200) => new Response(JSON.stringify(payload), { status });
+  const content = (text, sha) => json({ type: 'file', content: Buffer.from(text).toString('base64'), encoding: 'base64', sha });
+  const mock = async (input, init = {}) => {
+    const url = new URL(typeof input === 'string' ? input : input.url);
+    if (url.hostname !== 'api.github.com') throw new Error(`Unexpected host: ${url.hostname}`);
+    const method = init.method || 'GET';
+    if (method !== 'GET') throw new Error(`Unchanged update must not issue any GitHub write, got ${method} ${url.pathname}`);
+    if (url.pathname === '/repos/47tsai/merch/git/ref/heads/main') return json({ object: { sha: 'head-sha-1' } });
+    if (url.pathname === '/repos/47tsai/merch/git/commits/head-sha-1') return json({ sha: 'head-sha-1', tree: { sha: 'tree-sha-1' } });
+    if (url.pathname === '/repos/47tsai/merch/contents/data/works.json') return content(worksJson, 'sha-works');
+    if (url.pathname === '/repos/47tsai/merch/contents/public/data/version.json') return content(versionJson, 'sha-version');
+    if (url.pathname === '/repos/47tsai/merch/contents/package.json') return content(packageJson, 'sha-package');
+    if (url.pathname === '/repos/47tsai/merch/contents/public/data/shipping.json') return content(shippingJson, 'sha-shipping');
+    if (url.pathname === '/repos/47tsai/merch/contents/data/honkai-star-rail') return json([{ type: 'dir', name: 'k' }]);
+    if (url.pathname === '/repos/47tsai/merch/contents/data/honkai-star-rail/k/index.json') return content(categoryJson, 'sha-category');
+    if (url.pathname === '/repos/47tsai/merch/contents/data/honkai-star-rail/k/HSRk001/data.json') return content(JSON.stringify(item), 'sha-item');
+    if (url.pathname === '/repos/47tsai/merch/contents/data/honkai-star-rail/k/HSRk001/images') return json([]);
+    throw new Error(`Unexpected GitHub call: ${method} ${url.pathname}`);
+  };
+  const request = new Request('https://merch.chi.qzz.io/api/items/HSRk001', {
+    method: 'PUT',
+    headers: { Origin: origin, Authorization: `Bearer ${'a'.repeat(43)}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ item }),
+  });
+  const response = await withFetch(mock, () => worker.fetch(request, env));
+  const payload = await response.json();
+  assert.equal(response.status, 200, `unchanged update must succeed, got ${JSON.stringify(payload)}`);
+  assert.equal(payload.ok, true);
+  assert.equal(payload.data.version, '2.0.45', 'unchanged update must not bump the version');
 });

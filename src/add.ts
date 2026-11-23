@@ -87,10 +87,10 @@ async function submit(event: SubmitEvent): Promise<void> {
   };
   setBusy(true);
   try {
-    await store.addItem(item);
+    const warning = await store.addItem(item);
     clearFormErrors(feedback);
     sessionStorage.setItem('merch-management-selected-id', item.id);
-    showToast('收藏已新增。', 'success');
+    showToast(warning ?? '收藏已新增。', warning ? 'info' : 'success');
     const result = qs<HTMLElement>('#add-result'); const resultText = qs<HTMLElement>('#add-result-item');
     if (resultText) resultText.textContent = `${item.id} · ${item.title}`;
     if (result) result.hidden = false;

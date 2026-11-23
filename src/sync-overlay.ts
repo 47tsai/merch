@@ -11,7 +11,7 @@ function ensureOverlay(): HTMLElement {
   const element = document.createElement('div');
   element.className = 'sync-overlay';
   element.setAttribute('aria-hidden', 'true');
-  element.innerHTML = '<div class="sync-overlay-card" role="status" aria-live="polite"><div class="sync-overlay-spinner" aria-hidden="true"><i></i><i></i><i></i></div><strong class="sync-overlay-title">正在同步</strong><span class="sync-overlay-label"></span><small>請稍候，完成前暫時無法操作網站</small></div>';
+  element.innerHTML = '<div class="sync-overlay-card" role="status" aria-live="polite"><div class="sync-overlay-spinner" aria-hidden="true"><i></i><i></i><i></i></div><strong class="sync-overlay-title">正在同步</strong><span class="sync-overlay-label"></span><small>請稍候，資料傳送中</small></div>';
   document.body.appendChild(element);
   overlay = element;
   return element;
@@ -25,7 +25,7 @@ function setVisible(visible: boolean, label = '正在同步資料…'): void {
   const spinner = element.querySelector<HTMLElement>('.sync-overlay-spinner');
   if (titleNode) titleNode.textContent = '正在同步';
   if (labelNode) labelNode.textContent = label;
-  if (smallNode) smallNode.textContent = '請稍候，完成前暫時無法操作網站';
+  if (smallNode) smallNode.textContent = '請稍候，資料傳送中';
   spinner?.classList.remove('is-feedback');
   element.classList.remove('is-feedback', 'feedback-info', 'feedback-success', 'feedback-error');
   element.classList.toggle('is-visible', visible);
