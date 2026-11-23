@@ -33,7 +33,7 @@ function originFor(request: Request, env: Env): string | null { const origin = r
 async function authorized(request: Request, env: Env): Promise<boolean> { const clientId = env.CHI_AUTH_CLIENT_ID?.trim(); const configuredAuthUrl = env.CHI_AUTH_URL || 'https://auth.chi.qzz.io'; const authUrl = configuredAuthUrl.endsWith('/') ? configuredAuthUrl.slice(0, -1) : configuredAuthUrl; const match = (request.headers.get('Authorization') || '').match(/^Bearer ([A-Za-z0-9_-]{40,80})$/); if (!clientId || !match) return false; try { const response = await fetch(`${authUrl}/api/userinfo?client_id=${encodeURIComponent(clientId)}`, { headers: { Authorization: `Bearer ${match[1]}`, Accept: 'application/json' }, signal: AbortSignal.timeout(5000) }); if (!response.ok) return false; const identity = await response.json() as { sub?: unknown; aud?: unknown }; return identity.sub === 'chi-owner' && identity.aud === clientId; } catch { return false; } }
 function githubHeaders(env: Env): HeadersInit { return { Accept: 'application/vnd.github+json', 'Content-Type': 'application/json', Authorization: `Bearer ${env.GITHUB_TOKEN}`, 'X-GitHub-Api-Version': '2022-11-28', 'User-Agent': 'chi-merch-api' }; }
 function retryDelay(response: Response, attempt: number): number { const retryAfter = Number(response.headers.get('Retry-After') || ''); if (Number.isFinite(retryAfter) && retryAfter > 0) return Math.min(retryAfter * 1000, 4000); return [300, 900, 1800][attempt] ?? 1800; }
-async function githubJson<T>(env: Env, path: string, init: RequestInit = {}): Promise<T> { for (let attempt = 0; attempt < 3; attempt += 1) { const res = await fetch(`https://api.github.com${path}`, { ...init, headers: { ...githubHeaders(env), ...(init.headers || {}) } }); if (res.ok) return await res.json() as T; const transient = res.status === 429 || res.status === 502 || res.status === 503 || res.status === 504; if (transient && attempt < 2) { await new Promise(resolve => setTimeout(resolve, retryDelay(res, attempt))); continue; } const detail = await res.text().catch(() => ''); const error = new Error(`GitHub request failed: ${res.status}${detail ? ` ${detail.slice(0, 240)}` : ''}`); (error as Error & { status?: number }).status = res.status; throw error; } throw new Error('GitHub request failed after retries.'); }
+async function githubJson<T>(env: Env, path: string, init: RequestInit = {}): Promise<T> { for (let attempt = 0; attempt < 3; attempt += 1) { const res = await fetch(`https://api.github.com${path}`, { ...init, headers: { ...githubHeaders(env), ...(init.headers || {}) } }); if (res.ok) { if (res.status === 204) return undefined as T; return await res.json() as T; } const transient = res.status === 429 || res.status === 502 || res.status === 503 || res.status === 504; if (transient && attempt < 2) { await new Promise(resolve => setTimeout(resolve, retryDelay(res, attempt))); continue; } const detail = await res.text().catch(() => ''); const error = new Error(`GitHub request failed: ${res.status}${detail ? ` ${detail.slice(0, 240)}` : ''}`); (error as Error & { status?: number }).status = res.status; throw error; } throw new Error('GitHub request failed after retries.'); }
 function decodeBase64(content: string): Uint8Array { const binary = atob(content.replace(/\s/g, '')); return Uint8Array.from(binary, char => char.charCodeAt(0)); }
 function decodeText(content: string): string { return new TextDecoder().decode(decodeBase64(content)); }
 function jsonFile(value: unknown): string { return JSON.stringify(value, null, 2) + '\n'; }
@@ -95,20 +95,125 @@ async function loadRemoteForNewItem(env: Env, id: string, workId: string, catego
   return { ...base, categories, items: new Map() };
 }
 
+type GitHubTreeEntry = { path?: string; type?: string; sha?: string };
+type GraphQLBlobResult = { text?: string | null } | null;
+
+async function githubGraphQL<T>(env: Env, query: string): Promise<T> {
+  const res = await fetch('https://api.github.com/graphql', {
+    method: 'POST',
+    headers: { ...githubHeaders(env), Accept: 'application/json' },
+    body: JSON.stringify({ query }),
+  });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => '');
+    const error = new Error(`GitHub GraphQL request failed: ${res.status}${detail ? ` ${detail.slice(0, 240)}` : ''}`);
+    (error as Error & { status?: number }).status = res.status;
+    throw error;
+  }
+  const payload = (await res.json()) as { data?: T; errors?: { message?: string }[] };
+  if (payload.errors?.length) {
+    const error = new Error(`GitHub GraphQL request failed: ${payload.errors.map(e => e.message || 'unknown error').join('; ').slice(0, 240)}`);
+    (error as Error & { status?: number }).status = 502;
+    throw error;
+  }
+  if (!payload.data) throw new Error('GitHub GraphQL request failed: empty response.');
+  return payload.data;
+}
+
 async function loadRemote(env: Env): Promise<RemoteState> {
-  const base = await baseRemote(env);
-  const tree = await githubJson<{ tree: { path?: string; type?: string; sha?: string }[]; truncated?: boolean }>(env, `/repos/${env.GITHUB_REPO}/git/trees/${base.baseTreeSha}?recursive=1`);
+  // Full remote read, batched into a handful of requests: one GraphQL call
+  // for HEAD, one recursive tree to enumerate files, then one GraphQL call
+  // for the base files + category indexes and one more for the Item files.
+  // The previous implementation issued one contents request per category
+  // index and per Item file, which blows Cloudflare's 50-subrequest limit
+  // on the free plan once the collection grows (129 Item files + 41
+  // category indexes today: ~185 subrequests for a single shipping save).
+  const [owner, repo] = env.GITHUB_REPO.split('/');
+  if (!owner || !repo) throw new Error('GITHUB_REPO 格式無效。');
+  const branch = env.GITHUB_BRANCH;
+  const ref = await githubGraphQL<{ repository?: { ref?: { target?: { oid?: string; tree?: { oid?: string } } } | null } | null }>(
+    env,
+    `query { repository(owner: ${JSON.stringify(owner)}, name: ${JSON.stringify(repo)}) { ref(qualifiedName: ${JSON.stringify(`refs/heads/${branch}`)}) { target { ... on Commit { oid tree { oid } } } } } }`,
+  );
+  const headSha = ref.repository?.ref?.target?.oid;
+  const baseTreeSha = ref.repository?.ref?.target?.tree?.oid;
+  if (!headSha || !baseTreeSha) throw new Error('找不到 GitHub 分支 HEAD。');
+  const tree = await githubJson<{ tree: GitHubTreeEntry[]; truncated?: boolean }>(env, `/repos/${env.GITHUB_REPO}/git/trees/${baseTreeSha}?recursive=1`);
   if (tree.truncated) throw new Error('GitHub 資料樹過大，無法安全載入。');
-  for (const entry of tree.tree) if (entry.type === 'blob' && entry.path && entry.sha) base.blobs.set(entry.path, entry.sha);
+  const blobs = new Map<string, string>();
+  for (const entry of tree.tree) if (entry.type === 'blob' && entry.path && entry.sha) blobs.set(entry.path, entry.sha);
+  const categoryPaths = tree.tree.filter(x => x.type === 'blob' && x.path && /^data\/[^/]+\/[a-z]\/index\.json$/.test(x.path)).map(x => x.path as string);
+  const files = new Map<string, { content: string; sha: string }>();
+  const paths = new Set<string>();
+  const readBlob = (data: Record<string, unknown>, alias: string, path: string): string | null => {
+    const value = data[alias] as GraphQLBlobResult | undefined;
+    if (value && typeof value === 'object' && typeof value.text === 'string') {
+      const sha = blobs.get(path);
+      if (!sha) return null;
+      files.set(path, { content: value.text, sha });
+      paths.add(path);
+      return value.text;
+    }
+    return null;
+  };
+  const blobField = (alias: string, path: string): string => `${alias}: object(expression: ${JSON.stringify(`${branch}:${path}`)}) { ... on Blob { text } }`;
+  const basePaths = ['data/works.json', 'public/data/version.json', 'package.json', 'public/data/shipping.json'];
+  const baseAliases = basePaths.map((_, i) => `b${i}`);
+  const categoryAliases = categoryPaths.map((_, i) => `c${i}`);
+  const baseData = await githubGraphQL<{ repository?: Record<string, unknown> | null }>(
+    env,
+    `query { repository(owner: ${JSON.stringify(owner)}, name: ${JSON.stringify(repo)}) { ${[...basePaths.map((path, i) => blobField(baseAliases[i], path)), ...categoryPaths.map((path, i) => blobField(categoryAliases[i], path))].join(' ')} } }`,
+  );
+  const baseRepo = baseData.repository;
+  if (!baseRepo) throw new Error('GitHub GraphQL request failed: empty response.');
+  const worksText = readBlob(baseRepo, baseAliases[0], basePaths[0]);
+  const versionText = readBlob(baseRepo, baseAliases[1], basePaths[1]);
+  const packageText = readBlob(baseRepo, baseAliases[2], basePaths[2]);
+  const shippingText = readBlob(baseRepo, baseAliases[3], basePaths[3]);
+  if (!worksText || !versionText || !packageText) throw new Error('找不到資料檔：data/works.json、version.json 或 package.json。');
+  const index = JSON.parse(worksText) as WorkIndex;
+  const version = (JSON.parse(versionText) as { version?: string }).version;
+  const packageJson = JSON.parse(packageText) as { version?: string };
+  if (index.schemaVersion !== 2 || !version) throw new Error('新資料格式無效。');
+  if (packageJson.version !== version) throw new Error('package.json 與 version.json 版本不同。');
+  let shipping: ShippingRecord[] = [];
+  if (shippingText) {
+    try {
+      const parsed = JSON.parse(shippingText) as ShippingData;
+      if (parsed.schemaVersion === 1 && Array.isArray(parsed.records)) shipping = parsed.records;
+    } catch { /* keep empty shipping, same as before */ }
+  }
   const categories = new Map<string, CategoryIndex>();
+  for (let i = 0; i < categoryPaths.length; i += 1) {
+    const path = categoryPaths[i];
+    const text = readBlob(baseRepo, categoryAliases[i], path);
+    if (!text) continue;
+    try {
+      const category = JSON.parse(text) as CategoryIndex;
+      if (category.schemaVersion !== 1 || !category.workId || !CATEGORY_RE.test(category.category) || !Array.isArray(category.items)) continue;
+      categories.set(path, category);
+    } catch { /* skip invalid index, same as readCategory */ }
+  }
+  const itemRefs = [...categories.entries()].flatMap(([categoryPath, category]) => category.items.map(summary => ({ categoryPath, category, summary })));
+  const itemPaths = itemRefs.map(({ summary }) => summary.path);
+  const itemAliases = itemPaths.map((_, i) => `i${i}`);
+  const itemData = await githubGraphQL<{ repository?: Record<string, unknown> | null }>(
+    env,
+    `query { repository(owner: ${JSON.stringify(owner)}, name: ${JSON.stringify(repo)}) { ${itemPaths.map((path, i) => blobField(itemAliases[i], path)).join(' ')} } }`,
+  );
+  const itemRepo = itemData.repository;
+  if (!itemRepo) throw new Error('GitHub GraphQL request failed: empty response.');
   const items = new Map<string, ItemRef>();
-  const categoryEntries = tree.tree.filter(x => x.type === 'blob' && x.path && /^data\/[^/]+\/[a-z]\/index\.json$/.test(x.path));
-  const loaded = await Promise.all(categoryEntries.map(async entry => ({ path: entry.path as string, category: await readCategory(env, entry.path as string, base.files, base.paths) })));
-  for (const { path, category } of loaded) { if (!category) continue; categories.set(path, category); }
-  const itemRefs = [...categories.values()].flatMap(category => category.items.map(summary => ({ category, summary })));
-  const itemLoaded = await Promise.all(itemRefs.map(async ({ category, summary }) => ({ category, summary, item: JSON.parse(await readJson(env, summary.path, base.files, base.paths)) as Item })));
-  for (const { category, summary, item } of itemLoaded) { if (!Array.isArray(item.images)) item.images = []; if (items.has(item.id)) throw new Error(`遠端資料存在重複 Item ID：${item.id}`); items.set(item.id, { item, path: summary.path, categoryPath: `data/${item.workId}/${category.category}/index.json`, workId: item.workId }); }
-  return { ...base, categories, items };
+  for (let i = 0; i < itemRefs.length; i += 1) {
+    const { category, summary } = itemRefs[i];
+    const text = readBlob(itemRepo, itemAliases[i], summary.path);
+    if (!text) throw new Error(`找不到資料檔：${summary.path}`);
+    const item = JSON.parse(text) as Item;
+    if (!Array.isArray(item.images)) item.images = [];
+    if (items.has(item.id)) throw new Error(`遠端資料存在重複 Item ID：${item.id}`);
+    items.set(item.id, { item, path: summary.path, categoryPath: `data/${item.workId}/${category.category}/index.json`, workId: item.workId });
+  }
+  return { index, version, shipping, headSha, baseTreeSha, files, blobs, paths, categories, items };
 }
 function allWorks(remote: RemoteState) { return remote.index.works.map(work => ({ id: work.id, name: work.name, code: work.code, items: [...remote.items.values()].filter(x => x.workId === work.id).map(x => x.item) })); }
 function dataResponseFromRemote(remote: RemoteState, origin: string): Response { return ok({ works: allWorks(remote), version: remote.version, shipping: remote.shipping }, origin); }
@@ -141,7 +246,7 @@ async function getAssetByFile(env: Env, file: string, origin: string): Promise<R
 async function putAsset(env: Env, asset: AssetRequest, origin: string): Promise<Response> { const parts = assetParts(asset.path); if (!parts) return fail('INVALID_ASSET_PATH', '圖片路徑格式無效。', 400, origin); const remote = await loadRemoteTarget(env, parts.itemId); const entry = remote.items.get(parts.itemId); if (!entry || entry.workId !== parts.workId || entry.item.category !== parts.category) return fail('ITEM_PATH_MISMATCH', '圖片路徑與 Item 所屬位置不一致。', 400, origin); const exists = remote.paths.has(asset.path); const item = normalizeItem(entry.item); const images = [...item.images]; if (!images.some(x => x.file === parts.file)) images.push({ id: `${parts.itemId}-${Date.now()}`, file: parts.file }); item.images = images; const category = remote.categories.get(entry.categoryPath); if (!category) return fail('CATEGORY_NOT_FOUND', '找不到圖片所屬類型索引。', 404, origin); const version = bumpPatch(remote.version); const writes: WriteEntry[] = [{ path: asset.path, content: asset.content, encoding: 'base64' }, { path: entry.path, content: jsonFile(item) }, { path: entry.categoryPath, content: jsonFile({ ...category, items: [...category.items.filter(x => x.id !== item.id), categoryEntry(item, entry.path)] }) }, { path: 'public/data/version.json', content: jsonFile({ version }) }]; await createAtomicCommit(env, remote, writes, `${exists ? 'fix: replace' : 'feat: add'} image ${parts.itemId}/${parts.file}`); return ok({ path: asset.path, replaced: exists, version }, origin); }
 async function deleteAsset(env: Env, path: string, origin: string): Promise<Response> { const parts = assetParts(path); if (!parts) return fail('INVALID_ASSET_PATH', '圖片路徑格式無效。', 400, origin); const remote = await loadRemoteTarget(env, parts.itemId); const entry = remote.items.get(parts.itemId); if (!entry || entry.workId !== parts.workId || entry.item.category !== parts.category) return fail('ITEM_PATH_MISMATCH', '圖片路徑與 Item 所屬位置不一致。', 400, origin); if (!remote.paths.has(path)) return fail('ASSET_NOT_FOUND', '找不到要刪除的圖片。', 404, origin); const item = normalizeItem(entry.item); item.images = item.images.filter(x => x.file !== parts.file); const category = remote.categories.get(entry.categoryPath); if (!category) return fail('CATEGORY_NOT_FOUND', '找不到圖片所屬類型索引。', 404, origin); const writes: WriteEntry[] = [{ path, delete: true }, { path: entry.path, content: jsonFile(item) }, { path: entry.categoryPath, content: jsonFile({ ...category, items: [...category.items.filter(x => x.id !== item.id), categoryEntry(item, entry.path)] }) }, { path: 'public/data/version.json', content: jsonFile({ version: bumpPatch(remote.version) }) }]; await createAtomicCommit(env, remote, writes, `fix: delete image ${parts.itemId}/${parts.file}`); return ok({ path, deleted: true, version: bumpPatch(remote.version) }, origin); }
 function validateWork(input: unknown, requireId: boolean): { id?: string; name: string; code: string } { if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('作品資料格式無效。'); const v = input as Record<string, unknown>; const id = typeof v.id === 'string' ? v.id.trim() : ''; const name = typeof v.name === 'string' ? v.name.trim() : ''; const code = typeof v.code === 'string' ? v.code.trim().toUpperCase() : ''; if (requireId && !WORK_ID_RE.test(id)) throw new Error('作品 ID 格式無效。'); if (!requireId && id) throw new Error('編輯作品時不可修改作品 ID。'); if (!name) throw new Error('作品名稱為必填欄位。'); if (!WORK_CODE_RE.test(code)) throw new Error('作品代碼必須是 2～3 碼大寫英文字母。'); return { ...(id ? { id } : {}), name, code }; }
-async function createWork(env: Env, input: unknown, origin: string): Promise<Response> { const work = validateWork((input as { work?: unknown } | null)?.work, true); const remote = await baseRemote(env); if (remote.index.works.some(x => x.id === work.id)) return fail('WORK_EXISTS', '作品 ID 已存在。', 409, origin); if (remote.index.works.some(x => x.code === work.code)) return fail('WORK_CODE_EXISTS', '作品代碼已存在。', 409, origin); const entry = { id: work.id as string, name: work.name, code: work.code, path: `data/${work.id}` }; const index = { ...remote.index, works: [...remote.index.works, entry] }; const version = bumpPatch(remote.version); await createAtomicCommit(env, remote, [{ path: 'data/works.json', content: jsonFile(index) }, { path: 'public/data/version.json', content: jsonFile({ version }) }], `feat: add work ${entry.id}`); remote.index = index; remote.version = version; return dataResponseFromRemote(remote, origin); }
+async function createWork(env: Env, input: unknown, origin: string): Promise<Response> { const work = validateWork((input as { work?: unknown } | null)?.work, true); const remote = await baseRemote(env); if (remote.index.works.some(x => x.id === work.id)) return fail('WORK_EXISTS', '作品 ID 已存在。', 409, origin); if (remote.index.works.some(x => x.code === work.code)) return fail('WORK_CODE_EXISTS', '作品代碼已存在。', 409, origin); const entry = { id: work.id as string, name: work.name, code: work.code, path: `data/${work.id}` }; const index = { ...remote.index, works: [...remote.index.works, entry] }; const version = bumpPatch(remote.version); await createAtomicCommit(env, remote, [{ path: 'data/works.json', content: jsonFile(index) }, { path: 'public/data/version.json', content: jsonFile({ version }) }], `feat: add work ${entry.id}`); remote.index = index; remote.version = version; return mutationResponse(version, origin); }
 async function updateWork(env: Env, id: string, input: unknown, origin: string): Promise<Response> { const work = validateWork((input as { work?: unknown } | null)?.work, false); const remote = await loadRemote(env); const current = remote.index.works.find(x => x.id === id); if (!current) return fail('WORK_NOT_FOUND', '找不到作品。', 404, origin); if (remote.index.works.some(x => x.code === work.code && x.id !== id)) return fail('WORK_CODE_EXISTS', '作品代碼已存在。', 409, origin); const hasItems = [...remote.items.values()].some(x => x.workId === id); if (hasItems && work.code !== current.code) return fail('WORK_CODE_LOCKED', '作品已有收藏，不可修改作品代碼。', 409, origin); const index = { ...remote.index, works: remote.index.works.map(x => x.id === id ? { ...x, name: work.name, code: work.code } : x) }; const version = bumpPatch(remote.version); await createAtomicCommit(env, remote, [{ path: 'data/works.json', content: jsonFile(index) }, { path: 'public/data/version.json', content: jsonFile({ version }) }], `fix: update work ${id}`); remote.index = index; remote.version = version; return dataResponseFromRemote(remote, origin); }
 async function deleteWork(env: Env, id: string, origin: string): Promise<Response> { const remote = await loadRemote(env); const current = remote.index.works.find(x => x.id === id); if (!current) return fail('WORK_NOT_FOUND', '找不到作品。', 404, origin); if ([...remote.items.values()].some(x => x.workId === id)) return fail('WORK_NOT_EMPTY', '作品仍有收藏，請先移除所有收藏後再刪除。', 409, origin); const index = { ...remote.index, works: remote.index.works.filter(x => x.id !== id) }; const version = bumpPatch(remote.version); await createAtomicCommit(env, remote, [{ path: 'data/works.json', content: jsonFile(index) }, { path: 'public/data/version.json', content: jsonFile({ version }) }], `fix: delete work ${id}`); remote.index = index; remote.version = version; return dataResponseFromRemote(remote, origin); }
 
