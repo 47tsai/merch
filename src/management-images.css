@@ -27,8 +27,6 @@
 .management-image-actions .chi-btn:hover:not(:disabled){border-color:color-mix(in srgb, var(--chi-color-accent) 40%, transparent);background:color-mix(in srgb, var(--chi-color-accent) 8%, transparent);color:var(--chi-color-accent)}
 .management-image-actions .chi-btn:focus-visible{outline:3px solid var(--chi-color-focus-ring);outline-offset:2px}
 .management-image-actions .chi-btn:disabled{opacity:.5;cursor:not-allowed}
-.management-image-actions .chi-btn.danger{border-color:color-mix(in srgb, var(--chi-color-danger) 40%, transparent);color:var(--chi-color-danger)}
-.management-image-actions .chi-btn.danger:hover:not(:disabled){background:var(--chi-color-danger-bg)}
 .management-image-replace{cursor:pointer}
 @media(max-width:820px){.management-image-row{grid-template-columns:72px minmax(0,1fr);gap:var(--chi-space-3)}.management-image-preview{width:72px;height:72px}.management-image-actions{grid-column:1/-1;width:100%;justify-content:stretch}.management-image-actions .chi-btn{flex:1 1 0;min-width:0}}
 @media(max-width:420px){.management-image-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.management-image-actions .chi-btn{padding-inline:var(--chi-space-2)}}

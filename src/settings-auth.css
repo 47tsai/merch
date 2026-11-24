@@ -32,7 +32,6 @@
 .settings-page-header p{margin:var(--chi-space-3) 0 0;color:var(--chi-color-text-muted);line-height:1.75}
 
 .settings-icon{display:block;width:18px;height:18px;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.settings-page-badge .settings-icon{width:15px;height:15px}
 .settings-layout{display:grid;gap:18px}
 [data-page="settings"] .settings-panel.chi-panel{min-width:0;padding:clamp(18px,2.5vw,26px);border:1px solid var(--chi-color-border-subtle);border-radius:var(--chi-radius-lg,16px);background:var(--chi-color-surface);box-shadow:none}
 [data-page="settings"] .settings-panel-featured.chi-panel{border-color:color-mix(in srgb, var(--chi-color-accent) 40%, transparent);background:var(--chi-color-surface)}

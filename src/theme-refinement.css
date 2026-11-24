@@ -8,7 +8,7 @@
 .theme-choice:focus-visible{outline:0;box-shadow:0 0 0 3px var(--color-focus-ring)}
 .theme-choice.is-active{background:var(--brand-soft);border-color:var(--brand-border);color:var(--brand-text);font-weight:var(--font-weight-bold)}
 
-.add-section,.shipping-editor,.shipping-list,.management-panel form,.management-panel .management-editor,.management-panel .management-picker,.management-panel .management-images{background:var(--color-surface);border-color:var(--color-border)}
+.add-section, .shipping-editor, .shipping-list, .management-panel form, .management-panel .management-images {background:var(--color-surface);border-color:var(--color-border)}
 .add-grid label,.add-section-heading h2,.add-section-heading p,.management-panel label,.management-panel h2,.management-panel h3,.management-panel p,.shipping-editor label,.shipping-editor h2,.shipping-editor h3{color:var(--color-text)}
 .add-grid label b{color:var(--brand)}
 .shipping-item{background:var(--color-surface);border-color:var(--color-border);color:var(--color-text)}
@@ -17,7 +17,7 @@
 .statistics-chart-card{box-shadow:var(--shadow-md)}
 .chart-track{fill:var(--color-surface-soft)}
 .chart-fill,.bar-fill{fill:var(--brand)}
-.chart-axis,.chart-grid-line{stroke:var(--color-border)}
+.chart-axis {stroke:var(--color-border)}
 .donut-segment{stroke:var(--color-surface)}
 .statistics-chart-preview svg,.statistics-large-chart svg{color:var(--color-text)}
 .statistics-data-table-row,.statistics-work-item{color:var(--color-text);border-color:var(--color-border)}
@@ -44,13 +44,11 @@ html[data-theme='dark'] .nav a.is-active,html[data-theme='dark'] .nav a:hover{ba
 html[data-theme='dark'] .stat-card,html[data-theme='dark'] .panel,html[data-theme='dark'] .item-detail-grid>section,html[data-theme='dark'] .item-detail-text{background:var(--color-surface);border-color:var(--color-border);box-shadow:var(--shadow-md)}
 html[data-theme='dark'] .item-media,html[data-theme='dark'] .item-detail-image{background:var(--color-surface-soft)}
 html[data-theme='dark'] .view-switch{background:var(--color-surface-soft)}
-
-html[data-theme='dark'] .view-button.is-active{background:var(--color-surface);color:var(--color-text)}
 html[data-theme='dark'] .badge{background:var(--brand-soft);color:var(--brand-text)}
-html[data-theme='dark'] .empty-state,html[data-theme='dark'] .boot-error,html[data-theme='dark'] .notice{background:var(--color-surface);border-color:var(--color-border);color:var(--color-text-muted)}
+html[data-theme='dark'] .boot-error, html[data-theme='dark'] .notice {background:var(--color-surface);border-color:var(--color-border);color:var(--color-text-muted)}
 html[data-theme='dark'] .item-detail-text p{color:var(--color-text-muted)}
-html[data-theme='dark'] .footer,html[data-theme='dark'] .sidebar-footer{color:var(--color-text-muted)}
-html[data-theme='dark'] .item-detail-topbar,html[data-theme='dark'] .item-detail-header,html[data-theme='dark'] .item-detail-grid dl>div,html[data-theme='dark'] .item-detail-text>div+div{border-color:var(--color-border)}
+html[data-theme='dark'] .footer {color:var(--color-text-muted)}
+html[data-theme='dark'] .item-detail-header, html[data-theme='dark'] .item-detail-grid dl>div, html[data-theme='dark'] .item-detail-text>div+div {border-color:var(--color-border)}
 html[data-theme='dark'] .item-detail-modal{color:var(--color-text)}
 
 /* Mobile appearance settings: prevent text and status rows from overflowing. */

@@ -19,6 +19,4 @@
 #works-management-list .data-list-actions .chi-btn:hover:not(:disabled){border-color:var(--chi-color-accent-border);background:var(--chi-color-accent-soft);color:var(--chi-color-accent)}
 #works-management-list .data-list-actions .chi-btn:focus-visible{outline:3px solid var(--chi-color-focus);outline-offset:2px}
 #works-management-list .data-list-actions .chi-btn:disabled{opacity:.5;cursor:not-allowed}
-#works-management-list .data-list-actions .chi-btn.danger{border-color:var(--chi-color-danger-border);color:var(--chi-color-danger)}
-#works-management-list .data-list-actions .chi-btn.danger:hover:not(:disabled){background:var(--chi-color-danger-soft)}
 @media(max-width:560px){.works-management-grid{grid-template-columns:minmax(0,1fr)}#works-management-list .data-list-row{grid-template-columns:minmax(0,1fr);align-items:start}#works-management-list .data-list-actions{justify-content:stretch}#works-management-list .data-list-actions .chi-btn{flex:1}}

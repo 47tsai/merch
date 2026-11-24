@@ -75,10 +75,7 @@ h3 {
   letter-spacing: var(--tracking-label);
 }
 
-.hero p,
-.page-heading p,
-.management-copy,
-.item-detail-text p {
+.page-heading p, .item-detail-text p {
   line-height: var(--line-height-relaxed);
 }
 

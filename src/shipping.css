@@ -38,7 +38,6 @@
 .shipping-editor .chi-field{display:grid;gap:var(--chi-space-2);min-width:0}
 .shipping-editor .chi-input,.shipping-editor .chi-textarea{width:100%;min-width:0}
 .shipping-editor .chi-textarea{resize:vertical;min-height:5.5rem}
-.shipping-editor .chi-label b{color:var(--chi-color-accent)}
 .shipping-form-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--chi-space-3)}
 .shipping-linked-items{min-width:0;margin-top:var(--chi-space-2);padding:var(--chi-space-4);border:1px solid var(--chi-color-border-subtle);border-radius:var(--chi-radius-lg);background:var(--chi-color-surface-sunken)}
 .shipping-subheading{display:flex;align-items:baseline;justify-content:space-between;gap:var(--chi-space-3);flex-wrap:wrap;margin-bottom:var(--chi-space-3)}

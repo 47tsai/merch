@@ -74,8 +74,21 @@
   min-height: 100vh;
 }
 
-/* 側邊欄導覽圖示沿用 Font Awesome（與遷移前同一組 <i>），撐滿 chi 圖示格。 */
-.chi-sidebar__icon i {
+/* Font Awesome 內聯 SVG（.fa-inline）：path data 取自 Font Awesome Free 6.4.0
+ * 官方套件（Icons: CC BY 4.0），不再載入外部全量 CSS。高度跟隨字體尺寸
+ *（1em），寬度依 viewBox 比例自動撐開，與先前 <i class="fa-solid"> 的渲染
+ * 高度一致。側邊欄規則提高特異度，蓋過 components.css「圖示撐滿 20px 格」
+ * 的寫法，維持原本 16px（561–767px 圖示列維持 15px，見下方 media query）。 */
+svg.fa-inline {
+  width: auto;
+  height: 1em;
+  flex: none;
+  fill: currentColor;
+  vertical-align: -0.125em;
+}
+.chi-sidebar__icon svg.fa-inline {
+  width: auto;
+  height: 1em;
   font-size: 16px;
 }
 
@@ -177,7 +190,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .chi-sidebar__nav a .chi-sidebar__icon i {
+  .chi-sidebar__nav a .chi-sidebar__icon svg {
     font-size: 15px;
   }
   .chi-content .main {

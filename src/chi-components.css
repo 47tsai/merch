@@ -40,7 +40,7 @@
 .chi-textarea{min-height:112px;resize:vertical}
 
 .chi-input::placeholder,.chi-textarea::placeholder{color:var(--chi-color-text-subtle)}
-.chi-input:focus-visible,.chi-select:focus-visible,.chi-textarea:focus-visible,.chi-link:focus-visible,.chi-nav a:focus-visible{outline:3px solid var(--chi-color-focus);outline-offset:2px}
+.chi-input:focus-visible, .chi-select:focus-visible, .chi-textarea:focus-visible {outline:3px solid var(--chi-color-focus);outline-offset:2px}
 
 .chi-badge{display:inline-flex;align-items:center;padding:2px 9px;border:1px solid var(--chi-color-border);border-radius:var(--chi-radius-pill);background:var(--chi-color-surface-muted);color:var(--chi-color-text-muted);font-size:var(--chi-text-xs);line-height:1.6;white-space:nowrap}
 
@@ -187,18 +187,7 @@
 
 /* Unified icon system: local Lucide-style SVG sprite, no icon font or CDN. */
 .chi-icon{display:inline-block;width:1em;height:1em;flex:none;vertical-align:-.16em;overflow:visible;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-
-
-.chi-icon-circle>.chi-icon{width:1.35rem;height:1.35rem}
-.chi-language__check .chi-icon{width:.875rem;height:.875rem}
 .chi-search>.chi-icon{margin-inline:.15rem .25rem;color:var(--chi-color-text-subtle)}
-.chi-menu__item>.chi-icon{color:var(--chi-color-text-muted)}
-.chi-dropzone__icon>.chi-icon{width:1.5rem;height:1.5rem}
-.chi-device-row__icon>.chi-icon{width:1.25rem;height:1.25rem}
-
-
-
-.chi-icon-gallery__item>.chi-icon{width:1.35rem;height:1.35rem;color:var(--chi-color-text-strong)}
 
 
 
