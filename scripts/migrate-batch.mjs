@@ -15,17 +15,21 @@
  *      `images` entry changes (`id` / `alt` / `isCover` / `sha` untouched).
  *   3. If the image is the cover, update the category `index.json` `cover`
  *      field to the new filename; otherwise leave `index.json` untouched.
- *   4. Delete the old file (only after the JSON writes succeed).
+ *   4. Archive the original to `originals/<work>/<cat>/<id>/images/<file>`
+ *      (same tree as `data/`, git-only backup — never deployed or served),
+ *      then delete the old file from `data/` (only after the JSON writes
+ *      and the archive copy succeed).
  * After all files: bump `package.json` patch +1 and run the repo's own
  * `scripts/sync-version.mjs` (syncs `public/data/version.json` and
- * `package-lock.json`). Pass `--no-bump-version` to skip step 4.
+ * `package-lock.json`). Pass `--no-bump-version` to skip the version bump.
  *
- * It never reads `mapping.csv` — the batch file list comes from the caller
- * (the workflow computes it live from `find data -name '*.jpeg' -o
- * -name '*.png'` sorted by size desc). It is safe to re-run on the same
- * list: already-migrated files are detected (new .webp on disk + `data.json`
- * already pointing at it) and skipped, and a file converted but not yet
- * JSON-updated resumes at the JSON step instead of re-encoding.
+ * The manifest records `original_path` for every file. It is safe to
+ * re-run on the same list: already-migrated files are detected (new .webp
+ * on disk + `data.json` already pointing at it) and skipped — but only if
+ * their original is present in `originals/`; a missing backup fails the
+ * run instead of silently recording a batch with no original. A file
+ * converted but not yet JSON-updated resumes at the JSON step instead of
+ * re-encoding.
  *
  * Usage:
  *   node scripts/migrate-batch.mjs --list <batch.txt> [--root <repo>]
@@ -274,6 +278,11 @@ function main() {
     const newName = `${stem}.webp`;
     const newRel = path.posix.join(path.dirname(rel).split(path.sep).join('/'), newName);
     const newPath = path.join(root, newRel);
+    // Originals live in a separate top-level tree mirroring data/ — never
+    // inside data/.../images/ (the image contract would flag an unreferenced
+    // file there, and sync-public-data would deploy it).
+    const originalRel = rel.replace(/^data\//, 'originals/');
+    const originalPath = path.join(root, originalRel);
     const dataJsonPath = path.join(itemDir, 'data.json');
 
     const oldExists = fs.existsSync(oldPath);
@@ -336,12 +345,31 @@ function main() {
     }
 
     if (status !== 'already-done') {
-      // JSON updates first; only then delete the old file.
+      // JSON updates first; then archive the original to originals/ (same
+      // tree as data/, git-only backup — never served) and only then delete
+      // the old file from data/.
       const dataResult = updateDataJson(itemDir, oldName, newName);
       isCover = dataResult.isCover;
       indexChanged = updateIndexJson(catDir, itemId, oldName, newName, isCover);
-      if (oldExists) fs.rmSync(oldPath);
+      if (oldExists) {
+        fs.mkdirSync(path.dirname(originalPath), { recursive: true });
+        fs.copyFileSync(oldPath, originalPath);
+        fs.rmSync(oldPath);
+      } else if (status === 'resume-json') {
+        // Old file already gone but JSON still points at it: the original
+        // was deleted without being archived — refuse, it must be restored.
+        fail(`${rel}: original is gone from disk but data.json still points at it — restore it to ${originalRel} first.`);
+      }
     } else {
+      // The original must have been archived to originals/ by the earlier
+      // run. If it is missing, the batch was migrated by the old design
+      // (originals deleted) — refuse rather than silently record a batch
+      // with no backup. Recovery: put the original back at originals/...
+      // (move it there if it is still on disk under data/..., else restore
+      // it from git history) and re-run.
+      if (!fs.existsSync(originalPath)) {
+        fail(`${rel}: already migrated but original is missing from ${originalRel} — refusing to record this batch without its backup.`);
+      }
       const entry = dataJson.images.find((img) => img && img.file === newName);
       isCover = entry.isCover === true;
       const indexJson = readJson(path.join(catDir, 'index.json'));
@@ -355,7 +383,7 @@ function main() {
       oldBytes = null;
     }
     files.push({
-      old_path: rel, new_path: newRel, old_bytes: oldBytes, new_bytes: newBytes,
+      old_path: rel, new_path: newRel, original_path: originalRel, old_bytes: oldBytes, new_bytes: newBytes,
       saved_bytes: oldBytes !== null && newBytes !== null ? oldBytes - newBytes : null,
       saved_pct: oldBytes !== null && newBytes !== null && oldBytes > 0
         ? Number(((100 * (oldBytes - newBytes)) / oldBytes).toFixed(1)) : null,
