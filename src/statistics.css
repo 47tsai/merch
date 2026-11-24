@@ -49,9 +49,9 @@
 .chart-value, .bar-value { font-weight: 700; }
 .bar-value { text-anchor: end; }
 .chart-axis { stroke: var(--chi-color-border-subtle); stroke-width: 1; }
-.chart-grid-line { stroke: var(--chi-color-border-subtle); stroke-width: 1; stroke-dasharray: 3 5; }
+
 .chart-axis-label, .chart-empty { fill: var(--chi-color-text-muted) !important; }
-.chart-year { fill: var(--chi-color-text-primary); font-size: 12px; font-weight: 700; }
+
 .donut-segment { stroke: var(--chi-color-surface); stroke-width: 3; cursor: pointer; transition: opacity .15s ease; }
 .donut-segment:hover, .donut-segment:focus-visible { opacity: .72; outline: none; }
 .donut-dot { stroke: none; }
@@ -76,7 +76,7 @@
   font-weight: 650;
 }
 .statistics-data-table { overflow-x: auto; }
-.statistics-work-item-empty { padding: 24px 12px; color: var(--chi-color-text-muted); text-align: center; font-size: 13px; }
+
 .statistics-page-header {
   display: flex;
   align-items: flex-end;
@@ -460,7 +460,7 @@
   place-items: center;
   padding: 24px;
 }
-.statistics-work-popup-backdrop { position: absolute; inset: 0; background: rgb(12 16 26 / 58%); backdrop-filter: blur(4px); }
+
 .statistics-work-popup-dialog {
   position: relative;
   width: min(760px, 100%);
@@ -504,7 +504,7 @@
 .statistics-work-item-main span { display: block; margin-top: 4px; color: var(--chi-color-text-muted); font-size: 11px; overflow-wrap: anywhere; }
 .statistics-work-item-meta { text-align: right; color: var(--chi-color-text-muted); font-size: 11px; }
 .statistics-work-item-meta strong { display: block; margin-top: 3px; color: var(--chi-color-text-primary); font-size: 14px; }
-.statistics-work-item-empty { padding: 24px 12px; color: var(--chi-color-text-muted); text-align: center; font-size: 13px; }
+
 
 @media (max-width: 1080px) {
   .statistics-overview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }

@@ -1,6 +1,6 @@
-.settings-theme-panel{margin-top:var(--space-5)}
-.settings-theme-controls{display:flex;align-items:center;justify-content:space-between;gap:var(--toolbar-gap)}
-.settings-theme-copy{margin:var(--space-1) 0 0;color:var(--color-text-muted);font-size:var(--font-size-xs)}
+
+
+
 .theme-choice-group{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--toolbar-gap);margin-top:var(--space-4)}
 .theme-choice{display:flex;align-items:center;justify-content:center;gap:var(--space-2);border:var(--border-width) solid var(--color-border);background:var(--color-surface);color:var(--color-text);border-radius:var(--radius-md);padding:var(--space-2) var(--space-3);cursor:pointer;min-height:46px;font:inherit;font-size:var(--font-size-xs);font-weight:var(--font-weight-semibold);transition:background .18s,border-color .18s,transform .18s}
 .theme-choice i{font-size:14px;width:16px;text-align:center}
@@ -40,11 +40,11 @@
 
 html[data-theme='dark'] body{background:var(--color-bg);color:var(--color-text)}
 html[data-theme='dark'] .nav a.is-active,html[data-theme='dark'] .nav a:hover{background:var(--brand-soft);color:var(--brand-text)}
-html[data-theme='dark'] .sidebar-toggle:hover{background:var(--brand-soft);color:var(--brand-text);border-color:var(--brand-border)}
+
 html[data-theme='dark'] .stat-card,html[data-theme='dark'] .panel,html[data-theme='dark'] .item-detail-grid>section,html[data-theme='dark'] .item-detail-text{background:var(--color-surface);border-color:var(--color-border);box-shadow:var(--shadow-md)}
 html[data-theme='dark'] .item-media,html[data-theme='dark'] .item-detail-image{background:var(--color-surface-soft)}
 html[data-theme='dark'] .view-switch{background:var(--color-surface-soft)}
-html[data-theme='dark'] .view-button{color:var(--color-text-muted)}
+
 html[data-theme='dark'] .view-button.is-active{background:var(--color-surface);color:var(--color-text)}
 html[data-theme='dark'] .badge{background:var(--brand-soft);color:var(--brand-text)}
 html[data-theme='dark'] .empty-state,html[data-theme='dark'] .boot-error,html[data-theme='dark'] .notice{background:var(--color-surface);border-color:var(--color-border);color:var(--color-text-muted)}

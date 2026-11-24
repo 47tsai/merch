@@ -6,12 +6,15 @@
  *
  * 資料絕對不快取：導覽、/api/*、/data、data/*.json 一律直接走網路
  * （app 本身 fetch 時也用 cache: 'no-store'），新部署或新收藏絕不會
- * 被舊快取蓋掉。靜態 js／css／圖示才用 cache-first，快取名帶版本號，
- * 改版時改 CACHE_VERSION 就會清掉舊快取。
+ * 被舊快取蓋掉。靜態 js／css／圖示用 stale-while-revalidate：先給快取、
+ * 背景抓新版寫回快取，下次就用新版；未雜湊的 /chi-system/* 檔案
+ * （sidebar.js／theme.js／components.css／tokens.css）改版後也不會
+ * 被舊快取永遠蓋住。快取名帶版本號，改版時改 CACHE_VERSION
+ * 就會清掉舊快取。
  */
-const CACHE_VERSION = 'merch-sw-v1';
+const CACHE_VERSION = 'merch-sw-v2';
 const STATIC_CACHE = `merch-static-${CACHE_VERSION}`;
-const APP_SHELL = ['/', '/index.html', '/manifest.webmanifest'];
+const APP_SHELL = ['/index.html', '/manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -71,18 +74,22 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 其餘同源靜態資源：cache-first，沒命中才抓網路並寫入快取。
+  // 其餘同源靜態資源：stale-while-revalidate——有快取先給快取、同時
+  // 背景抓新版寫回快取；沒快取才等網路。/api/*、/data、/data/*、
+  // 導覽不走這裡（見上方），絕對不快取。
   if (!isCacheableStatic(url)) return;
+  // 背景更新先啟動：無論有無快取都抓一次新版，成功才寫回快取。
+  const networkUpdate = fetch(request)
+    .then((response) => {
+      if (response.ok && response.type === 'basic') {
+        const copy = response.clone();
+        caches.open(STATIC_CACHE).then((cache) => cache.put(request, copy));
+      }
+      return response;
+    })
+    .catch(() => undefined);
+  event.waitUntil(networkUpdate);
   event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) return cached;
-      return fetch(request).then((response) => {
-        if (response.ok && response.type === 'basic') {
-          const copy = response.clone();
-          caches.open(STATIC_CACHE).then((cache) => cache.put(request, copy));
-        }
-        return response;
-      });
-    }),
+    caches.match(request).then((cached) => cached || networkUpdate),
   );
 });
