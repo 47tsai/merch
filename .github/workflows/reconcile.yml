@@ -21,7 +21,7 @@ jobs:
     steps:
       - name: Check latest main commit verification
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.MERCH_GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           head_sha=$(gh api "repos/${{ github.repository }}/commits/main" --jq '.sha')
