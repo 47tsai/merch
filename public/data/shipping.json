@@ -33,6 +33,21 @@
         "HSRo007",
         "HSRr004"
       ]
+    },
+    {
+      "id": "ship-mwtznteh",
+      "amount": 72,
+      "currency": "TWD",
+      "date": "2026-11-18",
+      "carrier": "台集運",
+      "itemIds": [
+        "HSRc001",
+        "HSRd001",
+        "HSRd002",
+        "HSRv001",
+        "HSRc014",
+        "HSRk001"
+      ]
     }
   ]
 }
