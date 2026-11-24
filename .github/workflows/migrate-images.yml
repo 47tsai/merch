@@ -1,0 +1,469 @@
+# migrate-images.yml — merch 圖片轉 WebP 批次遷移（手動觸發專用）
+#
+# 安裝方式（只能走瀏覽器網頁編輯，不要用 push-files / 本機 git）：
+#   1. 先建立 scripts/migrate-batch.mjs（內容見 workflow/migrate-batch.mjs），
+#   2. 再建立本檔 .github/workflows/migrate-images.yml，
+#   3. 兩個檔案放在同一個 commit 一起上 main（缺任何一個都跑不起來）。
+#   詳細步驟、行數核對與觸發方式見 workflow/README.md。
+#
+# 設計要點（依據見 README.md §1）：
+#   - 只有 workflow_dispatch 觸發；push 不會觸發它。
+#   - 批次清單每次在 runner 內即時計算（find data，按大小降序），不依賴
+#     mapping.csv（它不在 repo 裡）。start_batch 是 PLAN 的批次編號
+#     （1..13）；已完成的批數由 main 上的遷移 commit 數量推導，
+#     start_batch 必須等於「已完成 + 1」，否則直接失敗（防跑錯批）。
+#   - 每批：轉換 → 改 JSON → 版號 +1 → 本地驗證 → commit + push
+#     （GITHUB_TOKEN）→ R2 回填 → 線上驗收 → repository_dispatch
+#     （MERCH_GITHUB_TOKEN）觸發 Verify → 等 Verify 綠才跑下一批。
+#   - GITHUB_TOKEN 推的 commit 不會觸發其他 workflow（GitHub 官方規則），
+#     所以 push 後必須自己 dispatch；dispatch 用 MERCH_GITHUB_TOKEN，
+#     與 reconcile.yml / Worker dispatchVerify() 的既有慣例一致。
+#   - 任一步失敗就停在該批，不開下一批。重跑方式見 README.md §5。
+name: Migrate images to WebP
+
+on:
+  workflow_dispatch:
+    inputs:
+      start_batch:
+        description: 'PLAN batch number to start from (1-13; must be already-done + 1)'
+        required: true
+        default: '1'
+        type: number
+      batch_count:
+        description: 'How many batches to run in this invocation (1-3)'
+        required: true
+        default: '1'
+        type: number
+      r2_only:
+        description: 'Only redo R2 backfill + acceptance + dispatch for already-committed batches (no conversion, no commit)'
+        required: false
+        default: false
+        type: boolean
+      dry_run:
+        description: 'Convert + verify only; push nothing, touch no R2, dispatch nothing'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write # push the migration commit (GITHUB_TOKEN)
+  actions: read   # poll the Verify run triggered by our dispatch
+
+concurrency:
+  group: migrate-images
+  cancel-in-progress: false # never cancel a migration mid-push; a second run queues
+
+env:
+  WRANGLER_VERSION: 4.151.0 # pinned; same version deploy.yml uses
+  R2_BUCKET: chi-merch-assets
+  SITE_URL: https://merch.chi.qzz.io
+  BATCH_SIZE: 10
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Guard — main branch only
+        run: |
+          set -euo pipefail
+          if [ "${{ github.ref }}" != "refs/heads/main" ]; then
+            echo "::error::migrate-images must run from main (selected ref: ${{ github.ref }})."
+            exit 1
+          fi
+
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0 # full history: needed for the done-batch count + r2_only lookup
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install tools
+        run: |
+          set -euo pipefail
+          if ! command -v cwebp >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq webp
+          fi
+          echo "cwebp: $(cwebp -version | head -1)"
+          echo "webpinfo: $(command -v webpinfo)"
+          command -v jq >/dev/null || { echo "::error::jq is required."; exit 1; }
+          command -v gh >/dev/null || { echo "::error::gh CLI is required."; exit 1; }
+          echo "tools OK (cwebp / webpinfo / jq / gh / node $(node --version))"
+
+      - name: Validate inputs
+        id: validate
+        run: |
+          set -euo pipefail
+          start=${{ inputs.start_batch }}
+          count=${{ inputs.batch_count }}
+          r2_only=${{ inputs.r2_only }}
+          dry_run=${{ inputs.dry_run }}
+          if [ "$start" -lt 1 ] || [ "$start" -gt 13 ]; then
+            echo "::error::start_batch must be 1-13 (got $start)."
+            exit 1
+          fi
+          if [ "$count" -lt 1 ] || [ "$count" -gt 3 ]; then
+            echo "::error::batch_count must be 1-3 (got $count)."
+            exit 1
+          fi
+          if [ "$r2_only" = "true" ] && [ "$dry_run" = "true" ]; then
+            echo "::error::r2_only and dry_run cannot both be true."
+            exit 1
+          fi
+          # Batches already on main = migration commits (one commit per batch).
+          # NOTE: a reverted batch still counts here; if a batch was ever
+          # reverted, this check will refuse and a human must sort it out.
+          done_batches=$(git log --format=%s | grep -c '^perf(images): migrate batch .* to WebP' || true)
+          echo "done_batches=$done_batches"
+          echo "done_batches=$done_batches" >> "$GITHUB_OUTPUT"
+          if [ "$done_batches" -ge 13 ]; then
+            echo "All 13 batches are already on main; nothing left to migrate."
+            echo "complete=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "$r2_only" = "true" ]; then
+            if [ "$start" -gt "$done_batches" ]; then
+              echo "::error::r2_only requested for batch $start, but only $done_batches batch(es) are committed."
+              exit 1
+            fi
+          elif [ "$start" -ne $((done_batches + 1)) ]; then
+            echo "::error::start_batch=$start but $done_batches batch(es) are already on main; the next batch is $((done_batches + 1)). Re-run with start_batch=$((done_batches + 1)), or use r2_only=true to retry R2 for an already-committed batch."
+            exit 1
+          fi
+
+      - name: Snapshot remaining images
+        id: snapshot
+        run: |
+          set -euo pipefail
+          # Live batch source: remaining .jpeg/.png files, size-desc.
+          # This is the same ordering as PLAN's mapping.csv (size-desc over
+          # the original 123); already-migrated files are .webp now, so they
+          # simply drop out of the list — that is what makes re-runs idempotent.
+          find data \( -name '*.jpeg' -o -name '*.png' \) -printf '%s %p\n' \
+            | sort -rn | awk '{print $2}' > "$RUNNER_TEMP/remaining.txt"
+          remaining=$(wc -l < "$RUNNER_TEMP/remaining.txt")
+          echo "remaining=$remaining"
+          echo "remaining=$remaining" >> "$GITHUB_OUTPUT"
+          if [ "$remaining" -eq 0 ]; then
+            echo "No .jpeg/.png images left under data/ — migration is complete."
+            exit 0
+          fi
+          echo "Remaining convertible images: $remaining"
+          echo "--- largest 15 remaining (bytes path) ---"
+          find data \( -name '*.jpeg' -o -name '*.png' \) -printf '%s %p\n' \
+            | sort -rn | head -15
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run batches
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MERCH_GITHUB_TOKEN: ${{ secrets.MERCH_GITHUB_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          START_BATCH: ${{ inputs.start_batch }}
+          BATCH_COUNT: ${{ inputs.batch_count }}
+          R2_ONLY: ${{ inputs.r2_only }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          MIGRATION_COMPLETE: ${{ steps.validate.outputs.complete }}
+          REMAINING: ${{ steps.snapshot.outputs.remaining }}
+        run: |
+          set -euo pipefail
+
+          # ---------- helpers ----------
+          wrangler() {
+            npx "wrangler@${WRANGLER_VERSION}" "$@"
+          }
+
+          # R2 backfill for one batch manifest: put new .webp keys (with the
+          # same httpMetadata the Worker writes: content-type image/webp +
+          # cache-control public, max-age=31536000, immutable), then delete
+          # the old keys. --remote is mandatory: without it wrangler writes
+          # to the local simulator and the real bucket never changes.
+          r2_backfill() {
+            local manifest="$1"
+            test -n "${CLOUDFLARE_API_TOKEN:-}" || { echo "::error::CLOUDFLARE_API_TOKEN secret is not set."; return 1; }
+            test -n "${CLOUDFLARE_ACCOUNT_ID:-}" || { echo "::error::CLOUDFLARE_ACCOUNT_ID secret is not set."; return 1; }
+            jq -c '.files[]' "$manifest" > "$RUNNER_TEMP/r2-list.jsonl"
+            while IFS= read -r entry; do
+              local old new
+              old=$(echo "$entry" | jq -r '.old_path')
+              new=$(echo "$entry" | jq -r '.new_path')
+              echo "R2 put ${R2_BUCKET}/${new} (image/webp, immutable 1y)"
+              wrangler r2 object put "${R2_BUCKET}/${new}" --remote \
+                --file "${new}" \
+                --content-type image/webp \
+                --cache-control "public, max-age=31536000, immutable"
+              echo "R2 delete ${R2_BUCKET}/${old}"
+              wrangler r2 object delete "${R2_BUCKET}/${old}" --remote
+            done < "$RUNNER_TEMP/r2-list.jsonl"
+          }
+
+          # Acceptance for one batch manifest (PLAN §6.2 items 13 + 16):
+          # new URL -> 200 + image/webp + X-Merch-Asset-Source: r2;
+          # old URL -> 404; /api/data already lists the new filename.
+          accept_batch() {
+            local manifest="$1"
+            local api_data="$RUNNER_TEMP/api-data.json"
+            curl -fsS "${SITE_URL}/api/data" -o "$api_data"
+            jq -c '.files[]' "$manifest" > "$RUNNER_TEMP/accept-list.jsonl"
+            while IFS= read -r entry; do
+              local old new old_name new_name
+              old=$(echo "$entry" | jq -r '.old_path')
+              new=$(echo "$entry" | jq -r '.new_path')
+              old_name=$(basename "$old")
+              new_name=$(basename "$new")
+              local ok=0
+              for _ in 1 2 3 4 5 6; do
+                local headers status ctype src
+                headers=$(curl -sS -D - -o /dev/null "${SITE_URL}/api/assets/${new}" || true)
+                status=$(echo "$headers" | head -1)
+                ctype=$(echo "$headers" | grep -i '^content-type:' | tr -d '\r' || true)
+                src=$(echo "$headers" | grep -i '^x-merch-asset-source:' | tr -d '\r' || true)
+                if echo "$status" | grep -q ' 200 ' \
+                  && echo "$ctype" | grep -qi 'image/webp' \
+                  && echo "$src" | grep -qi 'r2'; then ok=1; break; fi
+                sleep 10
+              done
+              if [ "$ok" -ne 1 ]; then
+                echo "::error::acceptance failed for ${new}: expected 200 + Content-Type image/webp + X-Merch-Asset-Source r2."
+                return 1
+              fi
+              echo "accept OK: ${new} -> 200 image/webp (r2)"
+              local gone=0
+              for _ in 1 2 3 4 5 6; do
+                local code
+                code=$(curl -s -o /dev/null -w '%{http_code}' "${SITE_URL}/api/assets/${old}" || true)
+                if [ "$code" = "404" ]; then gone=1; break; fi
+                sleep 10
+              done
+              if [ "$gone" -ne 1 ]; then
+                echo "::error::old URL still serves (not 404): ${old} — R2 old key or GitHub blob was not removed."
+                return 1
+              fi
+              echo "accept OK: ${old} -> 404"
+              grep -q "\"file\": \"${new_name}\"" "$api_data" \
+                || { echo "::error::/api/data does not list ${new_name} yet."; return 1; }
+              if grep -q "\"file\": \"${old_name}\"" "$api_data"; then
+                echo "::error::/api/data still lists old file ${old_name}."
+                return 1
+              fi
+              echo "accept OK: /api/data lists ${new_name}, no longer lists ${old_name}"
+            done < "$RUNNER_TEMP/accept-list.jsonl"
+          }
+
+          # Trigger Verify the way the Worker and reconcile.yml do:
+          # repository_dispatch merch-mutation with the new commit SHA.
+          dispatch_verify() {
+            local sha="$1"
+            test -n "${MERCH_GITHUB_TOKEN:-}" || { echo "::error::MERCH_GITHUB_TOKEN secret is not set."; return 1; }
+            jq -n --arg sha "$sha" '{event_type: "merch-mutation", client_payload: {commit_sha: $sha}}' \
+              | GH_TOKEN="$MERCH_GITHUB_TOKEN" gh api "repos/${{ github.repository }}/dispatches" --input - -X POST
+            echo "dispatched merch-mutation for $sha"
+          }
+
+          # Wait up to 10 min for the Verify run of $sha (same budget as the
+          # Deploy gate). A cancelled/failed Verify stops the migration.
+          wait_for_verify() {
+            local sha="$1"
+            for attempt in $(seq 1 60); do
+              local runs status conclusion
+              runs=$(gh api "repos/${{ github.repository }}/actions/workflows/verify.yml/runs?head_sha=$sha&per_page=100" || echo '{"workflow_runs":[]}')
+              status=$(echo "$runs" | jq -r --arg sha "$sha" '[.workflow_runs[] | select(.head_sha == $sha and .head_branch == "main")] | .[0].status // "none"')
+              conclusion=$(echo "$runs" | jq -r --arg sha "$sha" '[.workflow_runs[] | select(.head_sha == $sha and .head_branch == "main")] | .[0].conclusion // ""')
+              echo "Verify for $sha: status=$status conclusion=$conclusion (attempt $attempt/60)"
+              if [ "$status" = "completed" ]; then
+                if [ "$conclusion" = "success" ]; then return 0; fi
+                echo "::error::Verify finished with conclusion=$conclusion for $sha — stopping, see the Verify run."
+                return 1
+              fi
+              sleep 10
+            done
+            echo "::error::Verify did not complete within 10 minutes for $sha — stopping (check the Verify run; do NOT start the next batch)."
+            return 1
+          }
+
+          # Build the manifest-shaped JSON for an already-committed batch
+          # (r2_only mode): file list comes from the batch commit itself.
+          manifest_for_committed_batch() {
+            local batch="$1" out="$2"
+            local sha
+            sha=$(git log --format=%H --grep="^perf(images): migrate batch ${batch} to WebP" -1)
+            if [ -z "$sha" ]; then
+              echo "::error::no commit found for batch $batch (looked for 'perf(images): migrate batch $batch to WebP')."
+              return 1
+            fi
+            echo "batch $batch commit: $sha"
+            git show --name-status --pretty=format: "$sha" > "$RUNNER_TEMP/batch-${batch}-files.txt"
+            # New files: added .webp under data/; old files: deleted entries.
+            local new_list="$RUNNER_TEMP/batch-${batch}-new.txt"
+            local old_list="$RUNNER_TEMP/batch-${batch}-old.txt"
+            awk -F '\t' '$1 == "A" && $2 ~ /\.webp$/ && $2 ~ /^data\// {print $2}' "$RUNNER_TEMP/batch-${batch}-files.txt" > "$new_list"
+            awk -F '\t' '$1 == "D" && $2 ~ /^data\// {print $2}' "$RUNNER_TEMP/batch-${batch}-files.txt" > "$old_list"
+            if [ ! -s "$new_list" ]; then
+              echo "::error::batch $batch commit $sha lists no added .webp files."
+              return 1
+            fi
+            jq -n --arg sha "$sha" '{sha: $sha, files: []}' > "$out"
+            while IFS= read -r new; do
+              local stem old
+              stem="${new%.webp}"
+              old=$(grep -F "${stem}." "$old_list" | head -1 || true)
+              if [ -z "$old" ]; then
+                echo "::error::cannot find the deleted old file for $new in batch $batch commit."
+                return 1
+              fi
+              jq --arg old "$old" --arg new "$new" '.files += [{old_path: $old, new_path: $new}]' "$out" > "$out.tmp" && mv "$out.tmp" "$out"
+            done < "$new_list"
+            echo "r2_only manifest for batch $batch: $(jq -r '.files | length' "$out") files (commit $sha)"
+          }
+
+          # ---------- main ----------
+          if [ "${MIGRATION_COMPLETE:-}" = "true" ] || [ "${REMAINING:-1}" = "0" ]; then
+            echo "Migration already complete — nothing to do."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          for k in $(seq 0 $((BATCH_COUNT - 1))); do
+            batch=$((START_BATCH + k))
+            manifest="$RUNNER_TEMP/manifest-batch-${batch}.json"
+            echo "================ batch $batch ================"
+
+            if [ "$R2_ONLY" = "true" ]; then
+              manifest_for_committed_batch "$batch" "$manifest"
+              r2_backfill "$manifest"
+              accept_batch "$manifest"
+              sha=$(jq -r '.sha' "$manifest")
+              dispatch_verify "$sha"
+              wait_for_verify "$sha"
+              echo "batch $batch R2 retry complete."
+              continue
+            fi
+
+            # Slice of the snapshot taken at job start. The snapshot already
+            # excludes completed batches, so batch N in this run is always
+            # lines [k*10+1, k*10+10] (start_batch was validated to be
+            # done+1, so k=0 is the next batch).
+            slice_start=$((k * BATCH_SIZE + 1))
+            slice_end=$((slice_start + BATCH_SIZE - 1))
+            sed -n "${slice_start},${slice_end}p" "$RUNNER_TEMP/remaining.txt" > "$RUNNER_TEMP/batch-${batch}.txt"
+            slice_count=$(wc -l < "$RUNNER_TEMP/batch-${batch}.txt")
+            if [ "$slice_count" -eq 0 ]; then
+              echo "No files left for batch $batch — all images migrated."
+              break
+            fi
+            echo "--- batch $batch: $slice_count files ---"
+            paste -d' ' <(while IFS= read -r f; do stat -c '%s' "$f"; done < "$RUNNER_TEMP/batch-${batch}.txt") "$RUNNER_TEMP/batch-${batch}.txt"
+
+            # Tree must be clean (tracked files) before converting.
+            if git status --porcelain | grep -v '^??' | grep -q .; then
+              echo "::error::working tree has tracked modifications before batch $batch — refusing to convert on a dirty tree."
+              git status --porcelain
+              exit 1
+            fi
+
+            node scripts/migrate-batch.mjs \
+              --list "$RUNNER_TEMP/batch-${batch}.txt" \
+              --manifest "$manifest"
+
+            npm run verify:images
+            npm run verify:version
+            npm run verify
+            npm run build
+
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "--- dry run: batch $batch converted + verified, discarding changes ---"
+              git status --porcelain
+              git reset --hard HEAD
+              git clean -fd data/ public/data/ dist/ || true
+              continue
+            fi
+
+            # Commit exactly the files the manifest names — never `git add -A`
+            # (the build leaves untracked outputs under public/data/ + dist/,
+            # and npm ci leaves node_modules/).
+            {
+              jq -r '.files[] | .new_path, .old_path, .data_json' "$manifest"
+              jq -r '.files[] | select(.index_json_changed == true) | .data_json' "$manifest" \
+                | while IFS= read -r dj; do echo "$(dirname "$(dirname "$dj")")/index.json"; done
+              echo "package.json"
+              echo "package-lock.json"
+              echo "public/data/version.json"
+            } | sort -u > "$RUNNER_TEMP/add-list.txt"
+            # Expected tracked status after staging (built from the manifest).
+            {
+              jq -r '.files[] | "A  " + .new_path' "$manifest"
+              jq -r '.files[] | "D  " + .old_path' "$manifest"
+              jq -r '.files[] | "M  " + .data_json' "$manifest"
+              jq -r '.files[] | select(.index_json_changed == true) | .data_json' "$manifest" \
+                | while IFS= read -r dj; do echo "M  $(dirname "$(dirname "$dj")")/index.json"; done
+              echo "M  package.json"
+              echo "M  package-lock.json"
+              echo "M  public/data/version.json"
+            } | sort -u > "$RUNNER_TEMP/expected-status.txt"
+            xargs -a "$RUNNER_TEMP/add-list.txt" -d '\n' git add --
+            git status --porcelain > "$RUNNER_TEMP/status.txt"
+            if ! diff <(sort "$RUNNER_TEMP/expected-status.txt") <(grep -v '^??' "$RUNNER_TEMP/status.txt" | sort); then
+              echo "::error::git status does not match the manifest — unexpected files changed in batch $batch."
+              cat "$RUNNER_TEMP/status.txt"
+              exit 1
+            fi
+            if grep '^??' "$RUNNER_TEMP/status.txt" | grep -qv '^?? \(public/data/\|dist/\|node_modules/\)'; then
+              echo "::error::unexpected untracked files in batch $batch (only public/data/ + dist/ + node_modules/ build outputs are allowed)."
+              cat "$RUNNER_TEMP/status.txt"
+              exit 1
+            fi
+
+            # main must not have moved under us (e.g. 齊 used the management
+            # page while this run was working). Rebase-free fail-fast: re-run.
+            git fetch origin main
+            if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then
+              echo "::error::main moved since checkout (HEAD $(git rev-parse --short HEAD) != origin/main $(git rev-parse --short origin/main)). The batch is converted but NOT committed; re-run the workflow so it recomputes from the new HEAD."
+              exit 1
+            fi
+
+            n_files=$(jq -r '.files | length' "$manifest")
+            saved_pct=$(jq -r '.totals.saved_pct' "$manifest")
+            git commit -m "perf(images): migrate batch ${batch} to WebP (${n_files} images, -${saved_pct}%)"
+            git push origin main
+            sha=$(git rev-parse HEAD)
+            echo "pushed batch $batch as $sha"
+
+            r2_backfill "$manifest"
+            accept_batch "$manifest"
+            dispatch_verify "$sha"
+            wait_for_verify "$sha"
+            echo "batch $batch complete (commit $sha, Verify green)."
+          done
+          echo "================ all requested batches done ================"
+          find data \( -name '*.jpeg' -o -name '*.png' \) | wc -l | xargs echo "remaining .jpeg/.png files:"
+
+      - name: Upload batch manifests
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: migrate-batch-manifests-${{ github.run_id }}
+          path: ${{ runner.temp }}/manifest-batch-*.json
+          if-no-files-found: ignore
+          retention-days: 90
+
+      - name: Summary
+        if: always()
+        run: |
+          set -euo pipefail
+          echo "start_batch=${{ inputs.start_batch }} batch_count=${{ inputs.batch_count }} r2_only=${{ inputs.r2_only }} dry_run=${{ inputs.dry_run }}"
+          git log --oneline -5
+          echo "--- remaining convertible images ---"
+          find data \( -name '*.jpeg' -o -name '*.png' \) | wc -l
+          echo "--- current version ---"
+          cat package.json | grep '"version"'
+          cat public/data/version.json
