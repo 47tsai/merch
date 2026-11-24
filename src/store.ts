@@ -3,7 +3,7 @@ import { defaultUiState } from './types';
 import { parseItemId } from './item-id';
 import { CATEGORY_CODES } from './category-label';
 import { AppError, dataError, httpError, toAppError } from './error';
-import { getRemoteData, getAuthoritativeRemoteData, putItem, deleteItem as deleteRemoteItem, putShipping, deleteShipping as deleteRemoteShipping, type MutationSubmission } from './api';
+import { getRemoteData, getAuthoritativeRemoteData, putItem, deleteItem as deleteRemoteItem, putShipping, deleteShipping as deleteRemoteShipping, createWork as createRemoteWork, updateWork as updateRemoteWork, deleteWork as deleteRemoteWork, putAsset, deleteAsset, type MutationSubmission } from './api';
 import { isRecord, isStringArray, isValidImage, isValidShipping } from './validation';
 
 const VERSION_RE = /^\d+\.\d+\.\d+$/;
@@ -85,36 +85,128 @@ function normalizeStoreItem(item: Item, label: string): Item { return { ...item,
 function readSavedUi(): UiState { try { const raw = localStorage.getItem('merch-ui'); if (!raw) return { ...defaultUiState }; const parsed = JSON.parse(raw) as Partial<UiState>; const sort = parsed.collectionSort === 'purchase' || parsed.collectionSort === 'created' || parsed.collectionSort === 'title' || parsed.collectionSort === 'price' ? parsed.collectionSort : defaultUiState.collectionSort; const collectionPage = typeof parsed.collectionPage === 'number' && Number.isInteger(parsed.collectionPage) && parsed.collectionPage >= 1 ? parsed.collectionPage : 1; return { collectionView: parsed.collectionView === 'list' ? 'list' : 'cards', collectionQuery: typeof parsed.collectionQuery === 'string' ? parsed.collectionQuery : '', collectionStatus: typeof parsed.collectionStatus === 'string' ? parsed.collectionStatus : 'all', collectionWork: typeof parsed.collectionWork === 'string' ? parsed.collectionWork : 'all', collectionCategory: typeof parsed.collectionCategory === 'string' ? parsed.collectionCategory : 'all', collectionCharacter: typeof parsed.collectionCharacter === 'string' ? parsed.collectionCharacter : 'all', collectionManufacturer: typeof parsed.collectionManufacturer === 'string' ? parsed.collectionManufacturer : 'all', collectionSort: sort, collectionPage }; } catch { return { ...defaultUiState }; } }
 async function loadNewStaticData(index: WorksIndex): Promise<Work[]> { const works: Work[] = []; let categories: string[] = []; try { const categoriesResponse = await fetch('./data/categories.json', { cache: 'no-store' }); if (categoriesResponse.ok) { const payload = await categoriesResponse.json() as unknown; if (isRecord(payload) && Array.isArray(payload.categories)) categories = payload.categories.map(x => isRecord(x) && typeof x.code === 'string' ? x.code : '').filter(code => CATEGORY_CODES.has(code)); } } catch { /* Fall back to the category registry below. */ } if (!categories.length) categories = [...CATEGORY_CODES]; for (const entry of index.works) { const rootPath = entry.path.replace(/^\//, '').replace(/\/$/, ''); const items: Item[] = []; for (const category of categories) { const response = await fetch(`./${rootPath}/${category}/index.json`, { cache: 'no-store' }); if (!response.ok) continue; const payload = await response.json() as unknown; if (!isRecord(payload) || !Array.isArray(payload.items)) throw dataError(`類型索引格式無效：${entry.id}/${category}`); const categoryIndex = payload as unknown as CategoryIndex; for (const indexed of categoryIndex.items) { if (!indexed || typeof indexed.path !== 'string') throw dataError(`類型索引 Item path 無效：${entry.id}/${category}`); const itemResponse = await fetch(`./${indexed.path.replace(/^\//, '')}`, { cache: 'no-store' }); if (!itemResponse.ok) throw httpError(indexed.path, itemResponse.status); items.push(validateItem(await itemResponse.json(), indexed.path, entry)); } } works.push({ id: entry.id, name: entry.name, code: entry.code, items }); } return works; }
 
-export class MerchStore { private state: StoreState; private listeners = new Set<(state: StoreState) => void>(); private writeQueue: Promise<void> = Promise.resolve(); constructor(state: StoreState) { this.state = cloneAndFreeze(state); } get snapshot(): StoreState { return this.state; } subscribe(listener: (state: StoreState) => void): () => void { this.listeners.add(listener); return () => this.listeners.delete(listener); } setUi(patch: Partial<UiState>): void { const ui = freezeUiState({ ...this.state.ui, ...patch }); this.state = freezeShallowState({ ...this.state, ui }); try { localStorage.setItem('merch-ui', JSON.stringify(ui)); } catch {} this.emit(); } replaceData(works: Work[], version: string, shipping: StoreState['shipping'] = this.state.shipping): void { const normalizedWorks = works.map(work => ({ ...work, items: work.items.map((item, index) => normalizeStoreItem({ ...item, workId: work.id, workName: work.name }, `${work.name}.items[${index}]`)) })); const items = normalizedWorks.flatMap(work => work.items.map(item => ({ ...item, workId: work.id, workName: work.name }))); const normalizedShipping = validateShippingList(shipping ?? []); this.state = cloneAndFreeze({ ...this.state, works: normalizedWorks, items, version, shipping: normalizedShipping, loading: false, error: null }); this.emit(); } private applyRemote(data: { works: Work[]; version: string; shipping: StoreState['shipping'] }): void { this.replaceData(data.works, data.version, data.shipping); } private enqueueWrite<T>(operation: () => Promise<T>): Promise<T> { const run = this.writeQueue.then(operation, operation); this.writeQueue = run.then(() => undefined, () => undefined); return run; } private async settleMutation<T>(submission: MutationSubmission<T>, apply: (value: T) => void, previous: StoreState): Promise<string | null> {
+export class MerchStore { private state: StoreState; private listeners = new Set<(state: StoreState) => void>(); private writeQueue: Promise<void> = Promise.resolve(); constructor(state: StoreState) { this.state = cloneAndFreeze(state); } get snapshot(): StoreState { return this.state; } subscribe(listener: (state: StoreState) => void): () => void { this.listeners.add(listener); return () => this.listeners.delete(listener); } setUi(patch: Partial<UiState>): void { const ui = freezeUiState({ ...this.state.ui, ...patch }); this.state = freezeShallowState({ ...this.state, ui }); try { localStorage.setItem('merch-ui', JSON.stringify(ui)); } catch {} this.emit(); } replaceData(works: Work[], version: string, shipping: StoreState['shipping'] = this.state.shipping): void { const normalizedWorks = works.map(work => ({ ...work, items: work.items.map((item, index) => normalizeStoreItem({ ...item, workId: work.id, workName: work.name }, `${work.name}.items[${index}]`)) })); const items = normalizedWorks.flatMap(work => work.items.map(item => ({ ...item, workId: work.id, workName: work.name }))); const normalizedShipping = validateShippingList(shipping ?? []); this.state = cloneAndFreeze({ ...this.state, works: normalizedWorks, items, version, shipping: normalizedShipping, loading: false, error: null }); this.emit(); } private applyRemote(data: { works: Work[]; version: string; shipping: StoreState['shipping'] }): void { this.replaceData(data.works, data.version, data.shipping); } private enqueueWrite<T>(operation: () => Promise<T>): Promise<T> { const run = this.writeQueue.then(operation, operation); this.writeQueue = run.then(() => undefined, () => undefined); return run; } private async handleSettledFailure(error: unknown, previous: StoreState): Promise<string | null> {
+    // settled 失敗不一定代表沒寫進去：網路抖動或 5xx 時，commit 可能已經
+    // 落地。先用權威資料回讀一次：版號剛好是這次寫入預期的下一個版本，
+    // 代表寫入已落地，改報「已儲存＋警告」；否則用回讀到的權威資料回滾、
+    // 回讀也失敗時改回寫入前的快照，再把 Worker 回來的真正錯誤往上拋，
+    // 呼叫端才不會先報「已儲存」、事後又靜悄悄把紀錄抹掉。
+    const expectedVersion = bumpPatchVersion(previous.version);
+    let authoritative: { works: Work[]; version: string; shipping: StoreState['shipping'] } | null = null;
+    try {
+      authoritative = await getAuthoritativeRemoteData();
+    } catch {
+      // 回讀也失敗：落到下方的快照回滾。
+    }
+    if (authoritative) {
+      if (expectedVersion && isUnknownOutcome(error) && authoritative.version === expectedVersion) {
+        this.applyRemote(authoritative);
+        return '已儲存，但重新讀取時網路異常，畫面已是最新資料。';
+      }
+      this.applyRemote(authoritative);
+    } else {
+      this.replaceData(previous.works, previous.version, previous.shipping);
+    }
+    throw error;
+  }
+  private async settleMutation<T>(submission: MutationSubmission<T>, apply: (value: T) => void, previous: StoreState): Promise<string | null> {
     try {
       apply(await submission.settled);
       return null;
     } catch (error) {
-      // settled 失敗不一定代表沒寫進去：網路抖動或 5xx 時，commit 可能已經
-      // 落地。先用權威資料回讀一次：版號剛好是這次寫入預期的下一個版本，
-      // 代表寫入已落地，改報「已儲存＋警告」；否則用回讀到的權威資料回滾、
-      // 回讀也失敗時改回寫入前的快照，再把 Worker 回來的真正錯誤往上拋，
-      // 呼叫端才不會先報「已儲存」、事後又靜悄悄把紀錄抹掉。
-      const expectedVersion = bumpPatchVersion(previous.version);
-      let authoritative: { works: Work[]; version: string; shipping: StoreState['shipping'] } | null = null;
-      try {
-        authoritative = await getAuthoritativeRemoteData();
-      } catch {
-        // 回讀也失敗：落到下方的快照回滾。
-      }
-      if (authoritative) {
-        if (expectedVersion && isUnknownOutcome(error) && authoritative.version === expectedVersion) {
-          this.applyRemote(authoritative);
-          return '已儲存，但重新讀取時網路異常，畫面已是最新資料。';
-        }
-        this.applyRemote(authoritative);
-      } else {
-        this.replaceData(previous.works, previous.version, previous.shipping);
-      }
-      throw error;
+      return this.handleSettledFailure(error, previous);
     }
   }
-  async addItem(item: Item): Promise<string | null> { return this.enqueueWrite(async () => { const work = this.state.works.find(entry => entry.id === item.workId); if (!work) throw dataError(`找不到收藏所屬作品：${item.workId}`); const normalized = normalizeStoreItem({ ...item, workId: work.id, workName: work.name }, `item ${item.id}`); const parsed = parseItemId(normalized.id); if (!parsed || parsed.workCode !== work.code) throw dataError(`Item ID 與作品不一致：${normalized.id}`); if (this.state.items.some(entry => entry.id === normalized.id)) throw dataError(`Item ID 已存在：${normalized.id}`); const previous = this.state; const submission = await putItem(normalized); this.replaceData(this.state.works.map(currentWork => currentWork.id === work.id ? { ...currentWork, items: [...currentWork.items, normalized] } : currentWork), this.state.version, this.state.shipping); return this.settleMutation(submission, data => this.applyRemote(data), previous); }); } async updateItem(item: Item): Promise<string | null> { return this.enqueueWrite(async () => { const current = this.state.items.find(entry => entry.id === item.id); if (!current) throw dataError(`找不到收藏：${item.id}`); const work = this.state.works.find(entry => entry.id === current.workId); if (!work) throw dataError(`找不到收藏所屬作品：${current.workId}`); const normalized = normalizeStoreItem({ ...item, workId: work.id, workName: work.name }, `item ${item.id}`); if (parseItemId(normalized.id)?.workCode !== work.code) throw dataError(`Item ID 與作品不一致：${normalized.id}`); const previous = this.state; const submission = await putItem(normalized); this.replaceData(this.state.works.map(currentWork => currentWork.id === work.id ? { ...currentWork, items: currentWork.items.map(entry => entry.id === normalized.id ? normalized : entry) } : currentWork), this.state.version, this.state.shipping); return this.settleMutation(submission, data => this.applyRemote(data), previous); }); } async deleteItem(id: string): Promise<string | null> { return this.enqueueWrite(async () => { const current = this.state.items.find(entry => entry.id === id); if (!current) throw dataError(`找不到收藏：${id}`); const previous = this.state; const submission = await deleteRemoteItem(id); this.replaceData(this.state.works.map(work => work.id === current.workId ? { ...work, items: work.items.filter(entry => entry.id !== id) } : work), this.state.version, this.state.shipping); return this.settleMutation(submission, data => this.applyRemote(data), previous); }); } async saveShipping(record: ShippingRecord): Promise<string | null> { return this.enqueueWrite(async () => { const normalized = validateShipping(record, `shipping ${record.id}`); const duplicate = this.state.shipping.some(entry => entry.id === normalized.id && entry.id !== record.id); if (duplicate) throw dataError(`運費 ID 已存在：${normalized.id}`); const previous = this.state; const submission = await putShipping(normalized); const nextShipping = this.state.shipping.some(entry => entry.id === normalized.id) ? this.state.shipping.map(entry => entry.id === normalized.id ? normalized : entry) : [...this.state.shipping, normalized]; this.replaceData(this.state.works, this.state.version, nextShipping); return this.settleMutation(submission, data => this.applyRemote(data), previous); }); } async deleteShipping(id: string): Promise<string | null> { return this.enqueueWrite(async () => { if (!this.state.shipping.some(entry => entry.id === id)) throw dataError(`找不到運費紀錄：${id}`); const previous = this.state; const submission = await deleteRemoteShipping(id); this.replaceData(this.state.works, this.state.version, this.state.shipping.filter(entry => entry.id !== id)); return this.settleMutation(submission, data => this.applyRemote(data), previous); }); } setLoading(loading: boolean): void { this.state = freezeShallowState({ ...this.state, loading }); this.emit(); } setError(error: string | null): void { this.state = freezeShallowState({ ...this.state, error, loading: false }); this.emit(); } private emit(): void { this.listeners.forEach(listener => listener(this.state)); } }
+  private async settleAssetMutation(submission: MutationSubmission<{ version: string }>, previous: StoreState): Promise<string | null> {
+    try {
+      await submission.settled;
+    } catch (error) {
+      return this.handleSettledFailure(error, previous);
+    }
+    // settled 成功代表圖片已寫入：一次權威重讀套用完整資料。重讀失敗時
+    // 寫入已確定落地，但畫面仍是舊資料，明確要求重新整理，不要謊報成功。
+    try {
+      this.applyRemote(await getAuthoritativeRemoteData());
+      return null;
+    } catch {
+      throw dataError('圖片已儲存，但重新讀取失敗，請重新整理頁面查看。');
+    }
+  }
+  async addItem(item: Item): Promise<string | null> { return this.enqueueWrite(async () => { const work = this.state.works.find(entry => entry.id === item.workId); if (!work) throw dataError(`找不到收藏所屬作品：${item.workId}`); const normalized = normalizeStoreItem({ ...item, workId: work.id, workName: work.name }, `item ${item.id}`); const parsed = parseItemId(normalized.id); if (!parsed || parsed.workCode !== work.code) throw dataError(`Item ID 與作品不一致：${normalized.id}`); if (this.state.items.some(entry => entry.id === normalized.id)) throw dataError(`Item ID 已存在：${normalized.id}`); const previous = this.state; const submission = await putItem(normalized); this.replaceData(this.state.works.map(currentWork => currentWork.id === work.id ? { ...currentWork, items: [...currentWork.items, normalized] } : currentWork), this.state.version, this.state.shipping); return this.settleMutation(submission, data => this.applyRemote(data), previous); }); } async updateItem(item: Item): Promise<string | null> { return this.enqueueWrite(async () => { const current = this.state.items.find(entry => entry.id === item.id); if (!current) throw dataError(`找不到收藏：${item.id}`); const work = this.state.works.find(entry => entry.id === current.workId); if (!work) throw dataError(`找不到收藏所屬作品：${current.workId}`); const normalized = normalizeStoreItem({ ...item, workId: work.id, workName: work.name }, `item ${item.id}`); if (parseItemId(normalized.id)?.workCode !== work.code) throw dataError(`Item ID 與作品不一致：${normalized.id}`); const previous = this.state; const submission = await putItem(normalized); this.replaceData(this.state.works.map(currentWork => currentWork.id === work.id ? { ...currentWork, items: currentWork.items.map(entry => entry.id === normalized.id ? normalized : entry) } : currentWork), this.state.version, this.state.shipping); return this.settleMutation(submission, data => this.applyRemote(data), previous); }); } async deleteItem(id: string): Promise<string | null> { return this.enqueueWrite(async () => { const current = this.state.items.find(entry => entry.id === id); if (!current) throw dataError(`找不到收藏：${id}`); const previous = this.state; const submission = await deleteRemoteItem(id); this.replaceData(this.state.works.map(work => work.id === current.workId ? { ...work, items: work.items.filter(entry => entry.id !== id) } : work), this.state.version, this.state.shipping); return this.settleMutation(submission, data => this.applyRemote(data), previous); }); } async saveShipping(record: ShippingRecord): Promise<string | null> { return this.enqueueWrite(async () => { const normalized = validateShipping(record, `shipping ${record.id}`); const duplicate = this.state.shipping.some(entry => entry.id === normalized.id && entry.id !== record.id); if (duplicate) throw dataError(`運費 ID 已存在：${normalized.id}`); const previous = this.state; const submission = await putShipping(normalized); const nextShipping = this.state.shipping.some(entry => entry.id === normalized.id) ? this.state.shipping.map(entry => entry.id === normalized.id ? normalized : entry) : [...this.state.shipping, normalized]; this.replaceData(this.state.works, this.state.version, nextShipping); return this.settleMutation(submission, data => this.applyRemote(data), previous); }); } async deleteShipping(id: string): Promise<string | null> { return this.enqueueWrite(async () => { if (!this.state.shipping.some(entry => entry.id === id)) throw dataError(`找不到運費紀錄：${id}`); const previous = this.state; const submission = await deleteRemoteShipping(id); this.replaceData(this.state.works, this.state.version, this.state.shipping.filter(entry => entry.id !== id)); return this.settleMutation(submission, data => this.applyRemote(data), previous); }); }
+  async createWork(input: { id: string; name: string; code: string }): Promise<string | null> {
+    return this.enqueueWrite(async () => {
+      if (this.state.works.some(work => work.id === input.id)) throw dataError(`作品 ID 已存在：${input.id}`);
+      if (this.state.works.some(work => work.code === input.code)) throw dataError(`作品代碼已存在：${input.code}`);
+      const previous = this.state;
+      const submission = await createRemoteWork(input);
+      this.replaceData([...this.state.works, { id: input.id, name: input.name, code: input.code, items: [] }], this.state.version, this.state.shipping);
+      return this.settleMutation(submission, data => this.applyRemote(data), previous);
+    });
+  }
+  async updateWork(id: string, input: { name: string; code: string }): Promise<string | null> {
+    return this.enqueueWrite(async () => {
+      const current = this.state.works.find(work => work.id === id);
+      if (!current) throw dataError(`找不到作品：${id}`);
+      if (this.state.works.some(work => work.code === input.code && work.id !== id)) throw dataError(`作品代碼已存在：${input.code}`);
+      if (current.items.length > 0 && input.code !== current.code) throw dataError('作品已有收藏時不可修改作品代碼。');
+      const previous = this.state;
+      const submission = await updateRemoteWork(id, input);
+      this.replaceData(this.state.works.map(work => work.id === id ? { ...work, name: input.name, code: input.code } : work), this.state.version, this.state.shipping);
+      return this.settleMutation(submission, data => this.applyRemote(data), previous);
+    });
+  }
+  async deleteWork(id: string): Promise<string | null> {
+    return this.enqueueWrite(async () => {
+      const current = this.state.works.find(work => work.id === id);
+      if (!current) throw dataError(`找不到作品：${id}`);
+      if (current.items.length) throw dataError('作品仍有收藏，請先移除所有收藏後再刪除。');
+      const previous = this.state;
+      const submission = await deleteRemoteWork(id);
+      this.replaceData(this.state.works.filter(work => work.id !== id), this.state.version, this.state.shipping);
+      return this.settleMutation(submission, data => this.applyRemote(data), previous);
+    });
+  }
+  async uploadImage(path: string, content: string): Promise<string | null> {
+    return this.enqueueWrite(async () => {
+      const previous = this.state;
+      const submission = await putAsset(path, content);
+      return this.settleAssetMutation(submission, previous);
+    });
+  }
+  async replaceImage(currentPath: string, newPath: string, content: string): Promise<string | null> {
+    return this.enqueueWrite(async () => {
+      const previous = this.state;
+      const submission = await putAsset(newPath, content);
+      try {
+        await submission.settled;
+      } catch (error) {
+        return this.handleSettledFailure(error, previous);
+      }
+      let cleanupWarning: string | null = null;
+      if (newPath !== currentPath) {
+        try {
+          const cleanup = await deleteAsset(currentPath);
+          await cleanup.settled;
+        } catch {
+          cleanupWarning = '新圖片已儲存，舊圖片清理失敗，請稍後再試。';
+        }
+      }
+      // 新圖＋舊圖清理都 settled 後，只做一次權威重讀。
+      try {
+        this.applyRemote(await getAuthoritativeRemoteData());
+      } catch {
+        throw dataError('圖片已儲存，但重新讀取失敗，請重新整理頁面查看。');
+      }
+      return cleanupWarning;
+    });
+  }
+  async deleteImage(path: string): Promise<string | null> {
+    return this.enqueueWrite(async () => {
+      const previous = this.state;
+      const submission = await deleteAsset(path);
+      return this.settleAssetMutation(submission, previous);
+    });
+  } setLoading(loading: boolean): void { this.state = freezeShallowState({ ...this.state, loading }); this.emit(); } setError(error: string | null): void { this.state = freezeShallowState({ ...this.state, error, loading: false }); this.emit(); } private emit(): void { this.listeners.forEach(listener => listener(this.state)); } }
 
 let sharedStorePromise: Promise<MerchStore> | null = null;
 export function loadStore(): Promise<MerchStore> { if (sharedStorePromise) return sharedStorePromise; startStoreLoadMeasurement(); sharedStorePromise = (async () => { const store = new MerchStore({ works: [], items: [], version: '0.0.0', shipping: [], ui: readSavedUi(), loading: true, error: null }); try { try { const remote = await getRemoteData(); store.replaceData(remote.works, remote.version, remote.shipping); return store; } catch { /* API 尚未切換時使用靜態來源。 */ } const indexResponse = await fetch('./data/works.json', { cache: 'no-store' }); if (!indexResponse.ok) throw httpError('works.json', indexResponse.status); const index = validateWorksIndex(await indexResponse.json()); const works = index.schemaVersion === 2 ? await loadNewStaticData(index) : await Promise.all(index.works.map(async entry => { const response = await fetch(`./${entry.path}`, { cache: 'no-store' }); if (!response.ok) throw httpError(entry.path, response.status); const payload = await response.json() as unknown; assertRecord(payload, entry.path); if (!Array.isArray(payload.items)) throw dataError(`${entry.path}.items 必須是陣列`); return { id: entry.id, name: entry.name, code: entry.code, items: payload.items.map((item, i) => validateItem(item, `${entry.path}.items[${i}]`, entry)) } satisfies Work; })); const allIds = new Set<string>(); works.forEach(work => work.items.forEach(item => { if (allIds.has(item.id)) throw dataError(`所有作品存在重複 Item ID：${item.id}`); allIds.add(item.id); })); const versionResponse = await fetch('./data/version.json', { cache: 'no-store' }); if (!versionResponse.ok) throw httpError('version.json', versionResponse.status); const version = validateVersion(await versionResponse.json()).version; let shipping: StoreState['shipping'] = []; try { const shippingResponse = await fetch('./data/shipping.json', { cache: 'no-store' }); if (shippingResponse.ok) { const shippingPayload = await shippingResponse.json() as unknown; if (isRecord(shippingPayload) && shippingPayload.schemaVersion === 1) shipping = validateShippingList(shippingPayload.records); } } catch {} store.replaceData(works, version, shipping); return store; } catch (error) { const appError = toAppError(error, '資料載入失敗'); store.setError(appError.message); sharedStorePromise = null; throw Object.assign(new Error(appError.message), { store, code: appError.code, cause: appError.cause }); } finally { finishStoreLoadMeasurement(); } })(); return sharedStorePromise; }

@@ -26,11 +26,13 @@ if (!workerMatch || !/^\d+\.\d+\.\d+$/.test(workerMatch[1])) {
   process.exit(1);
 }
 
-if (packageJson.version !== packageLock.version || packageJson.version !== packageLock.packages[''].version) {
-  console.error(`Version verification failed: package.json (${packageJson.version}) and package-lock.json (${packageLock.version} / ${packageLock.packages[''].version}) differ.`);
-  process.exit(1);
-}
-
+// The lockfile root version is intentionally NOT required to equal
+// package.json: a Worker write bumps package.json + version.json together
+// (createAtomicCommit), but the lockfile only changes on the next
+// `npm run version:sync`. What this script still locks:
+// - all four places carry a valid semver,
+// - package.json and version.json are equal (the two places the Worker
+//   writes together on every mutation).
 if (packageJson.version !== versionJson.version) {
   console.error(`Version verification failed: package.json and public/data/version.json differ (${packageJson.version} vs ${versionJson.version}). Run npm run version:sync.`);
   process.exit(1);

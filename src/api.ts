@@ -18,8 +18,8 @@ const meta = import.meta as ImportMetaWithEnv;
 const API_BASE = (meta.env?.VITE_MERCH_API_URL || '/api').replace(/\/$/, '');
 const API_TIMEOUT_MS = 12_000;
 const FORBIDDEN_STORAGE_FIELDS = ['workName', 'shipping', 'material', 'release', 'createdAt', 'updatedAt'] as const;
-let mutationQueue: Promise<void> = Promise.resolve();
 let managementVerified = false;
+let authCheck: Promise<void> | null = null;
 let sessionAccessToken = (() => { try { const token = sessionStorage.getItem('chi-auth-token') || ''; sessionStorage.removeItem('chi-auth-token'); return token; } catch { return ''; } })();
 function endpoint(path: string): string { return `${API_BASE}${path.startsWith('/') ? path : `/${path}`}`; }
 function authToken(): string { return sessionAccessToken; }
@@ -27,8 +27,23 @@ async function ensureMutationReady(): Promise<void> {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) throw dataError('目前沒有網路連線，無法送出操作。');
   if (!hasChiAuthToken()) { managementVerified = false; throw dataError('尚未完成管理驗證，無法送出操作。'); }
   if (managementVerified) return;
-  const status = await getAuthStatus();
-  if (!status.authenticated) throw dataError('管理驗證已失效，請重新驗證。');
+  // Concurrent mutations share one in-flight auth check; the store queue
+  // normally serializes them, this only guards direct callers.
+  if (!authCheck) {
+    authCheck = (async () => {
+      const status = await getAuthStatus();
+      if (!status.authenticated) throw dataError('管理驗證已失效，請重新驗證。');
+    })();
+    try {
+      await authCheck;
+      managementVerified = true;
+    } finally {
+      authCheck = null;
+    }
+    return;
+  }
+  await authCheck;
+  managementVerified = true;
 }
 function resetManagementVerification(): void { managementVerified = false; }
 
@@ -68,18 +83,13 @@ export async function getRemoteData(): Promise<ApiData> { try { const response =
 export async function getAuthoritativeRemoteData(): Promise<ApiData> { return validateData(await request('/data')); }
 function mutationLabel(method: string): string { if (method === 'DELETE') return '正在刪除並同步資料…'; if (method === 'PUT' || method === 'PATCH') return '正在編輯並同步資料…'; if (method === 'POST') return '正在新增並同步資料…'; return '正在同步資料…'; }
 async function mutateSubmitted<T>(method: string, start: () => Promise<T>): Promise<MutationSubmission<T>> {
-  const started = mutationQueue.then(async () => {
-    await ensureMutationReady();
-    return { settled: start() };
-  }, async () => {
+  // No queue here on purpose: serialization lives in exactly one place,
+  // store.enqueueWrite. This function only sends the request and wraps the
+  // submitted/settled pair.
+  const { settled } = await runWithSync(mutationLabel(method), async () => {
     await ensureMutationReady();
     return { settled: start() };
   });
-  mutationQueue = started.then(
-    ({ settled }) => settled.then(() => undefined, () => undefined),
-    () => undefined,
-  );
-  const { settled } = await runWithSync(mutationLabel(method), () => started);
   return { submitted: true, settled };
 }
 export async function putItem(item: Item): Promise<MutationSubmission<ApiData>> { return mutateSubmitted('PUT', () => request(`/items/${encodeURIComponent(item.id)}`, { method: 'PUT', body: JSON.stringify({ item: toStorageItem(item) }) }).then(validateMutationResult).then(() => getAuthoritativeRemoteData())); }

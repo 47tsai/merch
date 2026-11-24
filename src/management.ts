@@ -1,6 +1,5 @@
 import './management.css';
 import './management-images.css';
-import { getAsset, putAsset, deleteAsset, getAuthoritativeRemoteData } from './api';
 import { resolveAssetUrl } from './image-source';
 import { getStore, type MerchStore } from './store';
 import type { ImageMeta, Item } from './types';
@@ -15,8 +14,7 @@ let pickerWork = '';
 let pickerCategory = '';
 let pickerSerial = '';
 let searchQuery = '';
-let saving = false;
-let imageSaving = false;
+let busy = false;
 let mountedRoot: HTMLElement | null = null;
 let mountController: AbortController | null = null;
 
@@ -56,77 +54,59 @@ function validImageFile(file: File): boolean { const extension = file.name.split
 async function uploadImage(file: File): Promise<void> {
   const item = selectedItem();
   if (!item) return showToast('請先選擇收藏，再上傳圖片。', 'error');
-  if (saving || imageSaving) return showToast('目前正在同步資料，請稍後再操作圖片。', 'info');
+  if (busy) return showToast('目前正在同步資料，請稍後再操作圖片。', 'info');
   if (!validImageFile(file)) return showToast('只允許 JPG/JPEG、PNG、WebP、GIF、AVIF，且不超過 8 MB。', 'error');
-  imageSaving = true; render(); showToast('圖片上傳同步中，請稍候。', 'info');
+  busy = true; render(); showToast('圖片上傳同步中，請稍候。', 'info');
   try {
     const optimizedFile = await optimizeImage(file);
     const path = imagePath(item, optimizedFile, imageList(item).length);
-    const submission = await putAsset(path, await fileToBase64(optimizedFile));
-    await submission.settled;
-    const data = await getAuthoritativeRemoteData();
-    storeRef?.replaceData(data.works, data.version, data.shipping);
-    showToast('圖片已上傳。', 'success');
+    const warning = await storeRef?.uploadImage(path, await fileToBase64(optimizedFile));
+    showToast(warning ?? '圖片已上傳。', warning ? 'info' : 'success');
   } catch (error) { showToast(error instanceof Error ? error.message : '圖片上傳失敗。', 'error'); }
-  finally { imageSaving = false; render(); }
+  finally { busy = false; render(); }
 }
 async function replaceImage(file: File, imageId: string): Promise<void> {
   const item = selectedItem(); const images = item ? imageList(item) : []; const index = images.findIndex(image => image.id === imageId); const current = index >= 0 ? images[index] : undefined;
   if (!item || !current) return;
-  if (saving || imageSaving) return showToast('目前正在同步資料，請稍後再操作圖片。', 'info');
+  if (busy) return showToast('目前正在同步資料，請稍後再操作圖片。', 'info');
   if (!validImageFile(file)) return showToast('只允許 JPG/JPEG、PNG、WebP、GIF、AVIF，且不超過 8 MB。', 'error');
-  imageSaving = true; render(); showToast('圖片替換同步中，請稍候。', 'info');
+  busy = true; render(); showToast('圖片替換同步中，請稍候。', 'info');
   const currentPath = `data/${item.workId}/${item.category}/${item.id}/images/${current.file}`;
   try {
     const optimizedFile = await optimizeImage(file);
     const path = imagePath(item, optimizedFile, index);
-    const submission = await putAsset(path, await fileToBase64(optimizedFile));
-    await submission.settled;
-    let cleanupFailed = false;
-    if (path !== currentPath) {
-      try {
-        const cleanup = await deleteAsset(currentPath);
-        await cleanup.settled;
-      } catch {
-        cleanupFailed = true;
-      }
-    }
-    const data = await getAuthoritativeRemoteData();
-    storeRef?.replaceData(data.works, data.version, data.shipping);
-    showToast(cleanupFailed ? '新圖片已儲存，舊圖片清理失敗，請稍後再試。' : '圖片已替換。', cleanupFailed ? 'info' : 'success');
+    const warning = await storeRef?.replaceImage(currentPath, path, await fileToBase64(optimizedFile));
+    showToast(warning ?? '圖片已替換。', warning ? 'info' : 'success');
   } catch (error) { showToast(error instanceof Error ? error.message : '圖片替換失敗。', 'error'); }
-  finally { imageSaving = false; render(); }
+  finally { busy = false; render(); }
 }
 async function deleteImage(imageId: string): Promise<void> {
   const item = selectedItem(); const image = item ? imageList(item).find(entry => entry.id === imageId) : undefined;
-  if (!item || !image || saving || imageSaving || !window.confirm(`確定要刪除「${image.file}」？`)) return;
-  imageSaving = true; render(); showToast('圖片刪除同步中，請稍候。', 'info');
+  if (!item || !image || busy || !window.confirm(`確定要刪除「${image.file}」？`)) return;
+  busy = true; render(); showToast('圖片刪除同步中，請稍候。', 'info');
   try {
-    const submission = await deleteAsset(`data/${item.workId}/${item.category}/${item.id}/images/${image.file}`);
-    await submission.settled;
-    const data = await getAuthoritativeRemoteData();
-    storeRef?.replaceData(data.works, data.version, data.shipping);
-    showToast('圖片已刪除。', 'success');
+    const warning = await storeRef?.deleteImage(`data/${item.workId}/${item.category}/${item.id}/images/${image.file}`);
+    showToast(warning ?? '圖片已刪除。', warning ? 'info' : 'success');
   } catch (error) { showToast(error instanceof Error ? error.message : '圖片刪除失敗。', 'error'); }
-  finally { imageSaving = false; render(); }
+  finally { busy = false; render(); }
 }
 async function setCover(imageId: string): Promise<void> {
-  const item = selectedItem(); if (!item || saving || imageSaving) return;
+  const item = selectedItem(); if (!item || busy) return;
   const images = imageList(item); if (!images.some(image => image.id === imageId)) return;
-  imageSaving = true; render(); showToast('主圖設定同步中，請稍候。', 'info');
+  busy = true; render(); showToast('主圖設定同步中，請稍候。', 'info');
   try { const warning = await saveImages(item, images.map(image => ({ ...image, ...(image.id === imageId ? { isCover: true } : { isCover: undefined }) }))); showToast(warning ?? '已設為主圖。', warning ? 'info' : 'success'); }
   catch (error) { showToast(error instanceof Error ? error.message : '主圖設定失敗。', 'error'); }
-  finally { imageSaving = false; render(); }
+  finally { busy = false; render(); }
 }
 async function moveImage(imageId: string, direction: -1 | 1): Promise<void> {
-  const item = selectedItem(); if (!item || saving || imageSaving) return;
+  const item = selectedItem(); if (!item || busy) return;
   const images = imageList(item); const index = images.findIndex(image => image.id === imageId); const target = index + direction;
   if (index < 0 || target < 0 || target >= images.length) return;
   [images[index], images[target]] = [images[target], images[index]];
-  imageSaving = true; render(); showToast('圖片排序同步中，請稍候。', 'info');
+  busy = true; render(); showToast('圖片排序同步中，請稍候。', 'info');
   try { const warning = await saveImages(item, images); showToast(warning ?? '圖片順序已更新。', warning ? 'info' : 'success'); }
   catch (error) { showToast(error instanceof Error ? error.message : '圖片排序失敗。', 'error'); }
-  finally { imageSaving = false; render(); }
+  finally { busy = false; render(); }
 }
 function renderImageArea(item: Item | undefined): void {
   const root = qs<HTMLElement>('[data-management-images]'); if (!root) return; root.replaceChildren();
@@ -142,11 +122,11 @@ function renderImageArea(item: Item | undefined): void {
     const strong = document.createElement('strong'); strong.textContent = image.isCover ? '主圖' : `圖片 ${index + 1}`;
     const small = document.createElement('small'); small.textContent = image.file; info.append(strong, small);
     const actions = document.createElement('div'); actions.className = 'management-image-actions';
-    const cover = document.createElement('button'); cover.className = 'chi-btn chi-btn--secondary'; cover.type = 'button'; cover.textContent = image.isCover ? '目前主圖' : '設為主圖'; cover.disabled = imageSaving || Boolean(image.isCover);
-    const up = document.createElement('button'); up.className = 'chi-btn chi-btn--secondary'; up.type = 'button'; up.textContent = '↑'; up.title = '上移'; up.setAttribute('aria-label', `將圖片 ${index + 1} 上移`); up.disabled = imageSaving || index === 0;
-    const down = document.createElement('button'); down.className = 'chi-btn chi-btn--secondary'; down.type = 'button'; down.textContent = '↓'; down.title = '下移'; down.setAttribute('aria-label', `將圖片 ${index + 1} 下移`); down.disabled = imageSaving || index === images.length - 1;
-    const replaceLabel = document.createElement('label'); replaceLabel.className = 'chi-btn chi-btn--secondary management-image-replace'; replaceLabel.appendChild(document.createTextNode('替換')); const replace = document.createElement('input'); replace.type = 'file'; replace.accept = '.jpg,.jpeg,.png,.webp,.gif,.avif,image/jpeg,image/png,image/webp,image/gif,image/avif'; replace.hidden = true; replace.disabled = imageSaving; replaceLabel.appendChild(replace);
-    const remove = document.createElement('button'); remove.className = 'chi-btn chi-btn--danger'; remove.type = 'button'; remove.textContent = '刪除'; remove.disabled = imageSaving;
+    const cover = document.createElement('button'); cover.className = 'chi-btn chi-btn--secondary'; cover.type = 'button'; cover.textContent = image.isCover ? '目前主圖' : '設為主圖'; cover.disabled = busy || Boolean(image.isCover);
+    const up = document.createElement('button'); up.className = 'chi-btn chi-btn--secondary'; up.type = 'button'; up.textContent = '↑'; up.title = '上移'; up.setAttribute('aria-label', `將圖片 ${index + 1} 上移`); up.disabled = busy || index === 0;
+    const down = document.createElement('button'); down.className = 'chi-btn chi-btn--secondary'; down.type = 'button'; down.textContent = '↓'; down.title = '下移'; down.setAttribute('aria-label', `將圖片 ${index + 1} 下移`); down.disabled = busy || index === images.length - 1;
+    const replaceLabel = document.createElement('label'); replaceLabel.className = 'chi-btn chi-btn--secondary management-image-replace'; replaceLabel.appendChild(document.createTextNode('替換')); const replace = document.createElement('input'); replace.type = 'file'; replace.accept = '.jpg,.jpeg,.png,.webp,.gif,.avif,image/jpeg,image/png,image/webp,image/gif,image/avif'; replace.hidden = true; replace.disabled = busy; replaceLabel.appendChild(replace);
+    const remove = document.createElement('button'); remove.className = 'chi-btn chi-btn--danger'; remove.type = 'button'; remove.textContent = '刪除'; remove.disabled = busy;
     actions.append(cover, up, down, replaceLabel, remove); row.append(preview, info, actions); root.appendChild(row);
   });
 }
@@ -156,10 +136,10 @@ function render(): void {
   const availableCategoryCodes = unique(items.filter(item => workOf(item) === pickerWork).map(item => item.category)); if (!availableCategoryCodes.includes(pickerCategory)) pickerCategory = availableCategoryCodes[0] ?? '';
   const categorySelect = qs<HTMLSelectElement>('#management-picker-category'); setOptions(categorySelect, availableCategoryCodes.map(code => ({ value: code, label: categoryName(code) })), pickerCategory); pickerCategory = categorySelect?.value ?? pickerCategory;
   const serialItems = items.filter(item => workOf(item) === pickerWork && item.category === pickerCategory); if (!pickerSerial || !serialItems.some(item => serialOf(item) === pickerSerial)) pickerSerial = serialOf(serialItems[0]) || ''; const serialSelect = qs<HTMLSelectElement>('#management-picker-serial'); setOptions(serialSelect, serialItems.map(item => ({ value: serialOf(item), label: `${serialOf(item).padStart(3, '0')} · ${item.title}` })), pickerSerial); pickerSerial = serialSelect?.value ?? pickerSerial;
-  const target = serialItems.find(item => serialOf(item) === pickerSerial) ?? items.find(item => item.id === selectedId) ?? items[0]; if (target && target.id !== selectedId) fill(target); const title = qs<HTMLElement>('#management-form-title'); if (title) title.textContent = '編輯收藏'; const submit = qs<HTMLButtonElement>('#management-submit'); if (submit) { submit.textContent = '儲存修改'; submit.disabled = saving || imageSaving; } const cancel = qs<HTMLButtonElement>('#management-cancel'); if (cancel) { cancel.hidden = true; cancel.disabled = true; } const del = qs<HTMLButtonElement>('#management-delete'); if (del) del.disabled = saving || imageSaving || !selectedItem(); const form = qs<HTMLFormElement>('#management-form'); if (form) { form.classList.remove('is-creating'); form.classList.add('is-editing'); form.setAttribute('aria-busy', String(saving || imageSaving)); } form?.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | HTMLButtonElement>('input,textarea,select,button').forEach(el => { if (el.id !== 'management-cancel' && el.id !== 'management-new') el.disabled = saving || imageSaving; }); renderImageArea(selectedItem()); const count = qs<HTMLElement>('#management-search-count'); if (count) count.textContent = searchQuery ? `搜尋「${searchQuery}」` : `共 ${items.length} 筆收藏`; const datalist = qs<HTMLDataListElement>('#management-search-options'); if (datalist) { datalist.replaceChildren(...items.filter(item => `${item.id} ${item.title} ${item.workName ?? ''}`.toLocaleLowerCase().includes(searchQuery.toLocaleLowerCase())).slice(0, 30).map(item => { const option = document.createElement('option'); option.value = `${item.id} · ${item.title}`; return option; })); }
+  const target = serialItems.find(item => serialOf(item) === pickerSerial) ?? items.find(item => item.id === selectedId) ?? items[0]; if (target && target.id !== selectedId) fill(target); const title = qs<HTMLElement>('#management-form-title'); if (title) title.textContent = '編輯收藏'; const submit = qs<HTMLButtonElement>('#management-submit'); if (submit) { submit.textContent = '儲存修改'; submit.disabled = busy; } const cancel = qs<HTMLButtonElement>('#management-cancel'); if (cancel) { cancel.hidden = true; cancel.disabled = true; } const del = qs<HTMLButtonElement>('#management-delete'); if (del) del.disabled = busy || !selectedItem(); const form = qs<HTMLFormElement>('#management-form'); if (form) { form.classList.remove('is-creating'); form.classList.add('is-editing'); form.setAttribute('aria-busy', String(busy)); } form?.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | HTMLButtonElement>('input,textarea,select,button').forEach(el => { if (el.id !== 'management-cancel' && el.id !== 'management-new') el.disabled = busy; }); renderImageArea(selectedItem()); const count = qs<HTMLElement>('#management-search-count'); if (count) count.textContent = searchQuery ? `搜尋「${searchQuery}」` : `共 ${items.length} 筆收藏`; const datalist = qs<HTMLDataListElement>('#management-search-options'); if (datalist) { datalist.replaceChildren(...items.filter(item => `${item.id} ${item.title} ${item.workName ?? ''}`.toLocaleLowerCase().includes(searchQuery.toLocaleLowerCase())).slice(0, 30).map(item => { const option = document.createElement('option'); option.value = `${item.id} · ${item.title}`; return option; })); }
 }
-async function handleSubmit(event: SubmitEvent): Promise<void> { event.preventDefault(); if (!storeRef || saving || imageSaving) return; const form = qs<HTMLFormElement>('#management-form'); const feedback = ensureFormErrors(form); clearFormErrors(feedback); const base = selectedItem(); if (!base) { const errors = ['找不到要操作的收藏。']; setFormErrors(feedback, errors); showToast(errors[0], 'error'); return; } const item = readFormItem(base); const errors = validateItem(item); if (errors.length) { setFormErrors(feedback, errors); showToast('請先修正表單中的錯誤。', 'error'); return; } saving = true; render(); try { const warning = await storeRef.updateItem(item); selectedId = item.id; clearFormErrors(feedback); showToast(warning ?? '收藏已更新。', warning ? 'info' : 'success'); } catch (error) { const message = error instanceof Error ? error.message : '儲存失敗。'; setFormErrors(feedback, [message]); showToast(message, 'error'); } finally { saving = false; render(); } }
-async function handleDelete(): Promise<void> { const item = selectedItem(); if (!storeRef || !item || saving || imageSaving) return; if (!window.confirm(`確定要刪除「${item.title}」？\n此操作會刪除收藏資料，且 Item ID 不會重新編號。`)) return; saving = true; render(); showToast('收藏刪除同步中，請稍候。', 'info'); try { const warning = await storeRef.deleteItem(item.id); selectedId = ''; pickerSerial = ''; showToast(warning ?? '收藏已刪除。', warning ? 'info' : 'success'); } catch (error) { showToast(error instanceof Error ? error.message : '刪除失敗。', 'error'); } finally { saving = false; render(); } }
+async function handleSubmit(event: SubmitEvent): Promise<void> { event.preventDefault(); if (!storeRef || busy) return; const form = qs<HTMLFormElement>('#management-form'); const feedback = ensureFormErrors(form); clearFormErrors(feedback); const base = selectedItem(); if (!base) { const errors = ['找不到要操作的收藏。']; setFormErrors(feedback, errors); showToast(errors[0], 'error'); return; } const item = readFormItem(base); const errors = validateItem(item); if (errors.length) { setFormErrors(feedback, errors); showToast('請先修正表單中的錯誤。', 'error'); return; } busy = true; render(); try { const warning = await storeRef.updateItem(item); selectedId = item.id; clearFormErrors(feedback); showToast(warning ?? '收藏已更新。', warning ? 'info' : 'success'); } catch (error) { const message = error instanceof Error ? error.message : '儲存失敗。'; setFormErrors(feedback, [message]); showToast(message, 'error'); } finally { busy = false; render(); } }
+async function handleDelete(): Promise<void> { const item = selectedItem(); if (!storeRef || !item || busy) return; if (!window.confirm(`確定要刪除「${item.title}」？\n此操作會刪除收藏資料，且 Item ID 不會重新編號。`)) return; busy = true; render(); showToast('收藏刪除同步中，請稍候。', 'info'); try { const warning = await storeRef.deleteItem(item.id); selectedId = ''; pickerSerial = ''; showToast(warning ?? '收藏已刪除。', warning ? 'info' : 'success'); } catch (error) { showToast(error instanceof Error ? error.message : '刪除失敗。', 'error'); } finally { busy = false; render(); } }
 function mount(root: HTMLElement): void {
   if (mountedRoot === root) return;
   mountController?.abort();
@@ -216,7 +196,7 @@ async function init(): Promise<void> {
   if (pendingId) sessionStorage.removeItem('merch-management-selected-id');
   const pendingItem = pendingId ? allItems().find(item => item.id === pendingId) : undefined;
   if (pendingItem) { searchQuery = `${pendingItem.id} · ${pendingItem.title}`; fill(pendingItem); }
-  storeRef.subscribe(() => { if (!saving && !imageSaving) render(); });
+  storeRef.subscribe(() => { if (!busy) render(); });
   const root = qs<HTMLElement>('#management-root');
   if (root) mount(root);
   const first = pendingItem ?? allItems()[0];

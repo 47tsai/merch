@@ -155,6 +155,7 @@ html[data-theme="dark"] .brand-logo-dark { display: block; }
 .nav a:hover { background: var(--color-surface-soft); color: var(--color-text-strong); }
 .nav a.is-active { border-color: var(--brand-border); background: var(--brand-soft); color: var(--brand-text); }
 .sidebar-footer { margin-top: auto; padding: 16px 10px 2px; display: flex; justify-content: space-between; gap: 8px; border-top: 1px solid var(--color-border); color: var(--color-text-subtle); font-size: 10px; letter-spacing: .08em; }
+.version-deploy-hint { color: var(--chi-color-warning, var(--color-text-subtle)); font-size: 11px; line-height: 1.5; letter-spacing: normal; }
 .main { min-height: 100vh; margin-left: 248px; padding: 0 28px; }
 .content { width: min(100%, var(--content-width)); margin: 0 auto; padding: 34px 8px 30px; }
 .page { animation: page-enter 160ms ease-out; }

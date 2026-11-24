@@ -225,6 +225,7 @@ function makeShippingGithubMock({ dispatchFails = false } = {}) {
     { path: 'data/honkai-star-rail/k/HSRk001/data.json', type: 'blob', sha: 'sha-item' },
   ] });
   let githubCalls = 0;
+  let committedShipping = null;
   const json = (payload, status = 200) => new Response(JSON.stringify(payload), { status });
   const mock = async (input, init = {}) => {
     const url = new URL(typeof input === 'string' ? input : input.url);
@@ -237,7 +238,15 @@ function makeShippingGithubMock({ dispatchFails = false } = {}) {
       return json({ data: { repository: { i0: { text: itemJson } } } });
     }
     if (url.pathname === '/repos/47tsai/merch/git/trees/tree-sha-1') return new Response(treeJson, { status: 200 });
-    if (url.pathname === '/repos/47tsai/merch/git/blobs' && init.method === 'POST') return json({ sha: 'new-blob-sha' }, 201);
+    if (url.pathname === '/repos/47tsai/merch/git/blobs' && init.method === 'POST') {
+      // Capture what the commit actually writes, so the test can check the
+      // persisted data instead of trusting the mutation response.
+      try {
+        const written = JSON.parse(String(JSON.parse(String(init.body)).content));
+        if (written && Array.isArray(written.records)) committedShipping = written;
+      } catch { /* not a JSON blob; ignore */ }
+      return json({ sha: 'new-blob-sha' }, 201);
+    }
     if (url.pathname === '/repos/47tsai/merch/git/trees' && init.method === 'POST') return json({ sha: 'new-tree-sha' }, 201);
     if (url.pathname === '/repos/47tsai/merch/git/commits' && init.method === 'POST') return json({ sha: 'new-commit-sha', tree: { sha: 'new-tree-sha' } }, 201);
     if (url.pathname === '/repos/47tsai/merch/git/refs/heads/main' && init.method === 'PATCH') return json({ object: { sha: 'new-commit-sha' } });
@@ -247,7 +256,7 @@ function makeShippingGithubMock({ dispatchFails = false } = {}) {
     }
     throw new Error(`Unexpected GitHub call: ${init.method || 'GET'} ${url.pathname}`);
   };
-  return { mock, getGithubCalls: () => githubCalls };
+  return { mock, getGithubCalls: () => githubCalls, getCommittedShipping: () => committedShipping };
 }
 
 function shippingPutRequest() {
@@ -260,27 +269,34 @@ function shippingPutRequest() {
 
 test('shipping PUT stays within the free-plan subrequest budget', async () => {
   const { env } = makeEnv();
-  const { mock, getGithubCalls } = makeShippingGithubMock();
+  const { mock, getGithubCalls, getCommittedShipping } = makeShippingGithubMock();
   const response = await withFetch(mock, () => worker.fetch(shippingPutRequest(), env));
   const payload = await response.json();
   assert.equal(response.status, 200, `shipping PUT must succeed, got ${JSON.stringify(payload)}`);
   assert.equal(payload.ok, true);
   assert.equal(payload.data.version, '2.0.46');
-  assert.equal(payload.data.shipping.length, 3);
-  assert.equal(payload.data.shipping.find(x => x.id === 'ship-test')?.amount, 72);
+  // Mutations return only the new version now; the frontend re-reads
+  // /api/data for the full state. The persisted data is checked on the
+  // commit payload itself: 3 records, including the new 72 TWD one.
+  assert.deepEqual(Object.keys(payload.data), ['version']);
+  const committed = getCommittedShipping();
+  assert.equal(committed?.records.length, 3);
+  assert.equal(committed?.records.find(x => x.id === 'ship-test')?.amount, 72);
   assert.ok(getGithubCalls() <= 20, `shipping PUT must stay within the free-plan subrequest budget, made ${getGithubCalls()} GitHub calls`);
 });
 
 test('shipping PUT still succeeds when the Verify dispatch fails', async () => {
   const { env } = makeEnv();
-  const { mock } = makeShippingGithubMock({ dispatchFails: true });
+  const { mock, getCommittedShipping } = makeShippingGithubMock({ dispatchFails: true });
   const response = await withFetch(mock, () => worker.fetch(shippingPutRequest(), env));
   const payload = await response.json();
   assert.equal(response.status, 200, `shipping PUT must succeed even when dispatch fails, got ${JSON.stringify(payload)}`);
   assert.equal(payload.ok, true);
   assert.equal(payload.data.version, '2.0.46');
-  assert.equal(payload.data.shipping.length, 3);
-  assert.equal(payload.data.shipping.find(x => x.id === 'ship-test')?.amount, 72);
+  assert.deepEqual(Object.keys(payload.data), ['version']);
+  const committed = getCommittedShipping();
+  assert.equal(committed?.records.length, 3);
+  assert.equal(committed?.records.find(x => x.id === 'ship-test')?.amount, 72);
 });
 
 test('unchanged Item update returns the current version without creating a commit', async () => {

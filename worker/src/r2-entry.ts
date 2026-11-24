@@ -1,5 +1,6 @@
 import app from './index';
 import { deleteR2Asset, getR2Asset, putR2Asset } from './r2-assets';
+import { authorized } from './auth';
 
 interface Env {
   ALLOWED_ORIGIN: string;
@@ -29,19 +30,6 @@ function corsResponse(response: Response, origin: string): Response {
   return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
 }
 
-async function authorized(request: Request, env: Env): Promise<boolean> {
-  const clientId = env.CHI_AUTH_CLIENT_ID?.trim();
-  const configuredAuthUrl = env.CHI_AUTH_URL || 'https://auth.chi.qzz.io';
-  const authUrl = configuredAuthUrl.endsWith('/') ? configuredAuthUrl.slice(0, -1) : configuredAuthUrl;
-  const match = (request.headers.get('Authorization') || '').match(/^Bearer ([A-Za-z0-9_-]{40,80})$/);
-  if (!clientId || !match) return false;
-  try {
-    const response = await fetch(`${authUrl}/api/userinfo?client_id=${encodeURIComponent(clientId)}`, { headers: { Authorization: `Bearer ${match[1]}`, Accept: 'application/json' }, signal: AbortSignal.timeout(5000) });
-    if (!response.ok) return false;
-    const identity = await response.json() as { sub?: unknown; aud?: unknown };
-    return identity.sub === 'chi-owner' && identity.aud === clientId;
-  } catch { return false; }
-}
 
 function originFor(request: Request, env: Env): string | null {
   const origin = request.headers.get('Origin');
