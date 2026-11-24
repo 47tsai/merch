@@ -416,7 +416,7 @@ jobs:
               echo "M  public/data/version.json"
             } | sort -u > "$RUNNER_TEMP/expected-status.txt"
             xargs -a "$RUNNER_TEMP/add-list.txt" -d '\n' git add --
-            git status --porcelain > "$RUNNER_TEMP/status.txt"
+            git status --porcelain --no-renames > "$RUNNER_TEMP/status.txt"
             if ! diff <(sort "$RUNNER_TEMP/expected-status.txt") <(grep -v '^??' "$RUNNER_TEMP/status.txt" | sort); then
               echo "::error::git status does not match the manifest — unexpected files changed in batch $batch."
               cat "$RUNNER_TEMP/status.txt"
