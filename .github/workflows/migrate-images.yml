@@ -257,8 +257,8 @@ jobs:
               local data_ok=0
                 for _ in 1 2 3 4 5 6; do
                 curl -fsS "${SITE_URL}/api/data" -o "$api_data"
-                if grep -q \"file\": \"${new_name}\" "$api_data" \
-                  && ! grep -q \"file\": \"${old_name}\" "$api_data"; then data_ok=1; break; fi
+                if grep -q "\"file\": \"${new_name}\"" "$api_data" \
+                  && ! grep -q "\"file\": \"${old_name}\"" "$api_data"; then data_ok=1; break; fi
                 sleep 10
               done
               if [ "$data_ok" -ne 1 ]; then
