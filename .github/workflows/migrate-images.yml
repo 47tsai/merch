@@ -252,10 +252,17 @@ jobs:
                 return 1
               fi
               echo "accept OK: ${old} -> 404"
-              grep -q "\"file\": \"${new_name}\"" "$api_data" \
-                || { echo "::error::/api/data does not list ${new_name} yet."; return 1; }
-              if grep -q "\"file\": \"${old_name}\"" "$api_data"; then
-                echo "::error::/api/data still lists old file ${old_name}."
+              # /api/data can lag the push; re-fetch until it lists the new
+                # file and no longer lists the old one (up to ~60s).
+              local data_ok=0
+                for _ in 1 2 3 4 5 6; do
+                curl -fsS "${SITE_URL}/api/data" -o "$api_data"
+                if grep -q \"file\": \"${new_name}\" "$api_data" \
+                  && ! grep -q \"file\": \"${old_name}\" "$api_data"; then data_ok=1; break; fi
+                sleep 10
+              done
+              if [ "$data_ok" -ne 1 ]; then
+                echo "::error::/api/data does not list ${new_name} (or still lists ${old_name}) after retries."
                 return 1
               fi
               echo "accept OK: /api/data lists ${new_name}, no longer lists ${old_name}"
