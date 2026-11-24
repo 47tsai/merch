@@ -7,6 +7,7 @@ import { getRemoteData, getAuthoritativeRemoteData, putItem, deleteItem as delet
 import { isRecord, isStringArray, isValidImage, isValidShipping } from './validation';
 
 const VERSION_RE = /^\d+\.\d+\.\d+$/;
+const CROSS_TAB_CHANNEL = 'merch-mutation';
 function bumpPatchVersion(version: string): string | null {
   const m = /^(\d+)\.(\d+)\.(\d+)$/.exec(version);
   return m ? `${m[1]}.${m[2]}.${Number(m[3]) + 1}` : null;
@@ -85,7 +86,49 @@ function normalizeStoreItem(item: Item, label: string): Item { return { ...item,
 function readSavedUi(): UiState { try { const raw = localStorage.getItem('merch-ui'); if (!raw) return { ...defaultUiState }; const parsed = JSON.parse(raw) as Partial<UiState>; const sort = parsed.collectionSort === 'purchase' || parsed.collectionSort === 'created' || parsed.collectionSort === 'title' || parsed.collectionSort === 'price' ? parsed.collectionSort : defaultUiState.collectionSort; const collectionPage = typeof parsed.collectionPage === 'number' && Number.isInteger(parsed.collectionPage) && parsed.collectionPage >= 1 ? parsed.collectionPage : 1; return { collectionView: parsed.collectionView === 'list' ? 'list' : 'cards', collectionQuery: typeof parsed.collectionQuery === 'string' ? parsed.collectionQuery : '', collectionStatus: typeof parsed.collectionStatus === 'string' ? parsed.collectionStatus : 'all', collectionWork: typeof parsed.collectionWork === 'string' ? parsed.collectionWork : 'all', collectionCategory: typeof parsed.collectionCategory === 'string' ? parsed.collectionCategory : 'all', collectionCharacter: typeof parsed.collectionCharacter === 'string' ? parsed.collectionCharacter : 'all', collectionManufacturer: typeof parsed.collectionManufacturer === 'string' ? parsed.collectionManufacturer : 'all', collectionSort: sort, collectionPage }; } catch { return { ...defaultUiState }; } }
 async function loadNewStaticData(index: WorksIndex): Promise<Work[]> { const works: Work[] = []; let categories: string[] = []; try { const categoriesResponse = await fetch('./data/categories.json', { cache: 'no-store' }); if (categoriesResponse.ok) { const payload = await categoriesResponse.json() as unknown; if (isRecord(payload) && Array.isArray(payload.categories)) categories = payload.categories.map(x => isRecord(x) && typeof x.code === 'string' ? x.code : '').filter(code => CATEGORY_CODES.has(code)); } } catch { /* Fall back to the category registry below. */ } if (!categories.length) categories = [...CATEGORY_CODES]; for (const entry of index.works) { const rootPath = entry.path.replace(/^\//, '').replace(/\/$/, ''); const items: Item[] = []; for (const category of categories) { const response = await fetch(`./${rootPath}/${category}/index.json`, { cache: 'no-store' }); if (!response.ok) continue; const payload = await response.json() as unknown; if (!isRecord(payload) || !Array.isArray(payload.items)) throw dataError(`類型索引格式無效：${entry.id}/${category}`); const categoryIndex = payload as unknown as CategoryIndex; for (const indexed of categoryIndex.items) { if (!indexed || typeof indexed.path !== 'string') throw dataError(`類型索引 Item path 無效：${entry.id}/${category}`); const itemResponse = await fetch(`./${indexed.path.replace(/^\//, '')}`, { cache: 'no-store' }); if (!itemResponse.ok) throw httpError(indexed.path, itemResponse.status); items.push(validateItem(await itemResponse.json(), indexed.path, entry)); } } works.push({ id: entry.id, name: entry.name, code: entry.code, items }); } return works; }
 
-export class MerchStore { private state: StoreState; private listeners = new Set<(state: StoreState) => void>(); private writeQueue: Promise<void> = Promise.resolve(); constructor(state: StoreState) { this.state = cloneAndFreeze(state); } get snapshot(): StoreState { return this.state; } subscribe(listener: (state: StoreState) => void): () => void { this.listeners.add(listener); return () => this.listeners.delete(listener); } setUi(patch: Partial<UiState>): void { const ui = freezeUiState({ ...this.state.ui, ...patch }); this.state = freezeShallowState({ ...this.state, ui }); try { localStorage.setItem('merch-ui', JSON.stringify(ui)); } catch {} this.emit(); } replaceData(works: Work[], version: string, shipping: StoreState['shipping'] = this.state.shipping): void { const normalizedWorks = works.map(work => ({ ...work, items: work.items.map((item, index) => normalizeStoreItem({ ...item, workId: work.id, workName: work.name }, `${work.name}.items[${index}]`)) })); const items = normalizedWorks.flatMap(work => work.items.map(item => ({ ...item, workId: work.id, workName: work.name }))); const normalizedShipping = validateShippingList(shipping ?? []); this.state = cloneAndFreeze({ ...this.state, works: normalizedWorks, items, version, shipping: normalizedShipping, loading: false, error: null }); this.emit(); } private applyRemote(data: { works: Work[]; version: string; shipping: StoreState['shipping'] }): void { this.replaceData(data.works, data.version, data.shipping); } private enqueueWrite<T>(operation: () => Promise<T>): Promise<T> { const run = this.writeQueue.then(operation, operation); this.writeQueue = run.then(() => undefined, () => undefined); return run; } private async handleSettledFailure(error: unknown, previous: StoreState): Promise<string | null> {
+export class MerchStore { private state: StoreState; private listeners = new Set<(state: StoreState) => void>(); private writeQueue: Promise<void> = Promise.resolve(); private crossTabChannel: BroadcastChannel | null = null; constructor(state: StoreState) { this.state = cloneAndFreeze(state); this.setupCrossTabSync(); }
+  private setupCrossTabSync(): void {
+    // 跨分頁通知（Phase 3-1）：任一分頁寫入成功後廣播，其他分頁自動重讀。
+    // BroadcastChannel 不支援或被停用時靜默不做——同步只是加分功能，
+    // 寫入本身不依賴它，也絕不用輪詢代替。
+    try {
+      if (typeof BroadcastChannel === 'undefined') return;
+      const channel = new BroadcastChannel(CROSS_TAB_CHANNEL);
+      this.crossTabChannel = channel;
+      channel.onmessage = (event: MessageEvent) => { void this.handleCrossTabMessage(event); };
+    } catch {
+      this.crossTabChannel = null;
+    }
+  }
+  private broadcastMutation(version: string): void {
+    try {
+      this.crossTabChannel?.postMessage({ type: CROSS_TAB_CHANNEL, version });
+    } catch {
+      // 廣播失敗不影響本次寫入。
+    }
+  }
+  private handleCrossTabMessage(event: MessageEvent): void {
+    const data = event.data as { type?: unknown; version?: unknown } | null;
+    if (!data || data.type !== CROSS_TAB_CHANNEL || typeof data.version !== 'string' || !VERSION_RE.test(data.version)) return;
+    // 寫入的那個分頁不會收到自己的廣播（BroadcastChannel 本來就不回送），
+    // 這裡的版號比對是第二道防線：版號相同就不重讀。
+    if (data.version === this.state.version) return;
+    // 重讀走 writeQueue 序列化，避免蓋掉本分頁進行中的樂觀更新；進佇列後
+    // 再比一次版號（等待期間本分頁可能已寫入或已重讀到新版）。
+    void this.enqueueWrite(async () => {
+      if (data.version === this.state.version) return;
+      const remote = await getAuthoritativeRemoteData();
+      if (remote.version !== this.state.version) this.applyRemote(remote, 'remote');
+    }).catch(() => {
+      // 跨分頁重讀失敗（例如斷網）就等下次廣播或手動重新整理，不報錯、不擋佇列。
+    });
+  } get snapshot(): StoreState { return this.state; } subscribe(listener: (state: StoreState) => void): () => void { this.listeners.add(listener); return () => this.listeners.delete(listener); } setUi(patch: Partial<UiState>): void { const ui = freezeUiState({ ...this.state.ui, ...patch }); this.state = freezeShallowState({ ...this.state, ui }); try { localStorage.setItem('merch-ui', JSON.stringify(ui)); } catch {} this.emit(); } replaceData(works: Work[], version: string, shipping: StoreState['shipping'] = this.state.shipping): void { const normalizedWorks = works.map(work => ({ ...work, items: work.items.map((item, index) => normalizeStoreItem({ ...item, workId: work.id, workName: work.name }, `${work.name}.items[${index}]`)) })); const items = normalizedWorks.flatMap(work => work.items.map(item => ({ ...item, workId: work.id, workName: work.name }))); const normalizedShipping = validateShippingList(shipping ?? []); this.state = cloneAndFreeze({ ...this.state, works: normalizedWorks, items, version, shipping: normalizedShipping, loading: false, error: null }); this.emit(); } private applyRemote(data: { works: Work[]; version: string; shipping: StoreState['shipping'] }, source: 'local' | 'remote' = 'local'): void {
+    const changed = data.version !== this.state.version;
+    this.replaceData(data.works, data.version, data.shipping);
+    // 只有「本分頁的寫入讓版號真的變了」才廣播：回滾到舊快照時版號不變，
+    // 不會誤廣播；跨分頁重讀套用的資料（source 'remote'）也不再廣播，避免迴圈。
+    if (source === 'local' && changed) this.broadcastMutation(data.version);
+  } private enqueueWrite<T>(operation: () => Promise<T>): Promise<T> { const run = this.writeQueue.then(operation, operation); this.writeQueue = run.then(() => undefined, () => undefined); return run; } private async handleSettledFailure(error: unknown, previous: StoreState): Promise<string | null> {
     // settled 失敗不一定代表沒寫進去：網路抖動或 5xx 時，commit 可能已經
     // 落地。先用權威資料回讀一次：版號剛好是這次寫入預期的下一個版本，
     // 代表寫入已落地，改報「已儲存＋警告」；否則用回讀到的權威資料回滾、

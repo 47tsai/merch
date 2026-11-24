@@ -18,11 +18,13 @@ try {
   const apiSource = await fs.readFile(path.join(root, 'src', 'api.ts'), 'utf8');
   const validationSource = await fs.readFile(path.join(root, 'src', 'validation.ts'), 'utf8');
   const errorSource = await fs.readFile(path.join(root, 'src', 'error.ts'), 'utf8');
+  const errorCodesSource = await fs.readFile(path.join(root, 'src', 'error-codes.ts'), 'utf8');
   const transpile = (source, fileName) => ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ES2022, moduleResolution: ts.ModuleResolutionKind.Bundler, verbatimModuleSyntax: true, sourceMap: false }, fileName }).outputText;
   await fs.writeFile(path.join(tempDir, 'error.mjs'), transpile(errorSource, 'error.ts'), 'utf8');
   await fs.writeFile(path.join(tempDir, 'validation.mjs'), transpile(validationSource, 'validation.ts'), 'utf8');
+  await fs.writeFile(path.join(tempDir, 'error-codes.mjs'), transpile(errorCodesSource, 'error-codes.ts'), 'utf8');
   await fs.writeFile(path.join(tempDir, 'sync-overlay.mjs'), 'export async function runWithSync(_label, operation) { return operation(); }\n', 'utf8');
-  await fs.writeFile(path.join(tempDir, 'api.mjs'), transpile(apiSource, 'api.ts').replace("from './error'", "from './error.mjs'").replace("from './sync-overlay'", "from './sync-overlay.mjs'").replace("from './validation'", "from './validation.mjs'"), 'utf8');
+  await fs.writeFile(path.join(tempDir, 'api.mjs'), transpile(apiSource, 'api.ts').replace("from './error'", "from './error.mjs'").replace("from './error-codes'", "from './error-codes.mjs'").replace("from './sync-overlay'", "from './sync-overlay.mjs'").replace("from './validation'", "from './validation.mjs'"), 'utf8');
 
   Object.defineProperty(globalThis, 'navigator', {
     value: { onLine: true },

@@ -1,5 +1,6 @@
 import type { Item, StoreState, Work } from './types';
-import { dataError } from './error';
+import { AppError, dataError } from './error';
+import { errorMessageForCode } from './error-codes';
 import { runWithSync } from './sync-overlay';
 import { isRecord, isStringArray, isValidImage, isValidItem, isValidShipping } from './validation';
 
@@ -17,6 +18,7 @@ type WorkPayload = { id?: string; name: string; code: string };
 const meta = import.meta as ImportMetaWithEnv;
 const API_BASE = (meta.env?.VITE_MERCH_API_URL || '/api').replace(/\/$/, '');
 const API_TIMEOUT_MS = 12_000;
+const READ_RETRY_DELAY_MS = 1_000;
 const FORBIDDEN_STORAGE_FIELDS = ['workName', 'shipping', 'material', 'release', 'createdAt', 'updatedAt'] as const;
 let managementVerified = false;
 let authCheck: Promise<void> | null = null;
@@ -58,11 +60,33 @@ async function request(path: string, init: RequestInit = {}): Promise<unknown> {
   if (!response.ok || !payload?.ok) {
     const workerVersion = response.headers.get('X-Merch-Worker-Version') || undefined;
     const failure: ApiFailure = { apiCode: payload?.error?.code, status: response.status, workerVersion };
-    const message = payload?.error?.message || `API 請求失敗（${response.status}）`;
+    // 錯誤文案優先查 src/error-codes.ts 對照表；表裡沒有的 code 才 fallback
+    // 用 Worker 回的 message。辨識細節 [code · HTTP 狀態 · Worker 版本] 照舊保留。
+    const workerMessage = payload?.error?.message || `API 請求失敗（${response.status}）`;
+    const message = (failure.apiCode ? errorMessageForCode(failure.apiCode) : undefined) || workerMessage;
     const detail = [failure.apiCode, `HTTP ${failure.status}`, workerVersion ? `Worker ${workerVersion}` : ''].filter(Boolean).join(' · ');
     throw dataError(`${message}${detail ? ` [${detail}]` : ''}`, failure);
   }
   return payload.data;
+}
+function isReadRetryable(error: unknown): boolean {
+  // 4xx 是 Worker 明確拒絕（驗證、格式、不存在），重試也不會成功；只有
+  // 沒有 HTTP 狀態（網路斷線、逾時）或 5xx 的瞬時失敗才值得重試一次。
+  if (error instanceof AppError) {
+    const status = (error.cause as { status?: unknown } | undefined)?.status;
+    return typeof status !== 'number' || status >= 500;
+  }
+  return true;
+}
+async function requestRead(path: string): Promise<unknown> {
+  // 唯讀專用：只給 GET /api/data 用。寫入絕對不走這裡（重試寫入可能重複提交）。
+  try {
+    return await request(path);
+  } catch (error) {
+    if (!isReadRetryable(error)) throw error;
+    await new Promise(resolve => window.setTimeout(resolve, READ_RETRY_DELAY_MS));
+    return request(path);
+  }
 }
 function validateImage(value: unknown): void { if (!isValidImage(value)) throw dataError('API 回傳圖片資料格式無效。'); }
 function validateItem(value: unknown): value is Item { if (!isValidItem(value)) return false; return true; }
@@ -79,8 +103,8 @@ function validateAuthStatus(data: unknown): AuthStatus { if (!data || typeof dat
 function validateAssetResult(data: unknown): AssetResult { if (!data || typeof data !== 'object') throw dataError('API 回傳圖片資料格式無效。'); const value = data as Partial<AssetResult>; if (typeof value.path !== 'string' || typeof value.replaced !== 'boolean' || typeof value.version !== 'string') throw dataError('API 回傳圖片資料格式無效。'); return value as AssetResult; }
 function validateAssetDeleteResult(data: unknown): AssetDeleteResult { if (!data || typeof data !== 'object') throw dataError('API 回傳圖片刪除結果格式無效。'); const value = data as Partial<AssetDeleteResult>; if (typeof value.path !== 'string' || value.deleted !== true || typeof value.version !== 'string') throw dataError('API 回傳圖片刪除結果格式無效。'); return value as AssetDeleteResult; }
 async function getStaticShipping(): Promise<StoreState['shipping'] | null> { try { const response = await fetch('./data/shipping.json', { cache: 'no-store' }); if (!response.ok) return null; const payload = await response.json(); if (!isRecord(payload) || payload.schemaVersion !== 1) return null; return validateShippingList(payload.records); } catch { return null; } }
-export async function getRemoteData(): Promise<ApiData> { try { const response = await fetch('./data/collection.json', { cache: 'no-store' }); if (response.ok) { const data = validateData(await response.json()); const shipping = await getStaticShipping(); return shipping ? { ...data, shipping } : data; } } catch (error) { /* Static collection unreadable/invalid: fall back to Worker /data below, but say so instead of failing silently — the two sources can disagree during the deploy window. */ console.warn('Static collection unavailable, falling back to Worker /data.', error); } return validateData(await request('/data')); }
-export async function getAuthoritativeRemoteData(): Promise<ApiData> { return validateData(await request('/data')); }
+export async function getRemoteData(): Promise<ApiData> { try { const response = await fetch('./data/collection.json', { cache: 'no-store' }); if (response.ok) { const data = validateData(await response.json()); const shipping = await getStaticShipping(); return shipping ? { ...data, shipping } : data; } } catch (error) { /* Static collection unreadable/invalid: fall back to Worker /data below, but say so instead of failing silently — the two sources can disagree during the deploy window. */ console.warn('Static collection unavailable, falling back to Worker /data.', error); } return validateData(await requestRead('/data')); }
+export async function getAuthoritativeRemoteData(): Promise<ApiData> { return validateData(await requestRead('/data')); }
 function mutationLabel(method: string): string { if (method === 'DELETE') return '正在刪除並同步資料…'; if (method === 'PUT' || method === 'PATCH') return '正在編輯並同步資料…'; if (method === 'POST') return '正在新增並同步資料…'; return '正在同步資料…'; }
 async function mutateSubmitted<T>(method: string, start: () => Promise<T>): Promise<MutationSubmission<T>> {
   // No queue here on purpose: serialization lives in exactly one place,

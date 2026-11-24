@@ -88,6 +88,38 @@ if (!hasWorkItemCollection || !hasDeleteGuard) {
   errors.push('worker/src/index.ts: missing explicit work item-count handling');
 }
 
+// Phase 3-1 cross-tab sync (BroadcastChannel only, no polling). These are
+// static contract checks: the live behaviour (two tabs, save in one, the
+// other refreshes by itself) still needs the manual two-tab check — open
+// the site in two tabs, save a shipping record in one, the other tab must
+// show it without a manual refresh, and must not re-broadcast in a loop.
+function bodyBetween(source, startMarker, endMarker) {
+  const start = source.indexOf(startMarker);
+  if (start < 0) return '';
+  const end = source.indexOf(endMarker, start + startMarker.length);
+  return end < 0 ? source.slice(start) : source.slice(start, end);
+}
+if (!/CROSS_TAB_CHANNEL = 'merch-mutation'/.test(store) || !/new BroadcastChannel\(CROSS_TAB_CHANNEL\)/.test(store)) {
+  errors.push("src/store.ts: cross-tab sync must use BroadcastChannel('merch-mutation')");
+}
+if (!/typeof BroadcastChannel/.test(store)) {
+  errors.push('src/store.ts: cross-tab sync must feature-detect BroadcastChannel and stay silent when unsupported');
+}
+if (/setInterval/.test(store)) {
+  errors.push('src/store.ts: must not poll for cross-tab updates; use BroadcastChannel');
+}
+const applyRemoteBody = bodyBetween(store, 'private applyRemote(', 'private enqueueWrite');
+if (!/broadcastMutation/.test(applyRemoteBody) || !/data\.version !== this\.state\.version/.test(applyRemoteBody) || !/source === 'local'/.test(applyRemoteBody)) {
+  errors.push('src/store.ts: applyRemote must broadcast only when a local write actually changed the version');
+}
+const crossTabBody = bodyBetween(store, 'handleCrossTabMessage(', 'private applyRemote(');
+if (!/enqueueWrite/.test(crossTabBody) || !/getAuthoritativeRemoteData/.test(crossTabBody)) {
+  errors.push('src/store.ts: cross-tab reload must go through the write queue and re-read authoritative data');
+}
+if (!/data\.version === this\.state\.version/.test(crossTabBody) || !/applyRemote\(remote, 'remote'\)/.test(crossTabBody)) {
+  errors.push('src/store.ts: cross-tab reload must skip when the version matches and must not re-broadcast');
+}
+
 if (!/editingId/.test(ui) || !/immutable|不可|不能|disabled/.test(ui)) {
   errors.push('src/works-management.ts: missing explicit edit-state / immutable work-code handling');
 }
