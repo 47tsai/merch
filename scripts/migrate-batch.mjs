@@ -101,8 +101,15 @@ function sourceDimensions(filePath) {
   if (commandExists('file')) {
     try {
       const out = run('file', ['-b', filePath]);
-      const m = out.match(/(\d+)x(\d+)/);
-      if (m) return { width: Number(m[1]), height: Number(m[2]) };
+      // `file` prints the JFIF density (e.g. "density 72x72") BEFORE the
+      // real dimensions, and PNG dimensions have spaces ("800 x 800"), so
+      // collect every WxH and take the LAST one — the real dimensions are
+      // always last (right before ", components" for JPEG).
+      const matches = [...out.matchAll(/(\d+)\s*x\s*(\d+)/g)];
+      if (matches.length > 0) {
+        const m = matches[matches.length - 1];
+        return { width: Number(m[1]), height: Number(m[2]) };
+      }
     } catch { /* fall through */ }
   }
   return null;
