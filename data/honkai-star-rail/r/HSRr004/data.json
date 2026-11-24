@@ -2,7 +2,9 @@
   "id": "HSRr004",
   "workId": "honkai-star-rail",
   "title": "Run to 歡愉雷射票",
-  "series": ["Run to 歡愉"],
+  "series": [
+    "Run to 歡愉"
+  ],
   "characters": [],
   "category": "r",
   "manufacturer": "米哈遊",
@@ -10,8 +12,20 @@
   "status": "received",
   "description": "",
   "notes": "崩鐵路跑活動",
-  "purchase": {"price": 170, "currency": "TWD", "platform": "線下活動", "date": "2026-05-09"},
+  "purchase": {
+    "price": 170,
+    "currency": "TWD",
+    "platform": "線下活動",
+    "date": "2026-05-09"
+  },
   "arrival": {},
   "afterSales": {},
-  "images": [{"id": "HSRr004-1789426284911-3olbb", "file": "HSRr004.jpeg", "alt": "Run to 歡愉雷射票", "isCover": true}]
+  "images": [
+    {
+      "id": "HSRr004-1789426284911-3olbb",
+      "file": "HSRr004.webp",
+      "alt": "Run to 歡愉雷射票",
+      "isCover": true
+    }
+  ]
 }
