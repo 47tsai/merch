@@ -12,9 +12,13 @@
 #     mapping.csv（它不在 repo 裡）。start_batch 是 PLAN 的批次編號
 #     （1..13）；已完成的批數由 main 上的遷移 commit 數量推導，
 #     start_batch 必須等於「已完成 + 1」，否則直接失敗（防跑錯批）。
-#   - 每批：轉換 → 改 JSON → 版號 +1 → 本地驗證 → commit + push
-#     （GITHUB_TOKEN）→ R2 回填 → 線上驗收 → repository_dispatch
-#     （MERCH_GITHUB_TOKEN）觸發 Verify → 等 Verify 綠才跑下一批。
+#   - 每批：轉換 → 改 JSON → 原圖歸檔到 originals/（與 data/ 同結構、
+#     純 git 備份、不部署、不服務）→ 版號 +1 → 本地驗證 → commit + push
+#     （GITHUB_TOKEN）→ R2 回填（只放 webp）→ 線上驗收 →
+#     repository_dispatch（MERCH_GITHUB_TOKEN）觸發 Verify →
+#     等 Verify 綠才跑下一批。
+#   - R2 只留 webp（2026-11-24 齊決定）：backfill 刪舊 jpeg key、
+#     驗收要求舊 URL 404；原圖只留 git originals/（＋git 歷史）。
 #   - GITHUB_TOKEN 推的 commit 不會觸發其他 workflow（GitHub 官方規則），
 #     所以 push 後必須自己 dispatch；dispatch 用 MERCH_GITHUB_TOKEN，
 #     與 reconcile.yml / Worker dispatchVerify() 的既有慣例一致。
@@ -384,7 +388,7 @@ jobs:
               echo "--- dry run: batch $batch converted + verified, discarding changes ---"
               git status --porcelain
               git reset --hard HEAD
-              git clean -fd data/ public/data/ dist/ || true
+              git clean -fd data/ public/data/ dist/ originals/ || true
               continue
             fi
 
@@ -392,7 +396,7 @@ jobs:
             # (the build leaves untracked outputs under public/data/ + dist/,
             # and npm ci leaves node_modules/).
             {
-              jq -r '.files[] | .new_path, .old_path, .data_json' "$manifest"
+              jq -r '.files[] | .new_path, .old_path, .data_json, .original_path' "$manifest"
               jq -r '.files[] | select(.index_json_changed == true) | .data_json' "$manifest" \
                 | while IFS= read -r dj; do echo "$(dirname "$(dirname "$dj")")/index.json"; done
               echo "package.json"
@@ -402,6 +406,7 @@ jobs:
             # Expected tracked status after staging (built from the manifest).
             {
               jq -r '.files[] | "A  " + .new_path' "$manifest"
+              jq -r '.files[] | "A  " + .original_path' "$manifest"
               jq -r '.files[] | "D  " + .old_path' "$manifest"
               jq -r '.files[] | "M  " + .data_json' "$manifest"
               jq -r '.files[] | select(.index_json_changed == true) | .data_json' "$manifest" \
