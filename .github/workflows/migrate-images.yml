@@ -274,20 +274,28 @@ jobs:
           dispatch_verify() {
             local sha="$1"
             test -n "${MERCH_GITHUB_TOKEN:-}" || { echo "::error::MERCH_GITHUB_TOKEN secret is not set."; return 1; }
+            # Repository-dispatch runs carry the branch HEAD as head_sha,
+            # not the payload commit, so wait_for_verify finds our run by
+            # creation time (10s buffer for clock skew).
+            DISPATCH_TIME=$(date -u -d '10 seconds ago' +%Y-%m-%dT%H:%M:%SZ)
             jq -n --arg sha "$sha" '{event_type: "merch-mutation", client_payload: {commit_sha: $sha}}' \
               | GH_TOKEN="$MERCH_GITHUB_TOKEN" gh api "repos/${{ github.repository }}/dispatches" --input - -X POST
-            echo "dispatched merch-mutation for $sha"
+            echo "dispatched merch-mutation for $sha at $DISPATCH_TIME"
           }
 
-          # Wait up to 10 min for the Verify run of $sha (same budget as the
-          # Deploy gate). A cancelled/failed Verify stops the migration.
+          # Wait up to 10 min for the Verify run triggered by our dispatch
+          # (same budget as the Deploy gate). A cancelled/failed Verify
+          # stops the migration. The run is found by creation time, not
+          # head_sha: a repository_dispatch run carries the branch HEAD as
+          # head_sha, while the payload commit lives only in client_payload
+          # (not visible in the list API).
           wait_for_verify() {
             local sha="$1"
             for attempt in $(seq 1 60); do
               local runs status conclusion
-              runs=$(gh api "repos/${{ github.repository }}/actions/workflows/verify.yml/runs?head_sha=$sha&per_page=100" || echo '{"workflow_runs":[]}')
-              status=$(echo "$runs" | jq -r --arg sha "$sha" '[.workflow_runs[] | select(.head_sha == $sha and .head_branch == "main")] | .[0].status // "none"')
-              conclusion=$(echo "$runs" | jq -r --arg sha "$sha" '[.workflow_runs[] | select(.head_sha == $sha and .head_branch == "main")] | .[0].conclusion // ""')
+              runs=$(gh api "repos/${{ github.repository }}/actions/workflows/verify.yml/runs?event=repository_dispatch&per_page=20" || echo '{"workflow_runs":[]}')
+              status=$(echo "$runs" | jq -r --arg since "$DISPATCH_TIME" '[.workflow_runs[] | select(.event == "repository_dispatch" and .head_branch == "main" and .created_at > $since)] | .[0].status // "none"')
+              conclusion=$(echo "$runs" | jq -r --arg since "$DISPATCH_TIME" '[.workflow_runs[] | select(.event == "repository_dispatch" and .head_branch == "main" and .created_at > $since)] | .[0].conclusion // ""')
               echo "Verify for $sha: status=$status conclusion=$conclusion (attempt $attempt/60)"
               if [ "$status" = "completed" ]; then
                 if [ "$conclusion" = "success" ]; then return 0; fi
