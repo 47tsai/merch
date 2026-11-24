@@ -35,7 +35,7 @@
       "manufacturer": "米哈遊",
       "quantity": 1,
       "status": "received",
-      "cover": "HSRb001.jpeg"
+      "cover": "HSRb001.webp"
     },
     {
       "id": "HSRb002",
@@ -47,7 +47,7 @@
       "manufacturer": "米哈遊",
       "quantity": 1,
       "status": "received",
-      "cover": "HSRb002.jpeg"
+      "cover": "HSRb002.webp"
     }
   ]
 }
