@@ -1,0 +1,41 @@
+name: Reconcile
+
+# Daily safety net for the Verify -> Deploy chain. Pushes to main normally
+# trigger Verify directly, but if the latest main commit somehow has no
+# successful Verify run (missed trigger, cancelled run), re-fire the
+# merch-mutation dispatch so Verify — and then Deploy — still pick the
+# change up. Never dispatches twice for the same commit: a successful run
+# ends the job, and an in-progress run means "wait for it".
+on:
+  schedule:
+    # Daily 04:00 Taipei = 20:00 UTC.
+    - cron: '0 20 * * *'
+  workflow_dispatch:
+
+permissions:
+  actions: read
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check latest main commit verification
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          head_sha=$(gh api "repos/${{ github.repository }}/commits/main" --jq '.sha')
+          runs=$(gh api "repos/${{ github.repository }}/actions/workflows/verify.yml/runs?head_sha=$head_sha&per_page=100")
+          successful=$(echo "$runs" | jq -r --arg sha "$head_sha" '[.workflow_runs[] | select(.head_sha == $sha and .head_branch == "main" and .status == "completed" and .conclusion == "success")] | length')
+          if [ "$successful" -gt 0 ]; then
+            echo "HEAD $head_sha already has a successful Verify run; nothing to do."
+            exit 0
+          fi
+          in_progress=$(echo "$runs" | jq -r --arg sha "$head_sha" '[.workflow_runs[] | select(.head_sha == $sha and .head_branch == "main" and .status != "completed")] | length')
+          if [ "$in_progress" -gt 0 ]; then
+            echo "HEAD $head_sha has a Verify run in progress; skipping."
+            exit 0
+          fi
+          echo "HEAD $head_sha has no successful Verify run; re-dispatching merch-mutation."
+          jq -n --arg sha "$head_sha" '{event_type: "merch-mutation", client_payload: {commit_sha: $sha}}' | gh api "repos/${{ github.repository }}/dispatches" --input - -X POST
+          echo "Dispatched merch-mutation for $head_sha."
